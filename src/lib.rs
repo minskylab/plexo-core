@@ -1,10 +1,22 @@
-use sea_orm::prelude::*;
+use proc_macro::TokenStream;
+use quote::quote;
 
-pub mod entities;
-pub mod query_root;
+#[proc_macro_derive(AnswerFn)]
+pub fn lambda(_item: TokenStream) -> TokenStream {
+    println!("{}", _item.to_string());
 
-pub use query_root::QueryRoot;
+    quote! {
+        fn answer() -> u32 { 42 }
 
-pub struct OrmDataloader {
-    pub db: DatabaseConnection,
+        // impl Relationship<i32> {
+        //     fn unwrap(self) -> i32 {
+        //         match self {
+        //             Relationship::Edge(t) => t,
+        //             Relationship::None => 0,
+        //             Relationship::Unloaded => panic!("Relationship is not loaded"),
+        //         }
+        //     }
+        // }
+    }
+    .into()
 }

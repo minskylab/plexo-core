@@ -1590,6 +1590,7 @@ dependencies = [
  "dotenv",
  "lazy_static",
  "poem",
+ "quote",
  "sea-orm",
  "seaography",
  "serde_json",

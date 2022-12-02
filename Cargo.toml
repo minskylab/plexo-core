@@ -14,6 +14,8 @@ tokio = { version = "1.17.0", features = ["macros", "rt-multi-thread"] }
 tracing = { version = "0.1.34" }
 tracing-subscriber = { version = "0.3.11" }
 lazy_static = { version = "1.4.0" }
+quote = "1.0"
+
 
 [dependencies.seaography]
 version = "^0.2.0" # seaography version
@@ -24,3 +26,6 @@ serde_json = { version = '1.0.82' }
 
 [workspace]
 members = []
+
+[lib]
+proc-macro = true
