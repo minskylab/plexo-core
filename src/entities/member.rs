@@ -1,15 +1,8 @@
 use sea_orm::entity::prelude::*;
 
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    DeriveEntityModel,
-    async_graphql::SimpleObject,
-    seaography::macros::Filter,
-)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, async_graphql::SimpleObject)]
 #[sea_orm(table_name = "Member")]
-#[graphql(complex)]
+// #[graphql(complex)]
 #[graphql(name = "Member")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, unique)]
@@ -21,7 +14,16 @@ pub struct Model {
     pub email: String,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation, seaography::macros::RelationsCompact)]
-pub enum Relation {}
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_many = "super::task::Entity")]
+    Tasks,
+}
+
+impl Related<super::task::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Tasks.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

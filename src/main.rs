@@ -1,124 +1,166 @@
-// use async_graphql::{
-//     dataloader::DataLoader,
-//     http::{playground_source, GraphQLPlaygroundConfig},
-//     EmptyMutation, EmptySubscription, Schema,
-// };
-// use async_graphql_poem::GraphQL;
-// use dotenv::dotenv;
-// use lazy_static::lazy_static;
-// use plexo::*;
-// use poem::{get, handler, listener::TcpListener, web::Html, IntoResponse, Route, Server};
-// use sea_orm::Database;
-// use std::env;
+use async_graphql::{
+    futures_util::Stream,
+    futures_util::StreamExt,
+    // dataloader::DataLoader,
+    http::GraphiQLSource,
+    EmptyMutation,
+    Object,
+    Schema as GraphQLSchema,
+    Subscription,
+};
+use async_graphql_poem::{GraphQL, GraphQLSubscription};
+use dotenv::dotenv;
+use lazy_static::lazy_static;
+// use plexo::QueryRoot;
+use crate::entities::task;
+use poem::{get, handler, listener::TcpListener, web::Html, IntoResponse, Route, Server};
+use sea_orm::{
+    ActiveModelTrait, ConnectionTrait, Database, DatabaseBackend, DbBackend,
+    Schema as SeaORMSchema, Statement,
+};
+use std::{env, time::Duration};
 
-// lazy_static! {
-//     static ref URL: String = env::var("URL").unwrap_or("0.0.0.0:8080".into());
-//     static ref ENDPOINT: String = env::var("ENDPOINT").unwrap_or("/".into());
-//     static ref DATABASE_URL: String =
-//         env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
-//     static ref DEPTH_LIMIT: Option<usize> = env::var("DEPTH_LIMIT").map_or(None, |data| Some(
-//         data.parse().expect("DEPTH_LIMIT is not a number")
-//     ));
-//     static ref COMPLEXITY_LIMIT: Option<usize> = env::var("COMPLEXITY_LIMIT")
-//         .map_or(None, |data| {
-//             Some(data.parse().expect("COMPLEXITY_LIMIT is not a number"))
-//         });
-// }
+use sea_orm::ActiveValue::{NotSet, Set};
+
+// extern crate async_graphql;
+// extern crate tokio;
+// extern crate tokio_stream;
+
+use entities::task::Model as Task;
+
+mod entities;
+
+lazy_static! {
+    static ref URL: String = env::var("URL").unwrap_or("0.0.0.0:8080".into());
+    static ref ENDPOINT: String = env::var("ENDPOINT").unwrap_or("/".into());
+    static ref DATABASE_URL: String =
+        env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
+    static ref DEPTH_LIMIT: Option<usize> = env::var("DEPTH_LIMIT").map_or(None, |data| Some(
+        data.parse().expect("DEPTH_LIMIT is not a number")
+    ));
+    static ref COMPLEXITY_LIMIT: Option<usize> = env::var("COMPLEXITY_LIMIT")
+        .map_or(None, |data| {
+            Some(data.parse().expect("COMPLEXITY_LIMIT is not a number"))
+        });
+}
 
 // #[handler]
 // async fn graphql_playground() -> impl IntoResponse {
 //     Html(playground_source(GraphQLPlaygroundConfig::new(&*ENDPOINT)))
 // }
 
-// #[tokio::main]
-// async fn main() {
-//     dotenv().ok();
-//     tracing_subscriber::fmt()
-//         .with_max_level(tracing::Level::INFO)
-//         .with_test_writer()
-//         .init();
-//     let database = Database::connect(&*DATABASE_URL)
-//         .await
-//         .expect("Fail to initialize database connection");
-//     let orm_dataloader: DataLoader<OrmDataloader> = DataLoader::new(
-//         OrmDataloader {
-//             db: database.clone(),
-//         },
-//         tokio::spawn,
-//     );
-//     let mut schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
-//         .data(database)
-//         .data(orm_dataloader);
-//     if let Some(depth) = *DEPTH_LIMIT {
-//         schema = schema.limit_depth(depth);
-//     }
-//     if let Some(complexity) = *COMPLEXITY_LIMIT {
-//         schema = schema.limit_complexity(complexity);
-//     }
-//     let schema = schema.finish();
-//     let app = Route::new().at(
-//         &*ENDPOINT,
-//         get(graphql_playground).post(GraphQL::new(schema)),
-//     );
-//     println!("Visit GraphQL Playground at http://{}", *URL);
-//     Server::new(TcpListener::bind(&*URL))
-//         .run(app)
-//         .await
-//         .expect("Fail to start web server");
-// }
-
-// extern crate proc_macro_examples;
-// use proc_macro_examples::AnswerFn;
-
-// use plexo::AnswerFn;
-
-use plexo::AnswerFn;
-
-#[derive(Debug)]
-enum Relationship<T> {
-    Edge(T),
-    None,
-    Unloaded,
+#[handler]
+async fn graphiql() -> impl IntoResponse {
+    Html(
+        GraphiQLSource::build()
+            .endpoint(format!("http://{}", *URL).as_str())
+            .subscription_endpoint(format!("ws://{}/ws", *URL).as_str())
+            .finish(),
+    )
 }
 
-struct Post {
-    id: i32,
-    title: String,
-    body: String,
-    published: bool,
+struct QueryRoot;
+
+#[Object]
+impl QueryRoot {
+    async fn hello(&self) -> String {
+        "Hello World!".to_string()
+    }
 }
 
-#[derive(AnswerFn)]
-struct Person {
-    id: String,
-    name: String,
-    email: String,
+struct SubscriptionRoot;
 
-    posts: Option<Relationship<Vec<Post>>>,
+#[Subscription]
+impl SubscriptionRoot {
+    async fn integers(&self, #[graphql(default = 1)] step: i32) -> impl Stream<Item = i32> {
+        let mut value = 0;
+        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
+            .map(move |_| {
+                value += step;
+                value
+            })
+    }
+    async fn tasks(&self) -> impl Stream<Item = Task> {
+        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
+            .map(|_| Task {
+                id: "1".to_string(),
+                title: "Task 1".to_string(),
+                created_at: None,
+                updated_at: None,
+                description: None,
+            })
+    }
 }
 
-impl Person {
-    // fn posts(&self) -> Relationship<Vec<Post>> {
-    //     Relationship::Unloaded
-    // }
-}
+#[tokio::main]
+async fn main() {
+    dotenv().ok();
+    // tracing_subscriber::fmt()
+    //     .with_max_level(tracing::Level::INFO)
+    //     .with_test_writer()
+    //     .init();
 
-// #[derive(AnswerFn)]
-// struct PersonRelationships {
-//     posts: Vec<Post>,
-// }
+    let db = Database::connect(&*DATABASE_URL)
+        .await
+        .expect("Fail to initialize database connection");
 
-fn main() {
-    // let s = Struct { a: 1, b: 2 };
-    let a = Relationship::Edge(1);
-    // a.unwrap();
+    // db.
+    // println!("{:?}", db.get_database_backend());
+    // let res = db
+    //     .execute(Statement::from_string(
+    //         DatabaseBackend::Postgres,
+    //         "LISTEN myevent;".to_owned(),
+    //     ))
+    //     .await
+    //     .unwrap();
 
-    let p = Person {
-        id: "1".into(),
-        name: "John".into(),
-        email: "".into(),
-        posts: None,
+    let db_postgres = DbBackend::Postgres;
+    let schema = SeaORMSchema::new(db_postgres);
+
+    println!(
+        "{}",
+        db.get_database_backend()
+            .build(&schema.create_table_from_entity(task::Entity))
+            .clone()
+            .sql
+    );
+
+    // let orm_dataloader: DataLoader<OrmDataloader> = DataLoader::new(
+    //     OrmDataloader {
+    //         db: database.clone(),
+    //     },
+    //     tokio::spawn,
+    // );
+
+    let t = task::ActiveModel {
+        title: Set("Task 1".to_owned()),
+        ..Default::default()
     };
 
-    println!("answer: {}, {:?}", answer(), a);
+    t.insert(&db).await.unwrap();
+
+    let schema = GraphQLSchema::build(QueryRoot, EmptyMutation, SubscriptionRoot);
+    // .data(database)
+    // .data(orm_dataloader);
+    // .finish();
+
+    // if let Some(depth) = *DEPTH_LIMIT {
+    //     schema = schema.limit_depth(depth);
+    // }
+    // if let Some(complexity) = *COMPLEXITY_LIMIT {
+    //     schema = schema.limit_complexity(complexity);
+    // }
+
+    let schema = schema.finish();
+
+    let app = Route::new()
+        .at(&*ENDPOINT, get(graphiql).post(GraphQL::new(schema.clone())))
+        .at("/ws", get(GraphQLSubscription::new(schema)));
+
+    println!("Visit GraphQL Playground at http://{}", *URL);
+
+    Server::new(TcpListener::bind(&*URL))
+        .run(app)
+        .await
+        .expect("Fail to start web server");
 }
