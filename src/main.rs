@@ -9,26 +9,27 @@ use async_graphql::{
     Subscription,
 };
 use async_graphql_poem::{GraphQL, GraphQLSubscription};
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use lazy_static::lazy_static;
 // use plexo::QueryRoot;
-use crate::entities::task;
+// use crate::entities::task;
 use poem::{get, handler, listener::TcpListener, web::Html, IntoResponse, Route, Server};
-use sea_orm::{
-    ActiveModelTrait, ConnectionTrait, Database, DatabaseBackend, DbBackend,
-    Schema as SeaORMSchema, Statement,
-};
+// use sea_orm::{
+//     ActiveModelTrait, ConnectionTrait, Database, DatabaseBackend, DbBackend,
+//     Schema as SeaORMSchema, Statement,
+// };
 use std::{env, time::Duration};
 
-use sea_orm::ActiveValue::{NotSet, Set};
+// use sea_orm::ActiveValue::{NotSet, Set};
+use sqlx::postgres::PgPoolOptions;
 
 // extern crate async_graphql;
 // extern crate tokio;
 // extern crate tokio_stream;
 
-use entities::task::Model as Task;
+// use entities::task::Model as Task;
 
-mod entities;
+// mod entities;
 
 lazy_static! {
     static ref URL: String = env::var("URL").unwrap_or("0.0.0.0:8080".into());
@@ -80,16 +81,16 @@ impl SubscriptionRoot {
                 value
             })
     }
-    async fn tasks(&self) -> impl Stream<Item = Task> {
-        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
-            .map(|_| Task {
-                id: "1".to_string(),
-                title: "Task 1".to_string(),
-                created_at: None,
-                updated_at: None,
-                description: None,
-            })
-    }
+    // async fn tasks(&self) -> impl Stream<Item = Task> {
+    //     tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
+    //         .map(|_| Task {
+    //             id: "1".to_string(),
+    //             title: "Task 1".to_string(),
+    //             created_at: None,
+    //             updated_at: None,
+    //             description: None,
+    //         })
+    // }
 }
 
 #[tokio::main]
@@ -100,9 +101,9 @@ async fn main() {
     //     .with_test_writer()
     //     .init();
 
-    let db = Database::connect(&*DATABASE_URL)
-        .await
-        .expect("Fail to initialize database connection");
+    // let db = Database::connect(&*DATABASE_URL)
+    //     .await
+    //     .expect("Fail to initialize database connection");
 
     // db.
     // println!("{:?}", db.get_database_backend());
@@ -114,16 +115,16 @@ async fn main() {
     //     .await
     //     .unwrap();
 
-    let db_postgres = DbBackend::Postgres;
-    let schema = SeaORMSchema::new(db_postgres);
+    // let db_postgres = DbBackend::Postgres;
+    // let schema = SeaORMSchema::new(db_postgres);
 
-    println!(
-        "{}",
-        db.get_database_backend()
-            .build(&schema.create_table_from_entity(task::Entity))
-            .clone()
-            .sql
-    );
+    // println!(
+    //     "{}",
+    //     db.get_database_backend()
+    //         .build(&schema.create_table_from_entity(task::Entity))
+    //         .clone()
+    //         .sql
+    // );
 
     // let orm_dataloader: DataLoader<OrmDataloader> = DataLoader::new(
     //     OrmDataloader {
@@ -132,12 +133,35 @@ async fn main() {
     //     tokio::spawn,
     // );
 
-    let t = task::ActiveModel {
-        title: Set("Task 1".to_owned()),
-        ..Default::default()
-    };
+    // let t = task::ActiveModel {
+    //     title: Set("Task 1".to_owned()),
+    //     ..Default::default()
+    // };
 
-    t.insert(&db).await.unwrap();
+    // t.insert(&db).await.unwrap();
+
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&*DATABASE_URL)
+        .await
+        .unwrap();
+
+    // let row: (i64,) = sqlx::query_as("SELECT $1")
+    //     .bind(420_i64)
+    //     .fetch_one(&pool)
+    //     .await
+    //     .unwrap();
+
+    // println!("{:?}", row);
+
+    // let task_id = "1".to_string();
+
+    let projects = sqlx::query!("SELECT id, name FROM projects")
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+
+    println!("{:?}", projects);
 
     let schema = GraphQLSchema::build(QueryRoot, EmptyMutation, SubscriptionRoot);
     // .data(database)
@@ -154,12 +178,15 @@ async fn main() {
     let schema = schema.finish();
 
     let app = Route::new()
-        .at(&*ENDPOINT, get(graphiql).post(GraphQL::new(schema.clone())))
+        .at(
+            ENDPOINT.to_owned(),
+            get(graphiql).post(GraphQL::new(schema.clone())),
+        )
         .at("/ws", get(GraphQLSubscription::new(schema)));
 
     println!("Visit GraphQL Playground at http://{}", *URL);
 
-    Server::new(TcpListener::bind(&*URL))
+    Server::new(TcpListener::bind(URL.to_owned()))
         .run(app)
         .await
         .expect("Fail to start web server");

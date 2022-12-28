@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE `Project` (
-    `id` VARCHAR(191) NOT NULL,
+    `id` VARCHAR(191) NOT NULL DEFAULT gen_random_uuid(),
     `created_at` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `name` VARCHAR(191) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE `Project` (
 
 -- CreateTable
 CREATE TABLE `Task` (
-    `id` VARCHAR(191) NOT NULL,
+    `id` VARCHAR(191) NOT NULL DEFAULT gen_random_uuid(),
     `created_at` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `title` VARCHAR(191) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE `Task` (
 
 -- CreateTable
 CREATE TABLE `Member` (
-    `id` VARCHAR(191) NOT NULL,
+    `id` VARCHAR(191) NOT NULL DEFAULT gen_random_uuid(),
     `created_at` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `name` VARCHAR(191) NOT NULL,
