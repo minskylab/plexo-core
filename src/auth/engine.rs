@@ -1,11 +1,12 @@
 use std::env;
 
 use oauth2::{
-    basic::BasicClient, AuthUrl, Client, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
-    TokenUrl,
+    basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, Client, ClientId,
+    ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
 };
 use reqwest::Url;
 
+#[derive(Clone)]
 pub struct AuthEngine {
     github_client: BasicClient,
     google_client: Option<BasicClient>,
@@ -26,7 +27,6 @@ impl AuthEngine {
         let token_url = TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
             .expect("Invalid token endpoint URL");
 
-        // Set up the config for the Github OAuth2 process.
         let github_client = BasicClient::new(
             github_client_id,
             Some(github_client_secret),
@@ -34,7 +34,8 @@ impl AuthEngine {
             Some(token_url),
         )
         .set_redirect_uri(
-            RedirectUrl::new("http://localhost:8080".to_string()).expect("Invalid redirect URL"),
+            RedirectUrl::new("http://localhost:8080/auth/github/callback".to_string())
+                .expect("Invalid redirect URL"),
         );
 
         Self {
@@ -51,5 +52,22 @@ impl AuthEngine {
             .clone()
 
         // authorize_url.to_string()
+    }
+
+    pub async fn exchange_github_code(
+        &self,
+        code: AuthorizationCode,
+        // state: CsrfToken,
+    ) -> Result<String, String> {
+        let token_result = self
+            .github_client
+            .exchange_code(code)
+            .request_async(async_http_client)
+            .await;
+
+        match token_result {
+            Ok(token) => Ok(token.access_token().secret().to_string()),
+            Err(e) => Err(e.to_string()),
+        }
     }
 }

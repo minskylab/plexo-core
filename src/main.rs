@@ -4,16 +4,13 @@ use async_graphql::{
     http::{GraphiQLSource, ALL_WEBSOCKET_PROTOCOLS},
     Data, Schema,
 };
-use async_graphql_poem::{
-    GraphQL, GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLSubscription,
-    GraphQLWebSocket,
-};
+use async_graphql_poem::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLWebSocket};
 
 use dotenvy::dotenv;
 use lazy_static::lazy_static;
 use plexo::{
     auth::{
-        auth::{example_auth, github_sign_in, PlexoAuthToken},
+        auth::{github_callback, github_sign_in, PlexoAuthToken},
         engine::AuthEngine,
     },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
@@ -108,35 +105,28 @@ async fn ws(
 
 #[tokio::main]
 async fn main() {
-    // let database_url = secret_store
-    //     .get("DATABASE_URL")
-    //     .unwrap_or((&*DATABASE_URL.to_string()).into());
-
-    // env::set_var("DATABASE_URL", database_url.as_str());
-
     dotenv().ok();
 
-    // example_auth().await;
-
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&*DATABASE_URL)
-        .await
-        .unwrap();
-
-    let auth = AuthEngine::new();
-
-    let plexo_engine = Engine::new(pool, auth);
+    let plexo_engine = Engine::new(
+        PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&*DATABASE_URL)
+            .await
+            .unwrap(),
+        AuthEngine::new(),
+    );
 
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
-        .data(plexo_engine)
+        .data(plexo_engine.clone()) // TODO: Optimize this
         .finish();
 
     let app = Route::new()
         .at(ENDPOINT.to_owned(), get(graphiql).post(index))
         .at("/ws", get(ws))
-        .at("auth/sign-in/github", get(github_sign_in))
-        .data(schema);
+        .at("/auth/github", get(github_sign_in))
+        .at("/auth/github/callback", get(github_callback))
+        .data(schema)
+        .data(plexo_engine);
 
     println!("Visit GraphQL Playground at http://{}", *URL);
 

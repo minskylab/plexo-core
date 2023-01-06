@@ -3,6 +3,7 @@ use sqlx::{Pool, Postgres};
 
 use crate::auth::engine::AuthEngine;
 
+#[derive(Clone)]
 pub struct Engine {
     pub pool: Pool<Postgres>,
     pub auth: AuthEngine,

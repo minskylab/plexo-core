@@ -7,15 +7,19 @@ use oauth2::{
     AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
     TokenResponse, TokenUrl,
 };
-use poem::{handler, IntoResponse};
+use poem::web::{Data, Query, Redirect};
+use poem::{handler, IntoResponse, Response, ResponseBuilder};
+use reqwest::StatusCode;
+use serde::Deserialize;
 use serde_json::Value;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 
+use crate::system::core::Engine;
+
 pub struct PlexoAuthToken(pub String);
 
 pub async fn example_auth() {
-
     // A very naive implementation of the redirect server.
     // let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
     // loop {
@@ -128,4 +132,74 @@ pub async fn example_auth() {
 }
 
 #[handler]
-pub async fn github_sign_in() -> impl IntoResponse {}
+pub async fn github_sign_in(plexo_engine: Data<&Engine>) -> impl IntoResponse {
+    let (url, _) = plexo_engine.0.auth.new_github_authorize_url();
+
+    Redirect::temporary(url.to_string())
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GithubCallbackParams {
+    code: String,
+    state: String,
+}
+
+#[handler]
+pub async fn github_callback(
+    plexo_engine: Data<&Engine>,
+    params: Query<GithubCallbackParams>,
+    // state: String,
+) -> impl IntoResponse {
+    let code = AuthorizationCode::new(params.code.clone());
+
+    let token = plexo_engine.0.auth.exchange_github_code(code).await;
+
+    match token {
+        Ok(token) => {
+            let access_token = token;
+
+            println!("token: {}", access_token);
+            // println!("extra fields: {:#?}", token.extra_fields());
+
+            // let introspection = client
+            //     .introspect(token.access_token())
+            //     .unwrap()
+            //     .request_async(async_http_client)
+            //     .await
+            //     .unwrap();
+
+            // println!("introspection: {:#?}", introspection);
+
+            const USER_API: &'static str = "https://api.github.com/user";
+
+            let client = reqwest::Client::new();
+
+            let github_user_data = client
+                .get(USER_API)
+                .header("Authorization", format!("token {}", access_token))
+                .header("User-Agent", "plexo-agent")
+                .send()
+                .await
+                .unwrap()
+                .json::<Value>()
+                .await
+                .unwrap();
+
+            println!("github_user_data: {:#?}", github_user_data);
+
+            // let scopes = if let Some(scopes_vec) = token.scopes() {
+            //     scopes_vec
+            //         .iter()
+            //         .map(|comma_separated| comma_separated.split(','))
+            //         .flatten()
+            //         .collect::<Vec<_>>()
+            // } else {
+            //     Vec::new()
+            // };
+            // println!("Github returned the following scopes:\n{:?}\n", scopes);
+
+            "success".to_string().with_status(StatusCode::OK)
+        }
+        Err(e) => format!("error: {}", e).with_status(StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
