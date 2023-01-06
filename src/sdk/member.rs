@@ -5,7 +5,7 @@ use uuid::Uuid;
 use super::task::Task;
 
 #[derive(SimpleObject)]
-// #[graphql(complex)]
+#[graphql(complex)]
 pub struct Member {
     id: Uuid,
     created_at: DateTime<Utc>,
@@ -25,8 +25,9 @@ pub enum MemberRole {
     Member,
 }
 
+#[ComplexObject]
 impl Member {
-    pub fn tasks(&self) -> Vec<Task> {
+    pub async fn tasks(&self) -> Vec<Task> {
         todo!()
     }
 }
