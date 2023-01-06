@@ -1,4 +1,5 @@
-use sqlx::types::{time::PrimitiveDateTime, Uuid};
+use async_graphql::SimpleObject;
+use sqlx::types::time::PrimitiveDateTime;
 
 use super::{member::Member, project::Project};
 
@@ -18,6 +19,8 @@ pub enum TaskPriority {
     Urgent,
 }
 
+#[derive(SimpleObject)]
+#[graphql(complex)]
 pub struct Task {
     id: Uuid,
     created_at: PrimitiveDateTime,

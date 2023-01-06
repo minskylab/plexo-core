@@ -1,8 +1,6 @@
 use sqlx::types::{time::PrimitiveDateTime, Uuid};
 
-use crate::entities::task::Task;
-
-use super::task::{TaskPriority, TaskStatus};
+use super::task::Task;
 
 pub struct Member {
     id: Uuid,
