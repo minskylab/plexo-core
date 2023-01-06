@@ -12,8 +12,12 @@ use async_graphql_poem::{
 use dotenvy::dotenv;
 use lazy_static::lazy_static;
 use plexo::{
-    auth::auth::example_auth,
+    auth::{
+        auth::{example_auth, github_sign_in, PlexoAuthToken},
+        engine::AuthEngine,
+    },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
+    system::core::Engine,
 };
 use poem::{
     get, handler,
@@ -23,7 +27,7 @@ use poem::{
     EndpointExt, IntoResponse, Route, Server,
 };
 
-use serde_json::{from_value, Value};
+use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 
 lazy_static! {
@@ -50,10 +54,10 @@ async fn graphiql() -> impl IntoResponse {
     )
 }
 
-fn get_token_from_headers(headers: &HeaderMap) -> Option<String> {
+fn get_token_from_headers(headers: &HeaderMap) -> Option<PlexoAuthToken> {
     headers
         .get("Authorization")
-        .and_then(|value| value.to_str().map(|s| s.to_string()).ok())
+        .and_then(|value| value.to_str().map(|s| PlexoAuthToken(s.to_string())).ok())
 }
 
 pub async fn on_connection_init(value: Value) -> async_graphql::Result<Data> {
@@ -104,6 +108,12 @@ async fn ws(
 
 #[tokio::main]
 async fn main() {
+    // let database_url = secret_store
+    //     .get("DATABASE_URL")
+    //     .unwrap_or((&*DATABASE_URL.to_string()).into());
+
+    // env::set_var("DATABASE_URL", database_url.as_str());
+
     dotenv().ok();
 
     // example_auth().await;
@@ -114,20 +124,18 @@ async fn main() {
         .await
         .unwrap();
 
-    // let projects = sqlx::query!("SELECT id, name, created_at FROM projects")
-    //     .fetch_all(&pool)
-    //     .await
-    //     .unwrap();
+    let auth = AuthEngine::new();
 
-    // println!("{:?}", projects);
+    let plexo_engine = Engine::new(pool, auth);
 
-    let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot);
-
-    let schema = schema.data(pool).finish();
+    let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
+        .data(plexo_engine)
+        .finish();
 
     let app = Route::new()
         .at(ENDPOINT.to_owned(), get(graphiql).post(index))
         .at("/ws", get(ws))
+        .at("auth/sign-in/github", get(github_sign_in))
         .data(schema);
 
     println!("Visit GraphQL Playground at http://{}", *URL);

@@ -3,11 +3,15 @@ use chrono::{DateTime, Utc};
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-use crate::sdk::{
-    member::Member,
-    project::Project,
-    task::{Task, TaskPriority, TaskStatus},
-    utilities::DateTimeBridge,
+use crate::{
+    auth::auth::PlexoAuthToken,
+    sdk::{
+        member::Member,
+        project::Project,
+        task::{Task, TaskPriority, TaskStatus},
+        utilities::DateTimeBridge,
+    },
+    system::core::Engine,
 };
 
 pub struct QueryRoot;
@@ -25,8 +29,8 @@ pub struct TaskFilter {
 #[Object]
 impl QueryRoot {
     async fn tasks(&self, ctx: &Context<'_>, filter: Option<TaskFilter>) -> Vec<Task> {
-        let auth_token = ctx.data::<String>().unwrap();
-        let pool = ctx.data::<Pool<Postgres>>().unwrap();
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
 
         println!("token: {}", auth_token);
 
@@ -35,7 +39,7 @@ impl QueryRoot {
             SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, assignee_id, labels, owner_id
             FROM tasks
             "#
-        ).fetch_all(pool).await.unwrap();
+        ).fetch_all(&plexo_engine.pool).await.unwrap();
 
         tasks
             .iter()
