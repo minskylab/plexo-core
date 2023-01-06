@@ -192,7 +192,7 @@ async fn main() {
     //     schema = schema.limit_complexity(complexity);
     // }
 
-    let schema = schema.finish();
+    let schema = schema.data("data").finish();
 
     let app = Route::new()
         .at(
