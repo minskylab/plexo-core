@@ -52,7 +52,7 @@ async fn main() {
 
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot);
 
-    let schema = schema.data("data").finish();
+    let schema = schema.data(pool).finish();
 
     let app = Route::new()
         .at(

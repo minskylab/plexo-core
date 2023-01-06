@@ -2,7 +2,7 @@ use async_graphql::{ComplexObject, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use super::task::Task;
+use super::{project::Project, task::Task};
 
 #[derive(SimpleObject)]
 #[graphql(complex)]
@@ -28,6 +28,14 @@ pub enum MemberRole {
 #[ComplexObject]
 impl Member {
     pub async fn tasks(&self) -> Vec<Task> {
+        todo!()
+    }
+
+    pub async fn assigned_tasks(&self) -> Vec<Task> {
+        todo!()
+    }
+
+    pub async fn projects(&self) -> Vec<Project> {
         todo!()
     }
 }

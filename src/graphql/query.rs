@@ -1,11 +1,13 @@
-use async_graphql::{InputObject, Object};
+use async_graphql::{Context, InputObject, Object};
 use chrono::{DateTime, Utc};
+use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::sdk::{
     member::Member,
     project::Project,
     task::{Task, TaskPriority, TaskStatus},
+    utilities::DateTimeBridge,
 };
 
 pub struct QueryRoot;
@@ -22,8 +24,43 @@ pub struct TaskFilter {
 
 #[Object]
 impl QueryRoot {
-    async fn tasks(&self, filter: Option<TaskFilter>) -> Vec<Task> {
-        vec![]
+    async fn tasks(&self, ctx: &Context<'_>, filter: Option<TaskFilter>) -> Vec<Task> {
+        let pool = ctx.data::<Pool<Postgres>>().unwrap();
+
+        let tasks = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, assignee_id, labels, owner_id
+            FROM tasks
+            "#
+        ).fetch_all(pool).await.unwrap();
+
+        tasks
+            .iter()
+            .map(|r| Task {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                title: r.title.clone(),
+                description: r.description.clone(),
+                status: TaskStatus::from_optional_str(&r.status),
+                priority: TaskPriority::from_optional_str(&r.priority),
+                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+                project_id: r.project_id,
+                assignee_id: r.assignee_id,
+                labels: r
+                    .labels
+                    .as_ref()
+                    .map(|l| {
+                        l.as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|s| s.as_str().unwrap().to_string())
+                            .collect()
+                    })
+                    .unwrap_or(vec![]),
+                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+            })
+            .collect()
     }
 
     async fn task_by_id(&self, id: Uuid) -> Task {
