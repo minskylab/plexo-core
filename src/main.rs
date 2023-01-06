@@ -9,11 +9,12 @@ use async_graphql_poem::{
     GraphQLWebSocket,
 };
 
-use serde::Deserialize;
-
 use dotenvy::dotenv;
 use lazy_static::lazy_static;
-use plexo::graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot};
+use plexo::{
+    auth::auth::example_auth,
+    graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
+};
 use poem::{
     get, handler,
     http::HeaderMap,
@@ -105,18 +106,20 @@ async fn ws(
 async fn main() {
     dotenv().ok();
 
+    // example_auth().await;
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&*DATABASE_URL)
         .await
         .unwrap();
 
-    let projects = sqlx::query!("SELECT id, name, created_at FROM projects")
-        .fetch_all(&pool)
-        .await
-        .unwrap();
+    // let projects = sqlx::query!("SELECT id, name, created_at FROM projects")
+    //     .fetch_all(&pool)
+    //     .await
+    //     .unwrap();
 
-    println!("{:?}", projects);
+    // println!("{:?}", projects);
 
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot);
 

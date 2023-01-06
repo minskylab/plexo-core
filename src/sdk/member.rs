@@ -1,4 +1,4 @@
-use async_graphql::{ComplexObject, Enum, SimpleObject};
+use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
@@ -7,16 +7,16 @@ use super::{project::Project, task::Task};
 #[derive(SimpleObject)]
 #[graphql(complex)]
 pub struct Member {
-    id: Uuid,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+    pub id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 
-    name: String,
-    email: String,
+    pub name: String,
+    pub email: String,
 
-    auth_id: String,
+    pub auth_id: String,
 
-    role: MemberRole,
+    pub role: MemberRole,
 }
 
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]
@@ -27,15 +27,15 @@ pub enum MemberRole {
 
 #[ComplexObject]
 impl Member {
-    pub async fn tasks(&self) -> Vec<Task> {
+    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         todo!()
     }
 
-    pub async fn assigned_tasks(&self) -> Vec<Task> {
+    pub async fn assigned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         todo!()
     }
 
-    pub async fn projects(&self) -> Vec<Project> {
+    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         todo!()
     }
 }

@@ -5,7 +5,10 @@ use chrono::Utc;
 use tokio_stream::Stream;
 use uuid::Uuid;
 
-use crate::sdk::task::{Task, TaskPriority, TaskStatus};
+use crate::sdk::{
+    project::Project,
+    task::{Task, TaskPriority, TaskStatus},
+};
 
 pub struct SubscriptionRoot;
 
@@ -66,6 +69,22 @@ impl SubscriptionRoot {
                 project_id: None,
 
                 due_date: None,
+            })
+    }
+
+    async fn projects(&self, ctx: &Context<'_>) -> impl Stream<Item = Project> {
+        let auth_token = ctx.data::<String>().unwrap();
+        println!("token: {}", auth_token);
+
+        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
+            .map(|_| Project {
+                id: Uuid::new_v4(),
+                title: "Project X".to_string(),
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                description: None,
+                owner_id: Uuid::new_v4(),
+                labels: vec![],
             })
     }
 }

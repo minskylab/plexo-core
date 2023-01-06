@@ -1,4 +1,4 @@
-use async_graphql::{ComplexObject, Enum, SimpleObject};
+use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 
 use uuid::Uuid;
@@ -111,36 +111,15 @@ pub struct Task {
 
 #[ComplexObject]
 impl Task {
-    pub async fn owner(&self) -> Member {
+    pub async fn owner(&self, ctx: &Context<'_>) -> Member {
         todo!()
     }
 
-    pub async fn assignee(&self) -> Option<Member> {
+    pub async fn assignee(&self, ctx: &Context<'_>) -> Option<Member> {
         todo!()
     }
 
-    pub async fn project(&self) -> Option<Project> {
+    pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
         todo!()
     }
-}
-
-struct TaskBuilder;
-
-impl TaskBuilder {
-    // pub fn from_record(record: TaskRecord) -> Task {
-    //     Task {
-    //         id: record.id,
-    //         created_at: record.created_at,
-    //         updated_at: record.updated_at,
-    //         title: record.title,
-    //         description: record.description,
-    //         status: record.status,
-    //         priority: record.priority,
-    //         owner_id: record.owner_id,
-    //         labels: record.labels,
-    //         assignee_id: record.assignee_id,
-    //         project_id: record.project_id,
-    //         due_date: record.due_date,
-    //     }
-    // }
 }
