@@ -5,7 +5,7 @@ use async_graphql::{
 use async_graphql_poem::{GraphQL, GraphQLSubscription};
 use dotenvy::dotenv;
 use lazy_static::lazy_static;
-use plexo::entities::task::{Task, TaskBuilder};
+use plexo::entities::task::TaskBuilder;
 // use plexo::QueryRoot;
 // use crate::entities::task;
 use poem::{get, handler, listener::TcpListener, web::Html, IntoResponse, Route, Server};
@@ -63,20 +63,20 @@ impl QueryRoot {
         "Hello World!".to_string()
     }
 
-    async fn tasks(&self) -> Vec<Task> {
-        let pool = PgPoolOptions::new()
-            .max_connections(5)
-            .connect(&*DATABASE_URL)
-            .await
-            .unwrap();
+    // async fn tasks(&self) -> Vec<Task> {
+    //     let pool = PgPoolOptions::new()
+    //         .max_connections(5)
+    //         .connect(&*DATABASE_URL)
+    //         .await
+    //         .unwrap();
 
-        let task = TaskBuilder::new("Task 1".to_string())
-            .insert(&pool)
-            .await
-            .unwrap();
+    //     let task = TaskBuilder::new("Task 1".to_string())
+    //         .insert(&pool)
+    //         .await
+    //         .unwrap();
 
-        vec![task]
-    }
+    //     vec![task]
+    // }
 }
 
 struct SubscriptionRoot;
