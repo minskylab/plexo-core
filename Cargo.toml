@@ -15,7 +15,7 @@ tracing-subscriber = { version = "0.3.11" }
 lazy_static = { version = "1.4.0" }
 quote = "1.0"
 tokio-stream = "0.1.11"
-sqlx = { version = "0.6", features = [ "runtime-tokio-native-tls" , "postgres", "uuid" ] }
+sqlx = { version = "0.6", features = [ "runtime-tokio-native-tls" , "postgres", "uuid", "time" ] }
 tokio = { version = "1.17.0", features = ["full"] }
 dotenvy = "0.15.6"
 
@@ -25,5 +25,5 @@ serde_json = { version = '1.0.82' }
 [workspace]
 members = []
 
-[lib]
-proc-macro = true
+# [lib]
+# proc-macro = true

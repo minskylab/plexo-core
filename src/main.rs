@@ -1,16 +1,11 @@
 use async_graphql::{
-    futures_util::Stream,
-    futures_util::StreamExt,
-    // dataloader::DataLoader,
-    http::GraphiQLSource,
-    EmptyMutation,
-    Object,
-    Schema as GraphQLSchema,
-    Subscription,
+    futures_util::Stream, futures_util::StreamExt, http::GraphiQLSource, EmptyMutation, Object,
+    Schema as GraphQLSchema, Subscription,
 };
 use async_graphql_poem::{GraphQL, GraphQLSubscription};
 use dotenvy::dotenv;
 use lazy_static::lazy_static;
+use plexo::entities::task::{Task, TaskBuilder};
 // use plexo::QueryRoot;
 // use crate::entities::task;
 use poem::{get, handler, listener::TcpListener, web::Html, IntoResponse, Route, Server};
@@ -66,6 +61,21 @@ struct QueryRoot;
 impl QueryRoot {
     async fn hello(&self) -> String {
         "Hello World!".to_string()
+    }
+
+    async fn tasks(&self) -> Vec<Task> {
+        let pool = PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&*DATABASE_URL)
+            .await
+            .unwrap();
+
+        let task = TaskBuilder::new("Task 1".to_string())
+            .insert(&pool)
+            .await
+            .unwrap();
+
+        vec![task]
     }
 }
 
@@ -156,12 +166,19 @@ async fn main() {
 
     // let task_id = "1".to_string();
 
-    let projects = sqlx::query!("SELECT id, name FROM projects")
+    let projects = sqlx::query!("SELECT id, name, created_at FROM projects")
         .fetch_all(&pool)
         .await
         .unwrap();
 
     println!("{:?}", projects);
+
+    let t = TaskBuilder::new("Task 1".to_string())
+        .insert(&pool)
+        .await
+        .unwrap();
+
+    println!("{:?}", t);
 
     let schema = GraphQLSchema::build(QueryRoot, EmptyMutation, SubscriptionRoot);
     // .data(database)
