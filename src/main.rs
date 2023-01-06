@@ -1,12 +1,28 @@
 use std::env;
 
-use async_graphql::{http::GraphiQLSource, Schema};
-use async_graphql_poem::{GraphQL, GraphQLSubscription};
+use async_graphql::{
+    http::{GraphiQLSource, ALL_WEBSOCKET_PROTOCOLS},
+    Data, Schema,
+};
+use async_graphql_poem::{
+    GraphQL, GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLSubscription,
+    GraphQLWebSocket,
+};
+
+use serde::Deserialize;
+
 use dotenvy::dotenv;
 use lazy_static::lazy_static;
 use plexo::graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot};
-use poem::{get, handler, listener::TcpListener, web::Html, IntoResponse, Route, Server};
+use poem::{
+    get, handler,
+    http::HeaderMap,
+    listener::TcpListener,
+    web::{websocket::WebSocket, Data as PoemData, Html},
+    EndpointExt, IntoResponse, Route, Server,
+};
 
+use serde_json::{from_value, Value};
 use sqlx::postgres::PgPoolOptions;
 
 lazy_static! {
@@ -33,6 +49,58 @@ async fn graphiql() -> impl IntoResponse {
     )
 }
 
+fn get_token_from_headers(headers: &HeaderMap) -> Option<String> {
+    headers
+        .get("Authorization")
+        .and_then(|value| value.to_str().map(|s| s.to_string()).ok())
+}
+
+pub async fn on_connection_init(value: Value) -> async_graphql::Result<Data> {
+    match &value {
+        Value::Object(map) => {
+            if let Some(Value::String(token)) = map.get("Authorization") {
+                let mut data = Data::default();
+                data.insert(token.to_string());
+                return Ok(data);
+            } else {
+                Err("Authorization token is required".into())
+            }
+        }
+        _ => Err("Authorization token is required".into()),
+    }
+}
+
+#[handler]
+async fn index(
+    schema: PoemData<&Schema<QueryRoot, MutationRoot, SubscriptionRoot>>,
+    headers: &HeaderMap,
+    req: GraphQLRequest,
+) -> GraphQLResponse {
+    let mut req = req.0;
+    if let Some(token) = get_token_from_headers(headers) {
+        req = req.data(token);
+    }
+
+    schema.execute(req).await.into()
+}
+
+#[handler]
+async fn ws(
+    schema: PoemData<&Schema<QueryRoot, MutationRoot, SubscriptionRoot>>,
+    protocol: GraphQLProtocol,
+    websocket: WebSocket,
+) -> impl IntoResponse {
+    let schema = schema.0.clone();
+    websocket
+        .protocols(ALL_WEBSOCKET_PROTOCOLS)
+        .on_upgrade(move |stream| {
+            GraphQLWebSocket::new(stream, schema, protocol)
+                // connection params are used to extract the token in this fn
+                .on_connection_init(on_connection_init)
+                .serve()
+        })
+}
+
 #[tokio::main]
 async fn main() {
     dotenv().ok();
@@ -55,11 +123,9 @@ async fn main() {
     let schema = schema.data(pool).finish();
 
     let app = Route::new()
-        .at(
-            ENDPOINT.to_owned(),
-            get(graphiql).post(GraphQL::new(schema.clone())),
-        )
-        .at("/ws", get(GraphQLSubscription::new(schema)));
+        .at(ENDPOINT.to_owned(), get(graphiql).post(index))
+        .at("/ws", get(ws))
+        .data(schema);
 
     println!("Visit GraphQL Playground at http://{}", *URL);
 

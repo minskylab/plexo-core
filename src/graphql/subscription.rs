@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use async_graphql::{futures_util::StreamExt, Subscription};
+use async_graphql::{futures_util::StreamExt, Context, Subscription};
 use chrono::Utc;
 use tokio_stream::Stream;
 use uuid::Uuid;
@@ -20,7 +20,10 @@ impl SubscriptionRoot {
             })
     }
 
-    async fn tasks(&self) -> impl Stream<Item = Task> {
+    async fn tasks(&self, ctx: &Context<'_>) -> impl Stream<Item = Task> {
+        let auth_token = ctx.data::<String>().unwrap();
+        println!("token: {}", auth_token);
+
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Task {
                 id: Uuid::new_v4(),

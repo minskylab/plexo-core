@@ -25,7 +25,10 @@ pub struct TaskFilter {
 #[Object]
 impl QueryRoot {
     async fn tasks(&self, ctx: &Context<'_>, filter: Option<TaskFilter>) -> Vec<Task> {
+        let auth_token = ctx.data::<String>().unwrap();
         let pool = ctx.data::<Pool<Postgres>>().unwrap();
+
+        println!("token: {}", auth_token);
 
         let tasks = sqlx::query!(
             r#"
