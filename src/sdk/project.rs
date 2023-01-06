@@ -1,11 +1,15 @@
-use sqlx::types::{time::PrimitiveDateTime, Uuid};
+use async_graphql::{ComplexObject, SimpleObject};
+use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
 use super::{member::Member, task::Task};
 
+#[derive(SimpleObject)]
+#[graphql(complex)]
 pub struct Project {
     id: Uuid,
-    created_at: PrimitiveDateTime,
-    updated_at: PrimitiveDateTime,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 
     title: String,
     description: Option<String>,
@@ -15,16 +19,17 @@ pub struct Project {
     labels: Vec<String>,
 }
 
+#[ComplexObject]
 impl Project {
-    pub fn owner() -> Member {
+    pub async fn owner(&self) -> Member {
         todo!()
     }
 
-    pub fn members() -> Vec<Member> {
+    pub async fn members(&self) -> Vec<Member> {
         todo!()
     }
 
-    pub fn tasks() -> Vec<Task> {
+    pub async fn tasks(&self) -> Vec<Task> {
         todo!()
     }
 }

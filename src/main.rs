@@ -1,13 +1,10 @@
 use std::env;
 
-use async_graphql::{http::GraphiQLSource, EmptyMutation, Schema};
+use async_graphql::{http::GraphiQLSource, Schema};
 use async_graphql_poem::{GraphQL, GraphQLSubscription};
 use dotenvy::dotenv;
 use lazy_static::lazy_static;
-use plexo::{
-    entities::task::TaskBuilder,
-    graphql::{query::QueryRoot, subscription::SubscriptionRoot},
-};
+use plexo::graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot};
 use poem::{get, handler, listener::TcpListener, web::Html, IntoResponse, Route, Server};
 
 use sqlx::postgres::PgPoolOptions;
@@ -53,14 +50,7 @@ async fn main() {
 
     println!("{:?}", projects);
 
-    let t = TaskBuilder::new("Task 1".to_string())
-        .insert(&pool)
-        .await
-        .unwrap();
-
-    println!("{:?}", t);
-
-    let schema = Schema::build(QueryRoot, EmptyMutation, SubscriptionRoot);
+    let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot);
 
     let schema = schema.data("data").finish();
 

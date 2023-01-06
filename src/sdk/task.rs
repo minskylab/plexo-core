@@ -1,8 +1,12 @@
-use async_graphql::SimpleObject;
+use async_graphql::{scalar, ComplexObject, Enum, OutputType, SimpleObject};
+use chrono::{DateTime, Utc};
 use sqlx::types::time::PrimitiveDateTime;
+
+use uuid::Uuid;
 
 use super::{member::Member, project::Project};
 
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
 pub enum TaskStatus {
     Backlog,
     ToDo,
@@ -11,6 +15,7 @@ pub enum TaskStatus {
     Canceled,
 }
 
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
 pub enum TaskPriority {
     None,
     Low,
@@ -22,36 +27,37 @@ pub enum TaskPriority {
 #[derive(SimpleObject)]
 #[graphql(complex)]
 pub struct Task {
-    id: Uuid,
-    created_at: PrimitiveDateTime,
-    updated_at: PrimitiveDateTime,
+    pub id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 
-    title: String,
-    description: Option<String>,
+    pub title: String,
+    pub description: Option<String>,
 
-    status: TaskStatus,
-    priority: TaskPriority,
+    pub status: TaskStatus,
+    pub priority: TaskPriority,
 
-    owner_id: Uuid,
+    pub owner_id: Uuid,
 
-    labels: Vec<String>,
+    pub labels: Vec<String>,
 
-    assignee_id: Option<Uuid>,
-    project_id: Option<Uuid>,
+    pub assignee_id: Option<Uuid>,
+    pub project_id: Option<Uuid>,
 
-    due_date: Option<PrimitiveDateTime>,
+    pub due_date: Option<DateTime<Utc>>,
 }
 
+#[ComplexObject]
 impl Task {
-    pub fn owner() -> Member {
+    pub async fn owner(&self) -> Member {
         todo!()
     }
 
-    pub fn assignee() -> Option<Member> {
+    pub async fn assignee(&self) -> Option<Member> {
         todo!()
     }
 
-    pub fn project() -> Option<Project> {
+    pub async fn project(&self) -> Option<Project> {
         todo!()
     }
 }

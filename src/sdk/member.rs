@@ -1,11 +1,15 @@
-use sqlx::types::{time::PrimitiveDateTime, Uuid};
+use async_graphql::{ComplexObject, Enum, SimpleObject};
+use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
 use super::task::Task;
 
+#[derive(SimpleObject)]
+// #[graphql(complex)]
 pub struct Member {
     id: Uuid,
-    created_at: PrimitiveDateTime,
-    updated_at: PrimitiveDateTime,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 
     name: String,
     email: String,
@@ -15,6 +19,7 @@ pub struct Member {
     role: MemberRole,
 }
 
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
 pub enum MemberRole {
     Admin,
     Member,

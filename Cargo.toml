@@ -4,7 +4,7 @@ name = 'plexo'
 version = '0.2.0'
 
 [dependencies]
-async-graphql = { version = "5.0.4", features = ["decimal", "chrono", "dataloader"] }
+async-graphql = { version = "5.0.4", features = ["decimal", "chrono", "dataloader", "uuid"] }
 async-graphql-poem = { version = "5.0.4" }
 async-trait = { version = "0.1.53" }
 poem = { version = "1.3.29" }
@@ -18,6 +18,15 @@ tokio-stream = "0.1.11"
 sqlx = { version = "0.6", features = [ "runtime-tokio-native-tls" , "postgres", "uuid", "time" ] }
 tokio = { version = "1.17.0", features = ["full"] }
 dotenvy = "0.15.6"
+chrono = "0.4.23"
+
+[dependencies.uuid]
+version = "1.2.2"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+]
 
 [dev-dependencies]
 serde_json = { version = '1.0.82' }

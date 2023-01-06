@@ -1,27 +1,52 @@
-use async_graphql::Object;
+use async_graphql::{InputObject, Object};
+use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
-use crate::sdk::task::Task;
+use crate::sdk::{
+    member::Member,
+    project::Project,
+    task::{Task, TaskPriority, TaskStatus},
+};
 
 pub struct QueryRoot;
 
+#[derive(InputObject)]
+pub struct TaskFilter {
+    pub project_id: Option<Uuid>,
+    pub assignee_id: Option<Uuid>,
+    pub status: Option<TaskStatus>,
+    pub priority: Option<TaskPriority>,
+    pub due_date_from: Option<DateTime<Utc>>,
+    pub due_date_to: Option<DateTime<Utc>>,
+}
+
 #[Object]
 impl QueryRoot {
-    async fn tasks(&self) -> Vec<Task> {
+    async fn tasks(&self, filter: Option<TaskFilter>) -> Vec<Task> {
         vec![]
     }
 
-    // async fn tasks(&self) -> Vec<Task> {
-    //     let pool = PgPoolOptions::new()
-    //         .max_connections(5)
-    //         .connect(&*DATABASE_URL)
-    //         .await
-    //         .unwrap();
+    async fn task_by_id(&self, id: Uuid) -> Task {
+        todo!()
+    }
 
-    //     let task = TaskBuilder::new("Task 1".to_string())
-    //         .insert(&pool)
-    //         .await
-    //         .unwrap();
+    async fn members(&self) -> Vec<Member> {
+        vec![]
+    }
 
-    //     vec![task]
-    // }
+    async fn member_by_id(&self, id: Uuid) -> Member {
+        todo!()
+    }
+
+    async fn member_by_email(&self, email: String) -> Member {
+        todo!()
+    }
+
+    async fn projects(&self) -> Vec<Project> {
+        vec![]
+    }
+
+    async fn project_by_id(&self, id: Uuid) -> Project {
+        todo!()
+    }
 }
