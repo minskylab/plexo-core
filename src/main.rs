@@ -29,16 +29,9 @@ use sqlx::postgres::PgPoolOptions;
 
 lazy_static! {
     static ref URL: String = env::var("URL").unwrap_or("0.0.0.0:8080".into());
-    static ref ENDPOINT: String = env::var("ENDPOINT").unwrap_or("/".into());
+    // static ref ENDPOINT: String = env::var("ENDPOINT").unwrap_or("/".into());
     static ref DATABASE_URL: String =
         env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
-    // static ref DEPTH_LIMIT: Option<usize> = env::var("DEPTH_LIMIT").map_or(None, |data| Some(
-    //     data.parse().expect("DEPTH_LIMIT is not a number")
-    // ));
-    // static ref COMPLEXITY_LIMIT: Option<usize> = env::var("COMPLEXITY_LIMIT")
-    //     .map_or(None, |data| {
-    //         Some(data.parse().expect("COMPLEXITY_LIMIT is not a number"))
-    //     });
 }
 
 #[handler]
@@ -97,7 +90,6 @@ async fn ws(
         .protocols(ALL_WEBSOCKET_PROTOCOLS)
         .on_upgrade(move |stream| {
             GraphQLWebSocket::new(stream, schema, protocol)
-                // connection params are used to extract the token in this fn
                 .on_connection_init(on_connection_init)
                 .serve()
         })
@@ -121,14 +113,15 @@ async fn main() {
         .finish();
 
     let app = Route::new()
-        .at(ENDPOINT.to_owned(), get(graphiql).post(index))
+        .at("/api", get(graphiql).post(index))
         .at("/ws", get(ws))
         .at("/auth/github", get(github_sign_in))
         .at("/auth/github/callback", get(github_callback))
+        // .at("/", todo!()) // TODO: Serve static files
         .data(schema)
         .data(plexo_engine);
 
-    println!("Visit GraphQL Playground at http://{}", *URL);
+    println!("Visit GraphQL Playground at http://{}/api", *URL);
 
     Server::new(TcpListener::bind(URL.to_owned()))
         .run(app)
