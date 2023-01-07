@@ -98,7 +98,13 @@ CREATE TABLE public.tasks (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     title text NOT NULL,
     description text,
-    owner_id uuid
+    owner_id uuid,
+    status character varying,
+    priority character varying,
+    due_date timestamp with time zone,
+    project_id uuid,
+    assignee_id uuid,
+    labels jsonb
 );
 
 
@@ -150,8 +156,10 @@ e82ca097-6878-4739-9e13-d69ef21dbd08	2022-12-27 23:58:02.625052+00	2022-12-28 01
 -- Data for Name: tasks; Type: TABLE DATA; Schema: public; Owner: bregydoc
 --
 
-COPY public.tasks (id, created_at, updated_at, title, description, owner_id) FROM stdin;
-2872033d-8781-4e79-a99d-746a60362b45	2022-12-28 01:16:39.784253+00	2022-12-28 01:16:39.784253+00	Issue 1	\N	bfa44f6f-200f-4a91-88b6-4524cfaf1685
+COPY public.tasks (id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, assignee_id, labels) FROM stdin;
+2872033d-8781-4e79-a99d-746a60362b45	2022-12-28 01:16:39.784253+00	2022-12-28 01:16:39.784253+00	Issue 1	\N	bfa44f6f-200f-4a91-88b6-4524cfaf1685	\N	\N	\N	\N	\N	\N
+46a6c5d1-cf9a-4701-aad2-18c505401067	2023-01-06 02:21:55.300897+00	2023-01-06 02:21:55.300897+00	Task 1	\N	\N	\N	\N	\N	\N	\N	\N
+e32c49d5-4a7a-498c-bcb6-6c6cdd4505f0	2023-01-06 03:31:56.391032+00	2023-01-06 03:31:56.391032+00	Task 1	\N	\N	\N	\N	\N	\N	\N	\N
 \.
 
 
