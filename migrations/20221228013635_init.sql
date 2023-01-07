@@ -18,21 +18,21 @@ SET escape_string_warning = off;
 SET row_security = off;
 
 --
--- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
-
-
---
--- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+CREATE SCHEMA public;
 
 
 --
--- Name: set_current_timestamp_updated_at(); Type: FUNCTION; Schema: public; Owner: bregydoc
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- Name: set_current_timestamp_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.set_current_timestamp_updated_at() RETURNS trigger
@@ -48,14 +48,12 @@ END;
 $$;
 
 
-ALTER FUNCTION public.set_current_timestamp_updated_at() OWNER TO bregydoc;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: members; Type: TABLE; Schema: public; Owner: bregydoc
+-- Name: members; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.members (
@@ -66,14 +64,13 @@ CREATE TABLE public.members (
     email character varying NOT NULL,
     password_hash character varying,
     github_id character varying,
-    google_id character varying
+    google_id character varying,
+    photo_url character varying
 );
 
 
-ALTER TABLE public.members OWNER TO bregydoc;
-
 --
--- Name: projects; Type: TABLE; Schema: public; Owner: bregydoc
+-- Name: projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.projects (
@@ -86,10 +83,8 @@ CREATE TABLE public.projects (
 );
 
 
-ALTER TABLE public.projects OWNER TO bregydoc;
-
 --
--- Name: tasks; Type: TABLE; Schema: public; Owner: bregydoc
+-- Name: tasks; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tasks (
@@ -108,10 +103,8 @@ CREATE TABLE public.tasks (
 );
 
 
-ALTER TABLE public.tasks OWNER TO bregydoc;
-
 --
--- Name: tasks_by_assignees; Type: TABLE; Schema: public; Owner: bregydoc
+-- Name: tasks_by_assignees; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tasks_by_assignees (
@@ -120,10 +113,8 @@ CREATE TABLE public.tasks_by_assignees (
 );
 
 
-ALTER TABLE public.tasks_by_assignees OWNER TO bregydoc;
-
 --
--- Name: tasks_by_projects; Type: TABLE; Schema: public; Owner: bregydoc
+-- Name: tasks_by_projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tasks_by_projects (
@@ -132,56 +123,8 @@ CREATE TABLE public.tasks_by_projects (
 );
 
 
-ALTER TABLE public.tasks_by_projects OWNER TO bregydoc;
-
 --
--- Data for Name: members; Type: TABLE DATA; Schema: public; Owner: bregydoc
---
-
-COPY public.members (id, created_at, updated_at, name, email, password_hash, github_id, google_id) FROM stdin;
-bfa44f6f-200f-4a91-88b6-4524cfaf1685	2022-12-28 01:16:28.122701+00	2022-12-28 01:16:28.122701+00	Bregy Malpartida	bregy@minsky.cc	\N	\N	\N
-\.
-
-
---
--- Data for Name: projects; Type: TABLE DATA; Schema: public; Owner: bregydoc
---
-
-COPY public.projects (id, created_at, updated_at, name, prefix, owner_id) FROM stdin;
-e82ca097-6878-4739-9e13-d69ef21dbd08	2022-12-27 23:58:02.625052+00	2022-12-28 01:26:05.477048+00	test	TEST	bfa44f6f-200f-4a91-88b6-4524cfaf1685
-\.
-
-
---
--- Data for Name: tasks; Type: TABLE DATA; Schema: public; Owner: bregydoc
---
-
-COPY public.tasks (id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, assignee_id, labels) FROM stdin;
-2872033d-8781-4e79-a99d-746a60362b45	2022-12-28 01:16:39.784253+00	2022-12-28 01:16:39.784253+00	Issue 1	\N	bfa44f6f-200f-4a91-88b6-4524cfaf1685	\N	\N	\N	\N	\N	\N
-46a6c5d1-cf9a-4701-aad2-18c505401067	2023-01-06 02:21:55.300897+00	2023-01-06 02:21:55.300897+00	Task 1	\N	\N	\N	\N	\N	\N	\N	\N
-e32c49d5-4a7a-498c-bcb6-6c6cdd4505f0	2023-01-06 03:31:56.391032+00	2023-01-06 03:31:56.391032+00	Task 1	\N	\N	\N	\N	\N	\N	\N	\N
-\.
-
-
---
--- Data for Name: tasks_by_assignees; Type: TABLE DATA; Schema: public; Owner: bregydoc
---
-
-COPY public.tasks_by_assignees (task_id, assignee_id) FROM stdin;
-\.
-
-
---
--- Data for Name: tasks_by_projects; Type: TABLE DATA; Schema: public; Owner: bregydoc
---
-
-COPY public.tasks_by_projects (task_id, project_id) FROM stdin;
-2872033d-8781-4e79-a99d-746a60362b45	e82ca097-6878-4739-9e13-d69ef21dbd08
-\.
-
-
---
--- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -189,7 +132,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.projects
@@ -197,7 +140,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: tasks_by_assignees tasks_by_assignees_pkey; Type: CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks_by_assignees tasks_by_assignees_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks_by_assignees
@@ -205,7 +148,7 @@ ALTER TABLE ONLY public.tasks_by_assignees
 
 
 --
--- Name: tasks_by_projects tasks_by_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks_by_projects tasks_by_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks_by_projects
@@ -213,7 +156,7 @@ ALTER TABLE ONLY public.tasks_by_projects
 
 
 --
--- Name: tasks tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks
@@ -221,49 +164,49 @@ ALTER TABLE ONLY public.tasks
 
 
 --
--- Name: members set_public_members_updated_at; Type: TRIGGER; Schema: public; Owner: bregydoc
+-- Name: members set_public_members_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER set_public_members_updated_at BEFORE UPDATE ON public.members FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 
 
 --
--- Name: TRIGGER set_public_members_updated_at ON members; Type: COMMENT; Schema: public; Owner: bregydoc
+-- Name: TRIGGER set_public_members_updated_at ON members; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON TRIGGER set_public_members_updated_at ON public.members IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 
 
 --
--- Name: projects set_public_projects_updated_at; Type: TRIGGER; Schema: public; Owner: bregydoc
+-- Name: projects set_public_projects_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER set_public_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 
 
 --
--- Name: TRIGGER set_public_projects_updated_at ON projects; Type: COMMENT; Schema: public; Owner: bregydoc
+-- Name: TRIGGER set_public_projects_updated_at ON projects; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON TRIGGER set_public_projects_updated_at ON public.projects IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 
 
 --
--- Name: tasks set_public_tasks_updated_at; Type: TRIGGER; Schema: public; Owner: bregydoc
+-- Name: tasks set_public_tasks_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER set_public_tasks_updated_at BEFORE UPDATE ON public.tasks FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 
 
 --
--- Name: TRIGGER set_public_tasks_updated_at ON tasks; Type: COMMENT; Schema: public; Owner: bregydoc
+-- Name: TRIGGER set_public_tasks_updated_at ON tasks; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON TRIGGER set_public_tasks_updated_at ON public.tasks IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 
 
 --
--- Name: projects projects_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: projects projects_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.projects
@@ -271,7 +214,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: tasks_by_assignees tasks_by_assignees_assignee_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks_by_assignees tasks_by_assignees_assignee_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks_by_assignees
@@ -279,7 +222,7 @@ ALTER TABLE ONLY public.tasks_by_assignees
 
 
 --
--- Name: tasks_by_assignees tasks_by_assignees_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks_by_assignees tasks_by_assignees_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks_by_assignees
@@ -287,7 +230,7 @@ ALTER TABLE ONLY public.tasks_by_assignees
 
 
 --
--- Name: tasks_by_projects tasks_by_projects_project_fkey; Type: FK CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks_by_projects tasks_by_projects_project_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks_by_projects
@@ -295,7 +238,7 @@ ALTER TABLE ONLY public.tasks_by_projects
 
 
 --
--- Name: tasks_by_projects tasks_by_projects_task_fkey; Type: FK CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks_by_projects tasks_by_projects_task_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks_by_projects
@@ -303,7 +246,7 @@ ALTER TABLE ONLY public.tasks_by_projects
 
 
 --
--- Name: tasks tasks_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: bregydoc
+-- Name: tasks tasks_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks
@@ -311,7 +254,7 @@ ALTER TABLE ONLY public.tasks
 
 
 --
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: -
 --
 
 GRANT CREATE ON SCHEMA public TO web_access;
