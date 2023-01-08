@@ -86,7 +86,7 @@ impl TaskPriority {
     }
 }
 
-#[derive(SimpleObject)]
+#[derive(SimpleObject, Clone)]
 #[graphql(complex)]
 pub struct Task {
     pub id: Uuid,

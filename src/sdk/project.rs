@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use super::{member::Member, task::Task};
 
-#[derive(SimpleObject)]
+#[derive(SimpleObject, Clone)]
 #[graphql(complex)]
 pub struct Project {
     pub id: Uuid,

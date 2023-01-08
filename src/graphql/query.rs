@@ -9,6 +9,7 @@ use crate::{
         member::Member,
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
+        team::Team,
         utilities::DateTimeBridge,
     },
     system::core::Engine,
@@ -91,6 +92,14 @@ impl QueryRoot {
     }
 
     async fn project_by_id(&self, id: Uuid) -> Project {
+        todo!()
+    }
+
+    async fn teams(&self) -> Vec<Team> {
+        vec![]
+    }
+
+    async fn team_by_id(&self, id: Uuid) -> Team {
         todo!()
     }
 }

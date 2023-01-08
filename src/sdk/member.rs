@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use super::{project::Project, task::Task};
 
-#[derive(SimpleObject)]
+#[derive(SimpleObject, Clone)]
 #[graphql(complex)]
 pub struct Member {
     pub id: Uuid,
@@ -19,12 +19,6 @@ pub struct Member {
     pub role: MemberRole,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
-pub enum MemberRole {
-    Admin,
-    Member,
-}
-
 #[ComplexObject]
 impl Member {
     pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
@@ -37,5 +31,38 @@ impl Member {
 
     pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         todo!()
+    }
+}
+
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+pub enum MemberRole {
+    Admin,
+    Member,
+    ReadOnly,
+}
+
+impl MemberRole {
+    pub fn from_optional_str(s: &Option<String>) -> Self {
+        match s {
+            Some(s) => Self::from_str(s.as_str()),
+            None => Self::ReadOnly,
+        }
+    }
+
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "Admin" => Self::Admin,
+            "Member" => Self::Member,
+            "ReadOnly" => Self::ReadOnly,
+            _ => Self::ReadOnly,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            Self::Admin => "Admin",
+            Self::Member => "Member",
+            Self::ReadOnly => "ReadOnly",
+        }
     }
 }

@@ -10,7 +10,7 @@ use dotenvy::dotenv;
 use lazy_static::lazy_static;
 use plexo::{
     auth::{
-        auth::{github_callback, github_sign_in, PlexoAuthToken},
+        auth::{github_callback, github_sign_in, refresh_token_handler, PlexoAuthToken},
         engine::AuthEngine,
     },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
@@ -20,6 +20,7 @@ use poem::{
     get, handler,
     http::HeaderMap,
     listener::TcpListener,
+    post,
     web::{websocket::WebSocket, Data as PoemData, Html},
     EndpointExt, IntoResponse, Route, Server,
 };
@@ -35,11 +36,11 @@ lazy_static! {
 }
 
 #[handler]
-async fn graphiql() -> impl IntoResponse {
+async fn graphiq_handler() -> impl IntoResponse {
     Html(
         GraphiQLSource::build()
-            .endpoint(format!("http://{}", *URL).as_str())
-            .subscription_endpoint(format!("ws://{}/ws", *URL).as_str())
+            .endpoint(format!("http://{}/graphql", *URL).as_str())
+            .subscription_endpoint(format!("ws://{}/graphql/ws", *URL).as_str())
             .finish(),
     )
 }
@@ -66,7 +67,7 @@ pub async fn on_connection_init(value: Value) -> async_graphql::Result<Data> {
 }
 
 #[handler]
-async fn index(
+async fn index_handler(
     schema: PoemData<&Schema<QueryRoot, MutationRoot, SubscriptionRoot>>,
     headers: &HeaderMap,
     req: GraphQLRequest,
@@ -80,7 +81,7 @@ async fn index(
 }
 
 #[handler]
-async fn ws(
+async fn ws_switch_handler(
     schema: PoemData<&Schema<QueryRoot, MutationRoot, SubscriptionRoot>>,
     protocol: GraphQLProtocol,
     websocket: WebSocket,
@@ -113,15 +114,19 @@ async fn main() {
         .finish();
 
     let app = Route::new()
-        .at("/api", get(graphiql).post(index))
-        .at("/ws", get(ws))
+        // Non authenticated routes
         .at("/auth/github", get(github_sign_in))
         .at("/auth/github/callback", get(github_callback))
+        // Authenticated routes
+        .at("/auth/refresh", get(refresh_token_handler))
+        .at("/graphql", post(index_handler))
+        .at("/playground", get(graphiq_handler))
+        .at("/graphql/ws", get(ws_switch_handler))
         // .at("/", todo!()) // TODO: Serve static files
         .data(schema)
         .data(plexo_engine);
 
-    println!("Visit GraphQL Playground at http://{}/api", *URL);
+    println!("Visit GraphQL Playground at http://{}/playground", *URL);
 
     Server::new(TcpListener::bind(URL.to_owned()))
         .run(app)

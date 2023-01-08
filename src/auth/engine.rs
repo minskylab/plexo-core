@@ -6,8 +6,12 @@ use oauth2::{
 };
 use reqwest::Url;
 
+use super::jwt::JWT;
+
 #[derive(Clone)]
 pub struct AuthEngine {
+    pub jwt_engine: JWT,
+
     github_client: BasicClient,
     google_client: Option<BasicClient>,
 }
@@ -38,7 +42,16 @@ impl AuthEngine {
                 .expect("Invalid redirect URL"),
         );
 
+        let jwt_access_token_secret = env::var("JWT_ACCESS_TOKEN_SECRET")
+            .expect("Missing the JWT_ACCESS_TOKEN_SECRET environment variable.");
+
+        let jwt_refresh_token_secret = env::var("JWT_REFRESH_TOKEN_SECRET")
+            .expect("Missing the JWT_REFRESH_TOKEN_SECRET environment variable.");
+
+        let jwt_engine = JWT::new(jwt_access_token_secret, jwt_refresh_token_secret);
+
         Self {
+            jwt_engine,
             github_client,
             google_client: None,
         }
@@ -69,5 +82,14 @@ impl AuthEngine {
             Ok(token) => Ok(token.access_token().secret().to_string()),
             Err(e) => Err(e.to_string()),
         }
+    }
+
+    pub async fn refresh_token(
+        &self,
+        access_token: &str,
+        refresh_token: &str,
+    ) -> Result<String, jsonwebtoken::errors::Error> {
+        self.jwt_engine
+            .refresh_access_token(access_token, refresh_token)
     }
 }
