@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use crate::sdk::member::{Member, MemberRole};
 
 pub enum NewMemberPayloadAuthKind {
