@@ -31,14 +31,14 @@ const GITHUB_USER_API: &'static str = "https://api.github.com/user";
 // pub async fn example_auth() {}
 
 #[handler]
-pub async fn github_sign_in(plexo_engine: Data<&Engine>) -> impl IntoResponse {
+pub async fn github_sign_in_handler(plexo_engine: Data<&Engine>) -> impl IntoResponse {
     let (url, _) = plexo_engine.0.auth.new_github_authorize_url();
 
     Redirect::temporary(url.to_string())
 }
 
 #[handler]
-pub async fn github_callback(
+pub async fn github_callback_handler(
     plexo_engine: Data<&Engine>,
     params: Query<GithubCallbackParams>,
 ) -> impl IntoResponse {

@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, fmt::format};
 
 use async_graphql::{
     http::{GraphiQLSource, ALL_WEBSOCKET_PROTOCOLS},
@@ -10,7 +10,9 @@ use dotenvy::dotenv;
 use lazy_static::lazy_static;
 use plexo::{
     auth::{
-        auth::{github_callback, github_sign_in, refresh_token_handler, PlexoAuthToken},
+        auth::{
+            github_callback_handler, github_sign_in_handler, refresh_token_handler, PlexoAuthToken,
+        },
         engine::AuthEngine,
     },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
@@ -29,7 +31,10 @@ use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 
 lazy_static! {
-    static ref URL: String = env::var("URL").unwrap_or("0.0.0.0:8080".into());
+    static ref HOST: String = env::var("HOST").unwrap_or("0.0.0.0".into());
+    static ref PORT: String = env::var("PORT").unwrap_or("8080".into());
+    static ref URL: String = format!("{}:{}", *HOST, *PORT);
+    static ref DOMAIN: String = env::var("DOMAIN").unwrap_or(format!("http://{}", *URL));
     static ref DATABASE_URL: String =
         env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
 }
@@ -38,8 +43,8 @@ lazy_static! {
 async fn graphiq_handler() -> impl IntoResponse {
     Html(
         GraphiQLSource::build()
-            .endpoint(format!("http://{}/graphql", *URL).as_str())
-            .subscription_endpoint(format!("ws://{}/graphql/ws", *URL).as_str())
+            .endpoint(format!("{}/graphql", *DOMAIN).as_str())
+            .subscription_endpoint(format!("{}/graphql/ws", DOMAIN.replace("http", "ws")).as_str())
             .finish(),
     )
 }
@@ -114,12 +119,12 @@ async fn main() {
 
     let app = Route::new()
         // Non authenticated routes
-        .at("/auth/github", get(github_sign_in))
-        .at("/auth/github/callback", get(github_callback))
+        .at("/auth/github", get(github_sign_in_handler))
+        .at("/auth/github/callback", get(github_callback_handler))
+        .at("/playground", get(graphiq_handler))
         // Authenticated routes
         .at("/auth/refresh", get(refresh_token_handler))
         .at("/graphql", post(index_handler))
-        .at("/playground", get(graphiq_handler))
         .at("/graphql/ws", get(ws_switch_handler))
         // .at("/", todo!()) // TODO: Serve static files
         .data(schema)
