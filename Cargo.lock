@@ -1396,7 +1396,6 @@ dependencies = [
  "lazy_static",
  "oauth2",
  "poem",
- "quote",
  "reqwest",
  "serde",
  "serde_json",
