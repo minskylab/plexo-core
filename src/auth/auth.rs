@@ -53,7 +53,7 @@ pub async fn github_callback(
             .body(Body::from_json(&gh_response).unwrap());
     };
 
-    println!("token: {}", access_token);
+    // println!("token: {}", access_token);
 
     let client = reqwest::Client::new();
 
@@ -68,7 +68,7 @@ pub async fn github_callback(
         .await
         .unwrap();
 
-    println!("github_user_data: {:#?}", github_user_data);
+    // println!("github_user_data: {:#?}", github_user_data);
 
     let github_id = github_user_data
         .get("id")
