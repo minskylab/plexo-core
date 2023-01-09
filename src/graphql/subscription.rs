@@ -8,6 +8,7 @@ use uuid::Uuid;
 use crate::sdk::{
     project::Project,
     task::{Task, TaskPriority, TaskStatus},
+    team::{Team, TeamVisibility},
 };
 
 pub struct SubscriptionRoot;
@@ -85,6 +86,21 @@ impl SubscriptionRoot {
                 description: None,
                 owner_id: Uuid::new_v4(),
                 labels: vec![],
+            })
+    }
+
+    async fn teams(&self, ctx: &Context<'_>) -> impl Stream<Item = Team> {
+        let auth_token = ctx.data::<String>().unwrap();
+        println!("token: {}", auth_token);
+
+        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
+            .map(|_| Team {
+                id: Uuid::new_v4(),
+                name: "Team X".to_string(),
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                owner_id: Uuid::new_v4(),
+                visibility: TeamVisibility::Public,
             })
     }
 }

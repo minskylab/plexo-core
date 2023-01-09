@@ -5,6 +5,44 @@ use uuid::Uuid;
 
 use super::{member::Member, project::Project};
 
+#[derive(SimpleObject, Clone)]
+#[graphql(complex)]
+pub struct Task {
+    pub id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+
+    pub title: String,
+    pub description: Option<String>,
+
+    pub status: TaskStatus,
+    pub priority: TaskPriority,
+
+    pub owner_id: Uuid,
+
+    pub labels: Vec<String>,
+
+    pub assignee_id: Option<Uuid>,
+    pub project_id: Option<Uuid>,
+
+    pub due_date: Option<DateTime<Utc>>,
+}
+
+#[ComplexObject]
+impl Task {
+    pub async fn owner(&self, ctx: &Context<'_>) -> Member {
+        todo!()
+    }
+
+    pub async fn assignee(&self, ctx: &Context<'_>) -> Option<Member> {
+        todo!()
+    }
+
+    pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
+        todo!()
+    }
+}
+
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]
 pub enum TaskStatus {
     None,
@@ -83,43 +121,5 @@ impl TaskPriority {
             Self::High => "High",
             Self::Urgent => "Urgent",
         }
-    }
-}
-
-#[derive(SimpleObject, Clone)]
-#[graphql(complex)]
-pub struct Task {
-    pub id: Uuid,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-
-    pub title: String,
-    pub description: Option<String>,
-
-    pub status: TaskStatus,
-    pub priority: TaskPriority,
-
-    pub owner_id: Uuid,
-
-    pub labels: Vec<String>,
-
-    pub assignee_id: Option<Uuid>,
-    pub project_id: Option<Uuid>,
-
-    pub due_date: Option<DateTime<Utc>>,
-}
-
-#[ComplexObject]
-impl Task {
-    pub async fn owner(&self, ctx: &Context<'_>) -> Member {
-        todo!()
-    }
-
-    pub async fn assignee(&self, ctx: &Context<'_>) -> Option<Member> {
-        todo!()
-    }
-
-    pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
-        todo!()
     }
 }

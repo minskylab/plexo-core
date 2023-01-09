@@ -70,12 +70,29 @@ pub async fn github_callback(
 
     println!("github_user_data: {:#?}", github_user_data);
 
-    let github_id = "";
+    let github_id = github_user_data
+        .get("id")
+        .unwrap()
+        .as_i64()
+        .unwrap()
+        .to_string();
 
-    let user_email = "";
+    let user_email = github_user_data
+        .get("email")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    let user_name = github_user_data
+        .get("name")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string();
 
     let member = match plexo_engine
-        .get_members(MembersFilter::new().github_id(github_id.to_string()))
+        .get_members(MembersFilter::new().set_github_id(github_id.to_string()))
         .await
         .first()
     {
@@ -84,8 +101,9 @@ pub async fn github_callback(
             plexo_engine
                 .create_member(&NewMemberPayload::new(
                     NewMemberPayloadAuthKind::Github,
-                    github_id.to_string(),
-                    user_email.to_string(),
+                    github_id,
+                    user_email,
+                    user_name,
                 ))
                 .await
         }

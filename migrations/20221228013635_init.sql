@@ -65,7 +65,19 @@ CREATE TABLE public.members (
     password_hash character varying,
     github_id character varying,
     google_id character varying,
-    photo_url character varying
+    photo_url character varying,
+    role character varying
+);
+
+
+--
+-- Name: members_by_teams; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.members_by_teams (
+    team_id uuid NOT NULL,
+    member_id uuid NOT NULL,
+    role character varying DEFAULT 'Member'::character varying
 );
 
 
@@ -124,6 +136,44 @@ CREATE TABLE public.tasks_by_projects (
 
 
 --
+-- Name: teams; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.teams (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    name character varying NOT NULL,
+    owner_id uuid NOT NULL,
+    visibility character varying
+);
+
+
+--
+-- Name: members_by_teams members_by_teams_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_by_teams
+    ADD CONSTRAINT members_by_teams_pkey PRIMARY KEY (team_id, member_id);
+
+
+--
+-- Name: members members_github_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_github_id_key UNIQUE (github_id);
+
+
+--
+-- Name: members members_google_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_google_id_key UNIQUE (google_id);
+
+
+--
 -- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -161,6 +211,14 @@ ALTER TABLE ONLY public.tasks_by_projects
 
 ALTER TABLE ONLY public.tasks
     ADD CONSTRAINT tasks_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: teams teams_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.teams
+    ADD CONSTRAINT teams_pkey PRIMARY KEY (id);
 
 
 --
@@ -203,6 +261,20 @@ CREATE TRIGGER set_public_tasks_updated_at BEFORE UPDATE ON public.tasks FOR EAC
 --
 
 COMMENT ON TRIGGER set_public_tasks_updated_at ON public.tasks IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+
+
+--
+-- Name: teams set_public_teams_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_public_teams_updated_at BEFORE UPDATE ON public.teams FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+
+
+--
+-- Name: TRIGGER set_public_teams_updated_at ON teams; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TRIGGER set_public_teams_updated_at ON public.teams IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 
 
 --

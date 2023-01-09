@@ -1,3 +1,4 @@
+use chrono::Utc;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 
@@ -31,7 +32,7 @@ impl JWT {
     ) -> Result<(String, String), jsonwebtoken::errors::Error> {
         let my_claims = Claims {
             aud: "foo".to_string(),
-            exp: 0,
+            exp: (Utc::now() + chrono::Duration::minutes(10)).timestamp() as usize,
             // iat: 0,
             // iss: "bar".to_string(),
             // nbf: 0,

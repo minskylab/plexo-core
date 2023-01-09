@@ -14,7 +14,10 @@ pub struct Member {
     pub name: String,
     pub email: String,
 
-    pub auth_id: String,
+    pub github_id: Option<String>,
+    pub google_id: Option<String>,
+
+    pub photo_url: Option<String>,
 
     pub role: MemberRole,
 }

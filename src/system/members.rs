@@ -10,24 +10,29 @@ pub struct NewMemberPayload {
     pub auth_id: String,
     pub email: String,
 
-    pub name: Option<String>,
+    pub name: String,
 
     pub role: Option<MemberRole>,
 }
 
 impl NewMemberPayload {
-    pub fn new(auth_kind: NewMemberPayloadAuthKind, auth_id: String, email: String) -> Self {
+    pub fn new(
+        auth_kind: NewMemberPayloadAuthKind,
+        auth_id: String,
+        email: String,
+        name: String,
+    ) -> Self {
         Self {
             auth_kind,
             auth_id,
             email,
-            name: None,
+            name,
             role: None,
         }
     }
 
     pub fn name(&mut self, name: String) -> &mut Self {
-        self.name = Some(name);
+        self.name = name;
         self
     }
 
@@ -56,27 +61,27 @@ impl MembersFilter {
         }
     }
 
-    pub fn name(&mut self, name: String) -> &mut Self {
+    pub fn set_name(&mut self, name: String) -> &mut Self {
         self.name = Some(name);
         self
     }
 
-    pub fn email(&mut self, email: String) -> &mut Self {
+    pub fn set_email(&mut self, email: String) -> &mut Self {
         self.email = Some(email);
         self
     }
 
-    pub fn role(&mut self, role: MemberRole) -> &mut Self {
+    pub fn set_role(&mut self, role: MemberRole) -> &mut Self {
         self.role = Some(role);
         self
     }
 
-    pub fn github_id(&mut self, github_id: String) -> &mut Self {
+    pub fn set_github_id(&mut self, github_id: String) -> &mut Self {
         self.github_id = Some(github_id);
         self
     }
 
-    pub fn google_id(&mut self, google_id: String) -> &mut Self {
+    pub fn set_google_id(&mut self, google_id: String) -> &mut Self {
         self.google_id = Some(google_id);
         self
     }
