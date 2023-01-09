@@ -1,4 +1,4 @@
-use std::{env, fmt::format};
+use std::env;
 
 use async_graphql::{
     http::{GraphiQLSource, ALL_WEBSOCKET_PROTOCOLS},
@@ -33,10 +33,17 @@ use sqlx::postgres::PgPoolOptions;
 lazy_static! {
     static ref HOST: String = env::var("HOST").unwrap_or("0.0.0.0".into());
     static ref PORT: String = env::var("PORT").unwrap_or("8080".into());
-    static ref URL: String = format!("{}:{}", *HOST, *PORT);
+    static ref URL: String = env::var("PORT").unwrap_or(format!("{}:{}", *HOST, *PORT));
     static ref DOMAIN: String = env::var("DOMAIN").unwrap_or(format!("http://{}", *URL));
+    //
     static ref DATABASE_URL: String =
         env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
+    static ref GITHUB_CLIENT_ID: String =
+        env::var("GITHUB_CLIENT_ID").expect("Missing the GITHUB_CLIENT_ID environment variable.");
+    static ref GITHUB_CLIENT_SECRET: String = env::var("GITHUB_CLIENT_SECRET")
+        .expect("Missing the GITHUB_CLIENT_SECRET environment variable.");
+    static ref GITHUB_REDIRECT_URL: String =
+        env::var("GITHUB_REDIRECT_URL").unwrap_or(format!("{}/auth/github/callback", *DOMAIN));
 }
 
 #[handler]
@@ -110,7 +117,11 @@ async fn main() {
             .connect(&*DATABASE_URL)
             .await
             .unwrap(),
-        AuthEngine::new(),
+        AuthEngine::new(
+            &*GITHUB_CLIENT_ID,
+            &*GITHUB_CLIENT_SECRET,
+            &*GITHUB_REDIRECT_URL,
+        ),
     );
 
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
@@ -121,6 +132,7 @@ async fn main() {
         // Non authenticated routes
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))
+        //
         .at("/playground", get(graphiq_handler))
         // Authenticated routes
         .at("/auth/refresh", get(refresh_token_handler))

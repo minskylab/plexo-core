@@ -17,15 +17,14 @@ pub struct AuthEngine {
 }
 
 impl AuthEngine {
-    pub fn new() -> Self {
-        let github_client_id = ClientId::new(
-            env::var("GITHUB_CLIENT_ID")
-                .expect("Missing the GITHUB_CLIENT_ID environment variable."),
-        );
-        let github_client_secret = ClientSecret::new(
-            env::var("GITHUB_CLIENT_SECRET")
-                .expect("Missing the GITHUB_CLIENT_SECRET environment variable."),
-        );
+    pub fn new(
+        github_client_id: &str,
+        github_client_secret: &str,
+        github_redirect_url: &str,
+    ) -> Self {
+        let github_client_id = ClientId::new(github_client_id.to_string());
+        let github_client_secret = ClientSecret::new(github_client_secret.to_string());
+
         let auth_url = AuthUrl::new("https://github.com/login/oauth/authorize".to_string())
             .expect("Invalid authorization endpoint URL");
         let token_url = TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
@@ -38,8 +37,7 @@ impl AuthEngine {
             Some(token_url),
         )
         .set_redirect_uri(
-            RedirectUrl::new("http://localhost:8080/auth/github/callback".to_string())
-                .expect("Invalid redirect URL"),
+            RedirectUrl::new(github_redirect_url.to_string()).expect("Invalid redirect URL"),
         );
 
         let jwt_access_token_secret = env::var("JWT_ACCESS_TOKEN_SECRET")
