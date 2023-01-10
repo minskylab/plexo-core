@@ -43,15 +43,15 @@ impl MutationRoot {
         todo!()
     }
 
-    async fn create_member(
-        &self,
-        email: String,
-        password: String,
-        first_name: String,
-        last_name: String,
-    ) -> Member {
-        todo!()
-    }
+    // async fn create_member(
+    //     &self,
+    //     email: String,
+    //     password: String,
+    //     first_name: String,
+    //     last_name: String,
+    // ) -> Member {
+    //     todo!()
+    // }
 
     async fn update_member(
         &self,
@@ -64,9 +64,9 @@ impl MutationRoot {
         todo!()
     }
 
-    async fn delete_member(&self, id: Uuid) -> Member {
-        todo!()
-    }
+    // async fn delete_member(&self, id: Uuid) -> Member {
+    //     todo!()
+    // }
 
     async fn create_project(
         &self,
