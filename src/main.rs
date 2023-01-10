@@ -22,6 +22,7 @@ use poem::{
     get, handler,
     http::HeaderMap,
     listener::TcpListener,
+    middleware::Cors,
     post,
     web::{websocket::WebSocket, Data as PoemData, Html},
     EndpointExt, IntoResponse, Route, Server,
@@ -139,6 +140,7 @@ async fn main() {
         .at("/graphql", post(index_handler))
         .at("/graphql/ws", get(ws_switch_handler))
         // .at("/", todo!()) // TODO: Serve static files
+        .with(Cors::new())
         .data(schema)
         .data(plexo_engine);
 
