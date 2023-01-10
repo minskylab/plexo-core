@@ -1,5 +1,5 @@
 use chrono::Utc;
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, errors::Error, DecodingKey, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 
 use crate::sdk::member::Member;
@@ -12,9 +12,9 @@ pub struct JWT {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
+    iss: String,
     aud: String,
     sub: String,
-    // company: String,
     exp: usize,
 }
 
@@ -29,32 +29,37 @@ impl JWT {
     pub fn dispatch_jwt_access_refresh_pair(
         &self,
         member: &Member,
-    ) -> Result<(String, String), jsonwebtoken::errors::Error> {
-        let my_claims = Claims {
-            aud: "foo".to_string(),
-            exp: (Utc::now() + chrono::Duration::minutes(10)).timestamp() as usize,
-            // iat: 0,
-            // iss: "bar".to_string(),
-            // nbf: 0,
+    ) -> Result<(String, String), Error> {
+        let access_claims = Claims {
+            iss: "Plexo".to_string(),
+            aud: "access.plexo.app".to_string(),
             sub: member.id.to_string(),
+            exp: (Utc::now() + chrono::Duration::minutes(10)).timestamp() as usize,
+        };
+
+        let refresh_claims = Claims {
+            iss: "Plexo".to_string(),
+            aud: "refresh.plexo.app".to_string(),
+            sub: member.id.to_string(),
+            exp: (Utc::now() + chrono::Duration::days(7)).timestamp() as usize,
         };
 
         let access_token = encode(
             &Header::default(),
-            &my_claims,
+            &access_claims,
             &EncodingKey::from_secret(self.access_token_secret.as_ref()),
         )?;
 
         let refresh_token = encode(
             &Header::default(),
-            &my_claims,
+            &refresh_claims,
             &EncodingKey::from_secret(self.refresh_token_secret.as_ref()),
         )?;
 
         Ok((access_token, refresh_token))
     }
 
-    fn decode_access_token(&self, token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+    fn decode_access_token(&self, token: &str) -> Result<Claims, Error> {
         let token_data = decode::<Claims>(
             token,
             &DecodingKey::from_secret(self.access_token_secret.as_ref()),
@@ -64,7 +69,7 @@ impl JWT {
         Ok(token_data.claims)
     }
 
-    fn decode_refresh_token(&self, token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+    fn decode_refresh_token(&self, token: &str) -> Result<Claims, Error> {
         let token_data = decode::<Claims>(
             token,
             &DecodingKey::from_secret(self.refresh_token_secret.as_ref()),

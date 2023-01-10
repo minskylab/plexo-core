@@ -1,5 +1,4 @@
 use async_graphql::Schema;
-
 use dotenvy::dotenv;
 use plexo::{
     auth::{
@@ -12,7 +11,6 @@ use plexo::{
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
-
 use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]

@@ -71,8 +71,47 @@ impl QueryRoot {
             .collect()
     }
 
-    async fn task_by_id(&self, id: Uuid) -> Task {
-        todo!()
+    async fn task_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Task {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let task = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, assignee_id, labels, owner_id
+            FROM tasks
+            WHERE id = $1
+            "#,
+            id
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Task {
+            id: task.id,
+            created_at: DateTimeBridge::from_offset_date_time(task.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(task.updated_at),
+            title: task.title.clone(),
+            description: task.description.clone(),
+            status: TaskStatus::from_optional_str(&task.status),
+            priority: TaskPriority::from_optional_str(&task.priority),
+            due_date: task
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+            project_id: task.project_id,
+            assignee_id: task.assignee_id,
+            labels: task
+                .labels
+                .as_ref()
+                .map(|l| {
+                    l.as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|s| s.as_str().unwrap().to_string())
+                        .collect()
+                })
+                .unwrap_or(vec![]),
+            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+        }
     }
 
     async fn members(&self) -> Vec<Member> {
