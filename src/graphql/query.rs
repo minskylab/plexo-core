@@ -6,10 +6,10 @@ use uuid::Uuid;
 use crate::{
     auth::auth::PlexoAuthToken,
     sdk::{
-        member::Member,
+        member::{Member, MemberRole},
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
-        team::Team,
+        team::{Team, TeamVisibility},
         utilities::DateTimeBridge,
     },
     system::core::Engine,
@@ -26,6 +26,27 @@ pub struct TaskFilter {
     pub due_date_from: Option<DateTime<Utc>>,
     pub due_date_to: Option<DateTime<Utc>>,
 }
+
+#[derive(InputObject)]
+pub struct MemberFilter {
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub github_id: Option<String>,
+    pub role: Option<String>,
+}
+
+#[derive(InputObject)]
+pub struct TeamFilter {
+    pub visibility: Option<String>,
+    pub name: Option<String>,
+}
+
+#[derive(InputObject)]
+pub struct ProjectFilter {
+    pub title: Option<String>,
+    pub description: Option<String>,
+}
+
 
 #[Object]
 impl QueryRoot {
@@ -114,31 +135,194 @@ impl QueryRoot {
         }
     }
 
-    async fn members(&self) -> Vec<Member> {
-        vec![]
+    async fn members(&self, ctx: &Context<'_>, filter: Option<MemberFilter>) -> Vec<Member> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let members = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, name, email, github_id, google_id, photo_url, role
+            FROM members
+            "#
+        ).fetch_all(&plexo_engine.pool).await.unwrap();
+
+        members
+            .iter()
+            .map(|r| Member {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                email: r.email.clone(),
+                github_id: r.github_id.clone(),
+                google_id: r.google_id.clone(),
+                photo_url: r.photo_url.clone(),
+                role: MemberRole::from_optional_str(&r.role),
+            })
+            .collect()
     }
 
-    async fn member_by_id(&self, id: Uuid) -> Member {
-        todo!()
+    async fn member_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let member = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
+            FROM members
+            WHERE id = $1
+            "#,
+            id
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id.clone(),
+            google_id: member.google_id.clone(),
+            photo_url: member.photo_url.clone(),
+            role: MemberRole::from_optional_str(&member.role),
+        }
     }
 
-    async fn member_by_email(&self, email: String) -> Member {
-        todo!()
+    async fn member_by_email(&self, ctx: &Context<'_>, email: String) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let member = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
+            FROM members
+            WHERE email = $1
+            "#,
+            email
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id.clone(),
+            google_id: member.google_id.clone(),
+            photo_url: member.photo_url.clone(),
+            role: MemberRole::from_optional_str(&member.role),
+        }
     }
 
-    async fn projects(&self) -> Vec<Project> {
-        vec![]
+    async fn projects(&self, ctx: &Context<'_>, filter: Option<ProjectFilter>) -> Vec<Project> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let projects = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, name, prefix, owner_id
+            FROM projects
+            "#
+        ).fetch_all(&plexo_engine.pool).await.unwrap();
+
+        projects
+            .iter()
+            .map(|r| Project {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                description: None,
+                prefix: r.prefix.clone(),
+                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+            })
+            .collect()
+        
     }
 
-    async fn project_by_id(&self, id: Uuid) -> Project {
-        todo!()
+    async fn project_by_id(&self,  ctx: &Context<'_>, id: Uuid) -> Project {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let project = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, name, prefix, owner_id
+            FROM projects
+            WHERE id = $1
+            "#,
+            id
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Project {
+            id: project.id,
+            created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+            name: project.name.clone(),
+            description: None,
+            prefix: project.prefix.clone(),
+            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+        }
     }
 
-    async fn teams(&self) -> Vec<Team> {
-        vec![]
+    async fn teams(&self, ctx: &Context<'_>, filter: Option<TeamFilter>) -> Vec<Team> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let teams = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, name, owner_id, visibility
+            FROM teams
+            "#
+        ).fetch_all(&plexo_engine.pool).await.unwrap();
+
+        teams
+            .iter()
+            .map(|r| Team {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                owner_id: r.owner_id,
+                visibility: TeamVisibility::from_optional_str(&r.visibility),
+            })
+            .collect()
+       
     }
 
-    async fn team_by_id(&self, id: Uuid) -> Team {
-        todo!()
+    async fn team_by_id(&self,  ctx: &Context<'_>, id: Uuid) -> Team {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let team = sqlx::query!(
+            r#"
+            SELECT id, created_at, updated_at, name, owner_id, visibility
+            FROM teams
+            WHERE id = $1
+            "#,
+            id
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Team {
+            id: team.id,
+            created_at: DateTimeBridge::from_offset_date_time(team.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
+            name: team.name,
+            owner_id: team.owner_id,
+            visibility: TeamVisibility::from_optional_str(&team.visibility),
+        }
     }
 }

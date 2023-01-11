@@ -80,12 +80,12 @@ impl SubscriptionRoot {
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Project {
                 id: Uuid::new_v4(),
-                title: "Project X".to_string(),
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
+                name: "Project X".to_string(),
                 description: None,
                 owner_id: Uuid::new_v4(),
-                labels: vec![],
+                prefix: "PX".to_string(), 
             })
     }
 

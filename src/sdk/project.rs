@@ -11,12 +11,12 @@ pub struct Project {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 
-    pub title: String,
+    pub name: String,
     pub description: Option<String>,
+    pub prefix: String,
 
     pub owner_id: Uuid,
 
-    pub labels: Vec<String>,
 }
 
 #[ComplexObject]
