@@ -47,7 +47,6 @@ pub struct ProjectFilter {
     pub description: Option<String>,
 }
 
-
 #[Object]
 impl QueryRoot {
     async fn tasks(&self, ctx: &Context<'_>, filter: Option<TaskFilter>) -> Vec<Task> {
@@ -146,7 +145,10 @@ impl QueryRoot {
             SELECT id, created_at, updated_at, name, email, github_id, google_id, photo_url, role
             FROM members
             "#
-        ).fetch_all(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         members
             .iter()
@@ -177,7 +179,10 @@ impl QueryRoot {
             WHERE id = $1
             "#,
             id
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Member {
             id: member.id,
@@ -205,7 +210,10 @@ impl QueryRoot {
             WHERE email = $1
             "#,
             email
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Member {
             id: member.id,
@@ -231,7 +239,10 @@ impl QueryRoot {
             SELECT id, created_at, updated_at, name, prefix, owner_id
             FROM projects
             "#
-        ).fetch_all(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         projects
             .iter()
@@ -245,10 +256,9 @@ impl QueryRoot {
                 owner_id: r.owner_id.unwrap_or(Uuid::nil()),
             })
             .collect()
-        
     }
 
-    async fn project_by_id(&self,  ctx: &Context<'_>, id: Uuid) -> Project {
+    async fn project_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -261,7 +271,10 @@ impl QueryRoot {
             WHERE id = $1
             "#,
             id
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Project {
             id: project.id,
@@ -285,7 +298,10 @@ impl QueryRoot {
             SELECT id, created_at, updated_at, name, owner_id, visibility
             FROM teams
             "#
-        ).fetch_all(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         teams
             .iter()
@@ -298,10 +314,9 @@ impl QueryRoot {
                 visibility: TeamVisibility::from_optional_str(&r.visibility),
             })
             .collect()
-       
     }
 
-    async fn team_by_id(&self,  ctx: &Context<'_>, id: Uuid) -> Team {
+    async fn team_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -314,7 +329,10 @@ impl QueryRoot {
             WHERE id = $1
             "#,
             id
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Team {
             id: team.id,
