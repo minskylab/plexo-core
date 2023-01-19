@@ -124,11 +124,10 @@ pub async fn github_callback_handler(
     cookie.set_value_str(refresh_token);
     cookie.set_expires(Utc::now() + Duration::days(7));
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("Content-Type", "application/json")
-        .header("Set-Cookie", cookie.to_string())
-        .body(
+    Redirect::moved_permanent("/")
+        .with_header("Set-Cookie", cookie.to_string())
+        .with_header("Content-Type", "application/json")
+        .with_body(
             Body::from_json(&AuthenticationResponse {
                 access_token,
                 token_type: None,
@@ -136,6 +135,7 @@ pub async fn github_callback_handler(
             })
             .unwrap(),
         )
+        .into_response()
 }
 
 #[handler]

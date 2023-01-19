@@ -16,4 +16,8 @@ impl DateTimeBridge {
         Utc.timestamp_millis_opt(date_time.unix_timestamp())
             .unwrap()
     }
+
+    pub fn from_date_time(date_time: DateTime<Utc>) -> OffsetDateTime {
+        OffsetDateTime::from_unix_timestamp(date_time.timestamp_millis()).unwrap()
+    }
 }
