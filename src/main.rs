@@ -1,3 +1,5 @@
+pub mod statics;
+
 use async_graphql::Schema;
 use dotenvy::dotenv;
 use plexo::{
@@ -12,6 +14,8 @@ use plexo::{
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
 use sqlx::postgres::PgPoolOptions;
+
+use crate::statics::StaticFilesEndpointHTMLTrimmed;
 
 #[tokio::main]
 async fn main() {
@@ -35,6 +39,10 @@ async fn main() {
         .finish();
 
     let app = Route::new()
+        .nest(
+            "/",
+            StaticFilesEndpointHTMLTrimmed::new("plexo-platform/out").index_file("index.html"),
+        )
         // Non authenticated routes
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))
