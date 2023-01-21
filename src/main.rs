@@ -7,7 +7,9 @@ use plexo::{
         auth::{github_callback_handler, github_sign_in_handler, refresh_token_handler},
         engine::AuthEngine,
     },
-    config::{DATABASE_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL, URL},
+    config::{
+        DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL, URL,
+    },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
     system::core::Engine,
@@ -57,7 +59,7 @@ async fn main() {
         .data(schema)
         .data(plexo_engine);
 
-    println!("Visit GraphQL Playground at http://{}/playground", *URL);
+    println!("Visit GraphQL Playground at {}/playground", *DOMAIN);
 
     Server::new(TcpListener::bind(URL.to_owned()))
         .run(app)
