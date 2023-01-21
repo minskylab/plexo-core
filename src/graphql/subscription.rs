@@ -5,7 +5,7 @@ use chrono::Utc;
 use tokio_stream::Stream;
 use uuid::Uuid;
 
-use crate::sdk::{
+use crate::graphql::resources::{
     project::Project,
     task::{Task, TaskPriority, TaskStatus},
     team::{Team, TeamVisibility},
@@ -85,7 +85,7 @@ impl SubscriptionRoot {
                 name: "Project X".to_string(),
                 description: None,
                 owner_id: Uuid::new_v4(),
-                prefix: "PX".to_string(), 
+                prefix: "PX".to_string(),
             })
     }
 

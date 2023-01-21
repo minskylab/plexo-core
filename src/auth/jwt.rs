@@ -2,7 +2,7 @@ use chrono::Utc;
 use jsonwebtoken::{decode, encode, errors::Error, DecodingKey, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 
-use crate::sdk::member::Member;
+use crate::graphql::resources::member::Member;
 
 #[derive(Clone)]
 pub struct JWT {

@@ -1,71 +1,72 @@
-use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
-use chrono::{DateTime, Utc};
-use uuid::Uuid;
+use crate::graphql::resources::member::Member;
 
-use super::{project::Project, task::Task};
+use super::accessor::{Accessor, ByPK, Where};
 
-#[derive(SimpleObject, Clone)]
-#[graphql(complex)]
-pub struct Member {
-    pub id: Uuid,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-
-    pub name: String,
-    pub email: String,
-
-    pub github_id: Option<String>,
-    pub google_id: Option<String>,
-
-    pub photo_url: Option<String>,
-
-    pub role: MemberRole,
+struct MemberAccessor {
+    member: &'static Member,
 }
 
-#[ComplexObject]
-impl Member {
-    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        todo!()
-    }
+struct MemberWhere {
+    name: Option<String>,
+    email: Option<String>,
+    role: Option<String>,
+    github_id: Option<String>,
+    google_id: Option<String>,
+}
 
-    pub async fn assigned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        todo!()
-    }
-
-    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
+impl ByPK<MemberAccessor> for MemberAccessor {
+    fn get_by_pk(&self) -> &str {
         todo!()
     }
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
-pub enum MemberRole {
-    Admin,
-    Member,
-    ReadOnly,
+impl Where<MemberAccessor> for MemberWhere {
+    fn filter(&self, filter_name: &str, filter_value: &str) -> MemberAccessor {
+        todo!()
+    }
 }
 
-impl MemberRole {
-    pub fn from_optional_str(s: &Option<String>) -> Self {
-        match s {
-            Some(s) => Self::from_str(s.as_str()),
-            None => Self::ReadOnly,
-        }
+impl Accessor<MemberAccessor, MemberAccessor, MemberWhere> for MemberAccessor {
+    fn select(where_conditions: MemberWhere) -> Vec<MemberAccessor> {
+        // where_conditions.
+        // where_conditions.
+        todo!()
     }
 
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "Admin" => Self::Admin,
-            "Member" => Self::Member,
-            "ReadOnly" => Self::ReadOnly,
-            _ => Self::ReadOnly,
-        }
+    fn aggregate() -> Vec<MemberAccessor> {
+        todo!()
     }
 
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            Self::Admin => "Admin",
-            Self::Member => "Member",
-            Self::ReadOnly => "ReadOnly",
-        }
+    fn select_by_pk(pk: Self) -> MemberAccessor {
+        // pk.get_by_pk(pk);
+        todo!()
+    }
+
+    fn insert(data: Vec<MemberAccessor>) -> Vec<MemberAccessor> {
+        todo!()
+    }
+
+    fn insert_one(data: MemberAccessor) -> MemberAccessor {
+        todo!()
+    }
+
+    fn update(data: Vec<MemberAccessor>) -> Vec<MemberAccessor> {
+        todo!()
+    }
+
+    fn update_one(data: MemberAccessor) -> MemberAccessor {
+        todo!()
+    }
+
+    fn update_by_pk(pk: Self) -> MemberAccessor {
+        todo!()
+    }
+
+    fn delete(data: Vec<MemberAccessor>) -> Vec<MemberAccessor> {
+        todo!()
+    }
+
+    fn delete_by_pk(pk: Self) -> MemberAccessor {
+        todo!()
     }
 }

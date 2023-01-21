@@ -4,10 +4,8 @@ use uuid::Uuid;
 
 use crate::{
     auth::engine::AuthEngine,
-    sdk::{
-        member::{Member, MemberRole},
-        utilities::DateTimeBridge,
-    },
+    graphql::resources::member::{Member, MemberRole},
+    sdk::utilities::DateTimeBridge,
 };
 
 use super::members::{MembersFilter, NewMemberPayload};

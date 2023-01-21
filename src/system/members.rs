@@ -1,4 +1,4 @@
-use crate::sdk::member::{Member, MemberRole};
+use crate::graphql::resources::member::{Member, MemberRole};
 
 pub enum NewMemberPayloadAuthKind {
     Github,

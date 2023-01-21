@@ -2,7 +2,7 @@ use async_graphql::Object;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::sdk::{
+use crate::graphql::resources::{
     member::Member,
     project::Project,
     task::{Task, TaskPriority, TaskStatus},

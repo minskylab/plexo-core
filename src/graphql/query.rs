@@ -5,13 +5,13 @@ use uuid::Uuid;
 
 use crate::{
     auth::auth::PlexoAuthToken,
-    sdk::{
+    graphql::resources::{
         member::{Member, MemberRole},
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
         team::{Team, TeamVisibility},
-        utilities::DateTimeBridge,
     },
+    sdk::utilities::DateTimeBridge,
     system::core::Engine,
 };
 
