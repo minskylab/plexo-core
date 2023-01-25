@@ -116,7 +116,7 @@ impl MutationRoot {
     async fn create_project(
         &self,
         ctx: &Context<'_>,
-        title: String,
+        name: String,
         description: Option<String>,
         owner_id: Uuid,
         labels: Vec<String>,
@@ -132,7 +132,7 @@ impl MutationRoot {
         VALUES ($1, $2, $3)
         RETURNING id, created_at, updated_at, name, owner_id, prefix;
         "#,
-            title,
+            name,
             owner_id,
             prefix,
         ).fetch_one(&plexo_engine.pool).await.unwrap();
