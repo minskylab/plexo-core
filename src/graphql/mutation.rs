@@ -115,12 +115,40 @@ impl MutationRoot {
 
     async fn create_project(
         &self,
+        ctx: &Context<'_>,
         title: String,
         description: Option<String>,
         owner_id: Uuid,
         labels: Vec<String>,
+        prefix: String,
     ) -> Project {
-        todo!()
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        
+        let project = sqlx::query!(
+        r#"
+        INSERT INTO projects
+        (name, owner_id, prefix)
+        VALUES ($1, $2, $3)
+        RETURNING id, created_at, updated_at, name, owner_id, prefix;
+        "#,
+            title,
+            owner_id,
+            prefix,
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        
+        Project {
+            id: project.id,
+            created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+            name: project.name.clone(),
+            description: None,
+            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            prefix: project.prefix.clone(),
+           
+        }
+        
+        
     }
 
     async fn update_project(
