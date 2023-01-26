@@ -8,7 +8,7 @@ use sqlx::{Pool, Postgres, query, types::time::OffsetDateTime};
 use crate::{
     auth::auth::PlexoAuthToken,
     sdk::{
-        member::Member,
+        member::{Member, MemberRole},
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
         utilities::DateTimeBridge,
@@ -84,7 +84,7 @@ impl MutationRoot {
         
             
 
-    async fn delete_task(&self, id: Uuid) -> Task {
+    async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Task {
         todo!()
     }
 
@@ -100,13 +100,42 @@ impl MutationRoot {
 
     async fn update_member(
         &self,
+        ctx: &Context<'_>,
         id: Uuid,
         email: Option<String>,
-        password: Option<String>,
-        first_name: Option<String>,
-        last_name: Option<String>,
+        name: String,
+
     ) -> Member {
-        todo!()
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let member = sqlx::query!(
+            r#"
+            UPDATE members
+            SET email = $1,  name = $2
+            WHERE id = $3
+            RETURNING id, created_at, updated_at, name, email, github_id, google_id, photo_url, role;
+            "#,
+            email,
+            name,
+            id,
+        )
+        .fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id,
+            google_id: member.google_id,
+            photo_url: member.photo_url,
+            role: MemberRole::from_optional_str(&member.role),
+        }
+
+
+        
     }
 
     // async fn delete_member(&self, id: Uuid) -> Member {
@@ -153,16 +182,46 @@ impl MutationRoot {
 
     async fn update_project(
         &self,
+        ctx: &Context<'_>,
         id: Uuid,
-        title: Option<String>,
+        name: Option<String>,
         description: Option<String>,
         owner_id: Option<Uuid>,
         labels: Option<Vec<String>>,
+        prefix: String,
     ) -> Project {
-        todo!()
+
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        
+        let project = sqlx::query!(
+        r#"
+        UPDATE projects
+        SET name = $1, owner_id = $2, prefix = $3
+        WHERE id = $4
+        RETURNING id, created_at, updated_at, name, owner_id, prefix;
+        "#,
+            name,
+            owner_id,
+            prefix,
+            id,
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Project {
+            id: project.id,
+            created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+            name: project.name.clone(),
+            description: None,
+            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            prefix: project.prefix.clone(),
+           
+        }
+
+
     }
 
-    async fn delete_project(&self, id: Uuid) -> Project {
+    async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Project {
         todo!()
     }
 
