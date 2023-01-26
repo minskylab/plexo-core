@@ -85,7 +85,45 @@ impl MutationRoot {
             
 
     async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Task {
-        todo!()
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let task = sqlx::query!(
+            r#"
+            DELETE FROM tasks
+            WHERE id = $1
+            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, assignee_id, labels;
+            "#,
+            id,
+        )
+        .fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Task {
+            id: task.id,
+            created_at: DateTimeBridge::from_offset_date_time(task.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(task.updated_at),
+            title: task.title.clone(),
+            description: task.description.clone(),
+            status: TaskStatus::from_optional_str(&task.status),
+            priority: TaskPriority::from_optional_str(&task.priority),
+            due_date: task
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+            project_id: task.project_id,
+            assignee_id: task.assignee_id,
+            labels: task
+                .labels
+                .as_ref()
+                .map(|l| {
+                    l.as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|s| s.as_str().unwrap().to_string())
+                        .collect()
+                })
+                .unwrap_or(vec![]),
+            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+        }
     }
 
     // async fn create_member(
@@ -138,9 +176,35 @@ impl MutationRoot {
         
     }
 
-    // async fn delete_member(&self, id: Uuid) -> Member {
-    //     todo!()
-    // }
+    async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let member = sqlx::query!(
+            r#"
+            DELETE FROM members
+            WHERE id = $1
+            RETURNING id, created_at, updated_at, name, email, github_id, google_id, photo_url, role;
+            "#,
+            id,
+        )
+        .fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id,
+            google_id: member.google_id,
+            photo_url: member.photo_url,
+            role: MemberRole::from_optional_str(&member.role),
+        }
+
+
+    }
+        
 
     async fn create_project(
         &self,
@@ -222,7 +286,29 @@ impl MutationRoot {
     }
 
     async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Project {
-        todo!()
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        
+        let project = sqlx::query!(
+        r#"
+        DELETE FROM projects
+        WHERE id = $1
+        RETURNING id, created_at, updated_at, name, owner_id, prefix;
+        "#,
+            id,
+        ).fetch_one(&plexo_engine.pool).await.unwrap();
+
+        Project {
+            id: project.id,
+            created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+            name: project.name.clone(),
+            description: None,
+            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            prefix: project.prefix.clone(),
+           
+        }
+        
     }
 
 }
