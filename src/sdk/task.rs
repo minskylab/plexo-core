@@ -3,7 +3,19 @@ use chrono::{DateTime, Utc};
 
 use uuid::Uuid;
 
-use super::{member::Member, project::Project};
+use super::{member::{
+    Member,
+    MemberRole,
+    },
+     project::Project};
+use crate::{
+    system::core::Engine,
+    auth::auth::PlexoAuthToken,
+    sdk::{
+        utilities::DateTimeBridge,
+    
+    },
+};
 
 #[derive(SimpleObject, Clone)]
 #[graphql(complex)]
@@ -31,15 +43,107 @@ pub struct Task {
 #[ComplexObject]
 impl Task {
     pub async fn owner(&self, ctx: &Context<'_>) -> Member {
-        todo!()
-    }
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let member = sqlx::query!(
+            r#"SELECT * FROM members WHERE id = $1"#,
+            &self.owner_id
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id.clone(),
+            google_id: member.google_id.clone(),
+            photo_url: member.photo_url.clone(),
+            role: MemberRole::from_optional_str(&member.role),
+        }
+            }
+            
+
 
     pub async fn assignee(&self, ctx: &Context<'_>) -> Option<Member> {
-        todo!()
-    }
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+        
+        if self.assignee_id.is_none() {
+            return None
+        }
+        
+
+        let member = sqlx::query!(
+            r#"SELECT * FROM members WHERE id = $1"#,
+            &self.assignee_id.unwrap()
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await;
+
+        match member {
+            Ok(member) => {
+                Some(
+                    Member {
+                        id: member.id,
+                        created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+                        updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+                        name: member.name.clone(),
+                        email: member.email.clone(),
+                        github_id: member.github_id.clone(),
+                        google_id: member.google_id.clone(),
+                        photo_url: member.photo_url.clone(),
+                        role: MemberRole::from_optional_str(&member.role),
+                    }
+                )
+            }
+            Err(_) => None,
+        }
+            
+        }
+
+
 
     pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
-        todo!()
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        if self.project_id.is_none() {
+            return None;
+        }
+
+        let project = sqlx::query!(
+            r#"SELECT * FROM projects WHERE id = $1"#,
+            &self.project_id.unwrap()
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await;
+
+        match project {
+            Ok(project) => {
+                Some(
+                    Project {
+                        id: project.id,
+                        created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+                        updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+                        name: project.name.clone(),
+                        description: None,
+                        prefix: project.prefix.clone(),
+                        owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+                    }
+                )
+            }
+            Err(_) => None,
+        }
     }
 }
 
