@@ -33,7 +33,7 @@ pub struct Member {
 
 #[ComplexObject]
 impl Member {
-    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
+    pub async fn owned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE owner_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
@@ -99,7 +99,7 @@ impl Member {
             .collect()
     }
 
-    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
+    pub async fn owned_projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         let projects = sqlx::query!(r#"SELECT * FROM projects WHERE owner_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
