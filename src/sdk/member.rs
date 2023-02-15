@@ -67,7 +67,36 @@ impl Member {
     }
 
     pub async fn assigned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        todo!()
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE assignee_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
+        tasks
+            .iter()
+            .map(|r| Task {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                title: r.title.clone(),
+                description: r.description.clone(),
+                status: TaskStatus::from_optional_str(&r.status),
+                priority: TaskPriority::from_optional_str(&r.priority),
+                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+                project_id: r.project_id,
+                assignee_id: r.assignee_id,
+                labels: r
+                    .labels
+                    .as_ref()
+                    .map(|l| {
+                        l.as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|s| s.as_str().unwrap().to_string())
+                            .collect()
+                    })
+                    .unwrap_or(vec![]),
+                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+            })
+            .collect()
     }
 
     pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
