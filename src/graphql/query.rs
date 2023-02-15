@@ -150,6 +150,21 @@ impl QueryRoot {
         .await
         .unwrap();
 
+        // let mut results = vec![];
+        // for r in members.iter() {
+        //     let mut member = Member {
+        //         id: r.id,
+        //         created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+        //         updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+        //         ...
+        //         tasks: None,
+        //     };
+        //     let tasks = member.owned_tasks(ctx).await.unwrap();
+        //     member.tasks = Some(tasks);
+        //     results.push(member);
+        // }
+        // results
+
         members
             .iter()
             .map(|r| Member {
