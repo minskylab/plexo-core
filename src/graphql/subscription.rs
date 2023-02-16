@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use async_graphql::{futures_util::StreamExt, Context, Subscription};
 use chrono::Utc;
+use tokio::time::Instant;
 use tokio_stream::Stream;
 use uuid::{uuid, Uuid};
 
@@ -11,7 +12,10 @@ use crate::{
         task::{Task, TaskPriority, TaskStatus},
         team::{Team, TeamVisibility},
     },
-    system::subscriptions::{DataDiffEvent, DataDiffEventKind},
+    system::{
+        core::Engine,
+        subscriptions::{DataDiffEvent, DataDiffEventKind},
+    },
 };
 
 pub struct SubscriptionRoot;
@@ -27,12 +31,24 @@ impl SubscriptionRoot {
             })
     }
 
-    async fn example(&self, ctx: &Context<'_>) -> impl Stream<Item = DataDiffEvent> {
-        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
-            .map(move |_| DataDiffEvent {
-                kind: DataDiffEventKind::Created,
-                data: Uuid::new_v4().to_string(),
-            })
+    async fn example(&self, ctx: &Context<'_>) -> impl Stream<Item = Instant> {
+        let sub = ctx
+            .data::<Engine>()
+            .unwrap()
+            .subscription_manager
+            .subscriptions
+            .get("table:tasks")
+            .unwrap()
+            .clone();
+        // .unwrap()
+
+        // tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
+        //     .map(move |_| DataDiffEvent {
+        //         kind: DataDiffEventKind::Created,
+        //         data: Uuid::new_v4().to_string(),
+        //     })
+
+        sub
     }
 
     async fn tasks(&self, ctx: &Context<'_>) -> impl Stream<Item = Task> {
