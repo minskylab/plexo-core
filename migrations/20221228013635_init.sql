@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 15.1
--- Dumped by pg_dump version 15.1 (Ubuntu 15.1-1.pgdg22.04+1)
+-- Dumped by pg_dump version 15.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -70,6 +70,16 @@ CREATE TABLE public.members (
 
 
 --
+-- Name: members_by_projects; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.members_by_projects (
+    member_id uuid NOT NULL,
+    project_id uuid NOT NULL
+);
+
+
+--
 -- Name: members_by_teams; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -90,7 +100,11 @@ CREATE TABLE public.projects (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     name text NOT NULL,
     prefix character varying NOT NULL,
-    owner_id uuid
+    owner_id uuid,
+    description text,
+    lead_id uuid,
+    start_date timestamp without time zone,
+    due_date timestamp without time zone
 );
 
 
@@ -166,7 +180,17 @@ CREATE TABLE public.teams (
     name character varying NOT NULL,
     owner_id uuid NOT NULL,
     visibility character varying,
-    tasks_offset integer DEFAULT 0
+    prefix text
+);
+
+
+--
+-- Name: teams_by_projects; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.teams_by_projects (
+    team_id uuid NOT NULL,
+    project_id uuid NOT NULL
 );
 
 
@@ -175,6 +199,14 @@ CREATE TABLE public.teams (
 --
 
 ALTER TABLE ONLY public.tasks ALTER COLUMN count SET DEFAULT nextval('public.tasks_count_seq'::regclass);
+
+
+--
+-- Name: members_by_projects members_by_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_by_projects
+    ADD CONSTRAINT members_by_projects_pkey PRIMARY KEY (member_id, project_id);
 
 
 --
@@ -218,6 +250,14 @@ ALTER TABLE ONLY public.projects
 
 
 --
+-- Name: projects projects_prefix_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_prefix_key UNIQUE (prefix);
+
+
+--
 -- Name: tasks_by_assignees tasks_by_assignees_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -242,11 +282,27 @@ ALTER TABLE ONLY public.tasks
 
 
 --
+-- Name: teams_by_projects teams_by_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.teams_by_projects
+    ADD CONSTRAINT teams_by_projects_pkey PRIMARY KEY (team_id, project_id);
+
+
+--
 -- Name: teams teams_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.teams
     ADD CONSTRAINT teams_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: teams teams_prefix_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.teams
+    ADD CONSTRAINT teams_prefix_key UNIQUE (prefix);
 
 
 --
