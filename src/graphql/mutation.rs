@@ -1,9 +1,9 @@
 use std::process::id;
 
-use async_graphql::{Context, InputType, Object, ComplexObject};
+use async_graphql::{ComplexObject, Context, InputType, Object};
 use chrono::{DateTime, Utc};
+use sqlx::{postgres::PgRow, query, types::time::OffsetDateTime, Pool, Postgres, Row};
 use uuid::Uuid;
-use sqlx::{Pool, Postgres, query, types::time::OffsetDateTime, Row, postgres::PgRow };
 
 use crate::{
     auth::auth::PlexoAuthToken,
@@ -18,7 +18,6 @@ use crate::{
 
 pub struct MutationRoot;
 
-
 #[Object]
 impl MutationRoot {
     async fn create_task(
@@ -31,7 +30,7 @@ impl MutationRoot {
         priority: Option<String>,
         due_date: Option<DateTime<Utc>>,
         project_id: Option<Uuid>,
-        assignee_id: Option<Uuid>,
+        lead_id: Option<Uuid>,
         labels: Option<Vec<String>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
@@ -46,11 +45,12 @@ impl MutationRoot {
             "#,
             title,
             owner_id
-            
-            ).fetch_one(&plexo_engine.pool).await.unwrap();
-        
-        if description.is_some() {
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
+        if description.is_some() {
             let _task_update_description = sqlx::query!(
                 r#"
                 UPDATE tasks
@@ -59,8 +59,10 @@ impl MutationRoot {
                 "#,
                 description.unwrap(),
                 task_create.id,
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if status.is_some() {
@@ -72,8 +74,10 @@ impl MutationRoot {
                 "#,
                 status.unwrap(),
                 task_create.id,
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if priority.is_some() {
@@ -85,8 +89,10 @@ impl MutationRoot {
                 "#,
                 priority.unwrap(),
                 task_create.id,
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if due_date.is_some() {
@@ -98,8 +104,10 @@ impl MutationRoot {
                 "#,
                 due_date.map(|d| DateTimeBridge::from_date_time(d)),
                 task_create.id,
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if project_id.is_some() {
@@ -111,21 +119,25 @@ impl MutationRoot {
                 "#,
                 project_id.unwrap(),
                 task_create.id,
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
-        if assignee_id.is_some() {
-            let _task_update_assignee_id = sqlx::query!(
+        if lead_id.is_some() {
+            let _task_update_lead_id = sqlx::query!(
                 r#"
                 UPDATE tasks
-                SET assignee_id = $1
+                SET lead_id = $1
                 WHERE id = $2
                 "#,
-                assignee_id.unwrap(),
+                lead_id.unwrap(),
                 task_create.id,
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if labels.is_some() {
@@ -137,21 +149,22 @@ impl MutationRoot {
                 "#,
                 labels.map(|l| serde_json::to_value(l).unwrap()),
                 task_create.id,
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         let task_final_info = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, assignee_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
             FROM tasks
             WHERE id = $1
             "#,
             task_create.id,
         ).fetch_one(&plexo_engine.pool).await.unwrap();
 
-
-        Task {
+        let task = Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -159,9 +172,11 @@ impl MutationRoot {
             description: task_final_info.description,
             status: TaskStatus::from_optional_str(&task_final_info.status),
             priority: TaskPriority::from_optional_str(&task_final_info.priority),
-            due_date: task_final_info.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+            due_date: task_final_info
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
-            assignee_id: task_final_info.assignee_id,
+            lead_id: task_final_info.lead_id,
             labels: task_final_info
                 .labels
                 .as_ref()
@@ -173,11 +188,17 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-                owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
-            
-        }
+            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+        };
+
+        // plexo_engine
+        //     .subscription_manager
+        //     .broadcast_task_created(auth_token, task)
+        //     .await;
+
+        task
     }
-        
+
     async fn update_task(
         &self,
         ctx: &Context<'_>,
@@ -188,12 +209,11 @@ impl MutationRoot {
         priority: Option<String>,
         due_date: Option<DateTime<Utc>>,
         project_id: Option<Uuid>,
-        assignee_id: Option<Uuid>,
+        lead_id: Option<Uuid>,
         labels: Option<Vec<String>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        
 
         if title.is_some() {
             let _task_update_description = sqlx::query!(
@@ -204,8 +224,10 @@ impl MutationRoot {
                 "#,
                 title.unwrap().clone(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if description.is_some() {
@@ -217,8 +239,10 @@ impl MutationRoot {
                 "#,
                 description.unwrap().clone(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if status.is_some() {
@@ -230,8 +254,10 @@ impl MutationRoot {
                 "#,
                 status.unwrap().clone(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if priority.is_some() {
@@ -243,8 +269,10 @@ impl MutationRoot {
                 "#,
                 priority.unwrap().clone(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if due_date.is_some() {
@@ -256,8 +284,10 @@ impl MutationRoot {
                 "#,
                 due_date.map(|d| DateTimeBridge::from_date_time(d)),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if project_id.is_some() {
@@ -269,21 +299,25 @@ impl MutationRoot {
                 "#,
                 project_id.unwrap(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
-        if assignee_id.is_some() {
-            let _task_update_assignee_id = sqlx::query!(
+        if lead_id.is_some() {
+            let _task_update_lead_id = sqlx::query!(
                 r#"
                 UPDATE tasks
-                SET assignee_id = $1
+                SET lead_id = $1
                 WHERE id = $2
                 "#,
-                assignee_id.unwrap(),
+                lead_id.unwrap(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if labels.is_some() {
@@ -295,19 +329,20 @@ impl MutationRoot {
                 "#,
                 labels.map(|l| serde_json::to_value(l).unwrap()),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         let task_final_info = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, assignee_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
             FROM tasks
             WHERE id = $1
             "#,
             id.clone(),
         ).fetch_one(&plexo_engine.pool).await.unwrap();
-
 
         Task {
             id: id,
@@ -317,9 +352,11 @@ impl MutationRoot {
             description: task_final_info.description.clone(),
             status: TaskStatus::from_optional_str(&task_final_info.status),
             priority: TaskPriority::from_optional_str(&task_final_info.priority),
-            due_date: task_final_info.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+            due_date: task_final_info
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
-            assignee_id: task_final_info.assignee_id,
+            lead_id: task_final_info.lead_id,
             labels: task_final_info
                 .labels
                 .as_ref()
@@ -331,11 +368,9 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-                owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
-            
+            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
         }
     }
-            
 
     async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
@@ -345,7 +380,7 @@ impl MutationRoot {
             r#"
             DELETE FROM tasks
             WHERE id = $1
-            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, assignee_id, labels
+            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels
             "#,
             id,
         )
@@ -363,7 +398,7 @@ impl MutationRoot {
                 .due_date
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task.project_id,
-            assignee_id: task.assignee_id,
+            lead_id: task.lead_id,
             labels: task
                 .labels
                 .as_ref()
@@ -395,7 +430,6 @@ impl MutationRoot {
         id: Uuid,
         email: Option<String>,
         name: Option<String>,
-
     ) -> Member {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -409,8 +443,10 @@ impl MutationRoot {
                 "#,
                 email.unwrap(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         if name.is_some() {
@@ -422,8 +458,10 @@ impl MutationRoot {
                 "#,
                 name.unwrap(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         let member = sqlx::query!(
@@ -433,10 +471,10 @@ impl MutationRoot {
             WHERE id = $1
             "#,
             id.clone(),
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
-
-
-
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Member {
             id: member.id,
@@ -449,9 +487,6 @@ impl MutationRoot {
             photo_url: member.photo_url,
             role: MemberRole::from_optional_str(&member.role),
         }
-
-
-        
     }
 
     async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Member {
@@ -479,10 +514,7 @@ impl MutationRoot {
             photo_url: member.photo_url,
             role: MemberRole::from_optional_str(&member.role),
         }
-
-
     }
-        
 
     async fn create_project(
         &self,
@@ -495,7 +527,7 @@ impl MutationRoot {
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        
+
         let project_create = sqlx::query!(
             r#"
             INSERT INTO projects (name, owner_id, prefix)
@@ -505,7 +537,10 @@ impl MutationRoot {
             name,
             owner_id,
             prefix,
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         // if description.is_some() {
         //     let _project_update_description = sqlx::query!(
@@ -517,7 +552,7 @@ impl MutationRoot {
         //         description.unwrap(),
         //         project_create.id.clone(),
         //     ).execute(&plexo_engine.pool).await.unwrap();
-        
+
         // }
 
         // if prefix.is_some() {
@@ -530,7 +565,7 @@ impl MutationRoot {
         //         prefix.unwrap(),
         //         project_create.id.clone(),
         //     ).execute(&plexo_engine.pool).await.unwrap();
-        
+
         // }
 
         // if labels.is_some() {
@@ -553,8 +588,11 @@ impl MutationRoot {
             WHERE id = $1
             "#,
             project_create.id.clone(),
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
-        
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
         Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
@@ -563,10 +601,7 @@ impl MutationRoot {
             description: None,
             owner_id: project.owner_id.unwrap_or(Uuid::nil()),
             prefix: project.prefix.clone(),
-           
         }
-        
-        
     }
 
     async fn update_project(
@@ -578,11 +613,8 @@ impl MutationRoot {
         labels: Option<Vec<String>>,
         prefix: Option<String>,
     ) -> Project {
-
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        
-
 
         if name.is_some() {
             let _project_update_name = sqlx::query!(
@@ -593,10 +625,11 @@ impl MutationRoot {
                 "#,
                 name.unwrap(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
-
 
         // if description.is_some() {
         //     let _project_update_description = sqlx::query!(
@@ -608,7 +641,7 @@ impl MutationRoot {
         //         description.unwrap(),
         //         id.clone(),
         //     ).execute(&plexo_engine.pool).await.unwrap();
-        
+
         // }
 
         if prefix.is_some() {
@@ -620,8 +653,10 @@ impl MutationRoot {
                 "#,
                 prefix.unwrap(),
                 id.clone(),
-            ).execute(&plexo_engine.pool).await.unwrap();
-        
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
         }
 
         // if labels.is_some() {
@@ -634,9 +669,8 @@ impl MutationRoot {
         //         labels.unwrap(),
         //         id.clone(),
         //     ).execute(&plexo_engine.pool).await.unwrap();
-        
-        // }
 
+        // }
 
         let project = sqlx::query!(
             r#"
@@ -645,7 +679,10 @@ impl MutationRoot {
             WHERE id = $1
             "#,
             id.clone(),
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Project {
             id: project.id,
@@ -655,25 +692,24 @@ impl MutationRoot {
             description: None,
             owner_id: project.owner_id.unwrap_or(Uuid::nil()),
             prefix: project.prefix.clone(),
-           
         }
-
-
-
     }
 
     async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        
+
         let project = sqlx::query!(
-        r#"
+            r#"
         DELETE FROM projects
         WHERE id = $1
         RETURNING id, created_at, updated_at, name, owner_id, prefix;
         "#,
             id,
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Project {
             id: project.id,
@@ -683,9 +719,6 @@ impl MutationRoot {
             description: None,
             owner_id: project.owner_id.unwrap_or(Uuid::nil()),
             prefix: project.prefix.clone(),
-           
         }
-        
     }
-
-}      
+}

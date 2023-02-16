@@ -3,19 +3,11 @@ use chrono::{DateTime, Utc};
 
 use uuid::Uuid;
 
-use super::{member::{
-    Member,
-    MemberRole,
-    },
-     project::Project};
-use crate::{
-    system::core::Engine,
-    auth::auth::PlexoAuthToken,
-    sdk::{
-        utilities::DateTimeBridge,
-    
-    },
+use super::{
+    member::{Member, MemberRole},
+    project::Project,
 };
+use crate::{auth::auth::PlexoAuthToken, sdk::utilities::DateTimeBridge, system::core::Engine};
 
 #[derive(SimpleObject, Clone)]
 #[graphql(complex)]
@@ -34,7 +26,7 @@ pub struct Task {
 
     pub labels: Vec<String>,
 
-    pub assignee_id: Option<Uuid>,
+    pub lead_id: Option<Uuid>,
     pub project_id: Option<Uuid>,
 
     pub due_date: Option<DateTime<Utc>>,
@@ -48,15 +40,11 @@ impl Task {
 
         println!("token: {}", auth_token);
 
-        let member = sqlx::query!(
-            r#"SELECT * FROM members WHERE id = $1"#,
-            &self.owner_id
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await
-        .unwrap();
+        let member = sqlx::query!(r#"SELECT * FROM members WHERE id = $1"#, &self.owner_id)
+            .fetch_one(&plexo_engine.pool)
+            .await
+            .unwrap();
 
-        
         Member {
             id: member.id,
             created_at: DateTimeBridge::from_offset_date_time(member.created_at),
@@ -68,50 +56,40 @@ impl Task {
             photo_url: member.photo_url.clone(),
             role: MemberRole::from_optional_str(&member.role),
         }
-            }
-            
-
+    }
 
     pub async fn assignee(&self, ctx: &Context<'_>) -> Option<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
         println!("token: {}", auth_token);
-        
-        if self.assignee_id.is_none() {
-            return None
+
+        if self.lead_id.is_none() {
+            return None;
         }
-        
 
         let member = sqlx::query!(
             r#"SELECT * FROM members WHERE id = $1"#,
-            &self.assignee_id.unwrap()
+            &self.lead_id.unwrap()
         )
         .fetch_one(&plexo_engine.pool)
         .await;
 
         match member {
-            Ok(member) => {
-                Some(
-                    Member {
-                        id: member.id,
-                        created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-                        updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-                        name: member.name.clone(),
-                        email: member.email.clone(),
-                        github_id: member.github_id.clone(),
-                        google_id: member.google_id.clone(),
-                        photo_url: member.photo_url.clone(),
-                        role: MemberRole::from_optional_str(&member.role),
-                    }
-                )
-            }
+            Ok(member) => Some(Member {
+                id: member.id,
+                created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+                name: member.name.clone(),
+                email: member.email.clone(),
+                github_id: member.github_id.clone(),
+                google_id: member.google_id.clone(),
+                photo_url: member.photo_url.clone(),
+                role: MemberRole::from_optional_str(&member.role),
+            }),
             Err(_) => None,
         }
-            
-        }
-
-
+    }
 
     pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
@@ -129,19 +107,15 @@ impl Task {
         .await;
 
         match project {
-            Ok(project) => {
-                Some(
-                    Project {
-                        id: project.id,
-                        created_at: DateTimeBridge::from_offset_date_time(project.created_at),
-                        updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
-                        name: project.name.clone(),
-                        description: None,
-                        prefix: project.prefix.clone(),
-                        owner_id: project.owner_id.unwrap_or(Uuid::nil()),
-                    }
-                )
-            }
+            Ok(project) => Some(Project {
+                id: project.id,
+                created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+                name: project.name.clone(),
+                description: None,
+                prefix: project.prefix.clone(),
+                owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            }),
             Err(_) => None,
         }
     }

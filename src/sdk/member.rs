@@ -12,7 +12,6 @@ use crate::{
     system::core::Engine,
 };
 
-
 #[derive(SimpleObject, Clone)]
 #[graphql(complex)]
 pub struct Member {
@@ -36,7 +35,10 @@ impl Member {
     pub async fn owned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE owner_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
+        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE owner_id = $1"#, &self.id)
+            .fetch_all(&plexo_engine.pool)
+            .await
+            .unwrap();
         tasks
             .iter()
             .map(|r| Task {
@@ -49,7 +51,7 @@ impl Member {
                 priority: TaskPriority::from_optional_str(&r.priority),
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
-                assignee_id: r.assignee_id,
+                lead_id: r.lead_id,
                 labels: r
                     .labels
                     .as_ref()
@@ -69,7 +71,10 @@ impl Member {
     pub async fn assigned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE assignee_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
+        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE lead_id = $1"#, &self.id)
+            .fetch_all(&plexo_engine.pool)
+            .await
+            .unwrap();
         tasks
             .iter()
             .map(|r| Task {
@@ -82,7 +87,7 @@ impl Member {
                 priority: TaskPriority::from_optional_str(&r.priority),
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
-                assignee_id: r.assignee_id,
+                lead_id: r.lead_id,
                 labels: r
                     .labels
                     .as_ref()
@@ -102,7 +107,10 @@ impl Member {
     pub async fn owned_projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let projects = sqlx::query!(r#"SELECT * FROM projects WHERE owner_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
+        let projects = sqlx::query!(r#"SELECT * FROM projects WHERE owner_id = $1"#, &self.id)
+            .fetch_all(&plexo_engine.pool)
+            .await
+            .unwrap();
         projects
             .iter()
             .map(|r| Project {

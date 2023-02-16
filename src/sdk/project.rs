@@ -25,7 +25,6 @@ pub struct Project {
     pub prefix: String,
 
     pub owner_id: Uuid,
-
 }
 
 #[ComplexObject]
@@ -35,29 +34,22 @@ impl Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        let member = sqlx::query!(
-            r#"SELECT * FROM members WHERE id = $1"#,
-            &self.owner_id
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await;
+        let member = sqlx::query!(r#"SELECT * FROM members WHERE id = $1"#, &self.owner_id)
+            .fetch_one(&plexo_engine.pool)
+            .await;
 
         match member {
-            Ok(member) => {
-                Some(
-                    Member {
-                        id: member.id,
-                        created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-                        updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-                        name: member.name.clone(),
-                        email: member.email.clone(),
-                        github_id: member.github_id.clone(),
-                        google_id: member.google_id.clone(),
-                        photo_url: member.photo_url.clone(),
-                        role: MemberRole::from_optional_str(&member.role),
-                    }
-                )
-            }
+            Ok(member) => Some(Member {
+                id: member.id,
+                created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+                name: member.name.clone(),
+                email: member.email.clone(),
+                github_id: member.github_id.clone(),
+                google_id: member.google_id.clone(),
+                photo_url: member.photo_url.clone(),
+                role: MemberRole::from_optional_str(&member.role),
+            }),
             Err(_) => None,
         }
     }
@@ -81,13 +73,16 @@ impl Project {
         //         photo_url: r.photo_url.clone(),
         //         role: MemberRole::from_optional_str(&r.role),
         //     })
-        //     .collect()    
+        //     .collect()
     }
 
     pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE project_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
+        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE project_id = $1"#, &self.id)
+            .fetch_all(&plexo_engine.pool)
+            .await
+            .unwrap();
         tasks
             .iter()
             .map(|r| Task {
@@ -100,7 +95,7 @@ impl Project {
                 priority: TaskPriority::from_optional_str(&r.priority),
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
-                assignee_id: r.assignee_id,
+                lead_id: r.lead_id,
                 labels: r
                     .labels
                     .as_ref()

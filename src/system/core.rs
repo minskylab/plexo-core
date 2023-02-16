@@ -10,17 +10,27 @@ use crate::{
     },
 };
 
-use super::members::{MembersFilter, NewMemberPayload};
+use super::{
+    members::{MembersFilter, NewMemberPayload},
+    subscriptions::SubscriptionManager,
+};
 
 #[derive(Clone)]
 pub struct Engine {
     pub pool: Pool<Postgres>,
     pub auth: AuthEngine,
+    pub subscription_manager: SubscriptionManager,
 }
 
 impl Engine {
     pub fn new(pool: Pool<Postgres>, auth: AuthEngine) -> Self {
-        Self { pool, auth }
+        let subscription_manager = SubscriptionManager::new();
+
+        Self {
+            pool,
+            auth,
+            subscription_manager,
+        }
     }
 
     pub fn me<'ctx>(&self, ctx: &'ctx Context) {

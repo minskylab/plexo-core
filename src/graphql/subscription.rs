@@ -3,12 +3,15 @@ use std::time::Duration;
 use async_graphql::{futures_util::StreamExt, Context, Subscription};
 use chrono::Utc;
 use tokio_stream::Stream;
-use uuid::Uuid;
+use uuid::{uuid, Uuid};
 
-use crate::sdk::{
-    project::Project,
-    task::{Task, TaskPriority, TaskStatus},
-    team::{Team, TeamVisibility},
+use crate::{
+    sdk::{
+        project::Project,
+        task::{Task, TaskPriority, TaskStatus},
+        team::{Team, TeamVisibility},
+    },
+    system::subscriptions::{DataDiffEvent, DataDiffEventKind},
 };
 
 pub struct SubscriptionRoot;
@@ -21,6 +24,14 @@ impl SubscriptionRoot {
             .map(move |_| {
                 value += step;
                 value
+            })
+    }
+
+    async fn example(&self, ctx: &Context<'_>) -> impl Stream<Item = DataDiffEvent> {
+        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
+            .map(move |_| DataDiffEvent {
+                kind: DataDiffEventKind::Created,
+                data: Uuid::new_v4().to_string(),
             })
     }
 
@@ -43,7 +54,7 @@ impl SubscriptionRoot {
 
                 labels: vec![],
 
-                assignee_id: None,
+                lead_id: None,
                 project_id: None,
 
                 due_date: None,
@@ -66,7 +77,7 @@ impl SubscriptionRoot {
 
                 labels: vec![],
 
-                assignee_id: None,
+                lead_id: None,
                 project_id: None,
 
                 due_date: None,
@@ -85,7 +96,7 @@ impl SubscriptionRoot {
                 name: "Project X".to_string(),
                 description: None,
                 owner_id: Uuid::new_v4(),
-                prefix: "PX".to_string(), 
+                prefix: "PX".to_string(),
             })
     }
 

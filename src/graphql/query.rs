@@ -20,7 +20,7 @@ pub struct QueryRoot;
 #[derive(InputObject)]
 pub struct TaskFilter {
     pub project_id: Option<Uuid>,
-    pub assignee_id: Option<Uuid>,
+    pub lead_id: Option<Uuid>,
     pub status: Option<TaskStatus>,
     pub priority: Option<TaskPriority>,
     pub due_date_from: Option<DateTime<Utc>>,
@@ -57,7 +57,7 @@ impl QueryRoot {
 
         let tasks = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, assignee_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
             FROM tasks
             "#
         ).fetch_all(&plexo_engine.pool).await.unwrap();
@@ -74,7 +74,7 @@ impl QueryRoot {
                 priority: TaskPriority::from_optional_str(&r.priority),
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
-                assignee_id: r.assignee_id,
+                lead_id: r.lead_id,
                 labels: r
                     .labels
                     .as_ref()
@@ -99,7 +99,7 @@ impl QueryRoot {
 
         let task = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, assignee_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
             FROM tasks
             WHERE id = $1
             "#,
@@ -118,7 +118,7 @@ impl QueryRoot {
                 .due_date
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task.project_id,
-            assignee_id: task.assignee_id,
+            lead_id: task.lead_id,
             labels: task
                 .labels
                 .as_ref()

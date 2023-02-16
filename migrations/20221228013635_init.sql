@@ -123,7 +123,7 @@ CREATE TABLE public.tasks (
     priority character varying,
     due_date timestamp with time zone,
     project_id uuid,
-    assignee_id uuid,
+    lead_id uuid,
     labels jsonb,
     count integer NOT NULL
 );
