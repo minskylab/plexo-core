@@ -19,17 +19,20 @@ pub struct Task {
     pub title: String,
     pub description: Option<String>,
 
+    pub owner_id: Uuid,
+
     pub status: TaskStatus,
     pub priority: TaskPriority,
 
-    pub owner_id: Uuid,
-
-    pub labels: Vec<String>,
-
-    pub lead_id: Option<Uuid>,
-    pub project_id: Option<Uuid>,
-
     pub due_date: Option<DateTime<Utc>>,
+
+    pub project_id: Option<Uuid>,
+    pub lead_id: Option<Uuid>,
+    
+    pub labels: Vec<String>,
+    pub count: i32,
+
+    
 }
 
 #[ComplexObject]
@@ -112,9 +115,16 @@ impl Task {
                 created_at: DateTimeBridge::from_offset_date_time(project.created_at),
                 updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
                 name: project.name.clone(),
-                description: None,
+                description: project.description.clone(),
                 prefix: project.prefix.clone(),
                 owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+                lead_id: project.lead_id,
+                start_date: project
+                    .due_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                due_date: project
+                    .due_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
             }),
             Err(_) => None,
         }

@@ -57,7 +57,7 @@ impl QueryRoot {
 
         let tasks = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels, count
             FROM tasks
             "#
         ).fetch_all(&plexo_engine.pool).await.unwrap();
@@ -87,6 +87,7 @@ impl QueryRoot {
                     })
                     .unwrap_or(vec![]),
                 owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                count: r.count,
             })
             .collect()
     }
@@ -99,7 +100,7 @@ impl QueryRoot {
 
         let task = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels, count
             FROM tasks
             WHERE id = $1
             "#,
@@ -131,6 +132,7 @@ impl QueryRoot {
                 })
                 .unwrap_or(vec![]),
             owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            count: task.count,
         }
     }
 

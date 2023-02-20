@@ -157,7 +157,7 @@ impl MutationRoot {
 
         let task_final_info = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id, count
             FROM tasks
             WHERE id = $1
             "#,
@@ -189,6 +189,7 @@ impl MutationRoot {
                 })
                 .unwrap_or(vec![]),
             owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            count: task_final_info.count,
         };
 
         // plexo_engine
@@ -337,7 +338,7 @@ impl MutationRoot {
 
         let task_final_info = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
+            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id, count
             FROM tasks
             WHERE id = $1
             "#,
@@ -369,6 +370,7 @@ impl MutationRoot {
                 })
                 .unwrap_or(vec![]),
             owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            count: task_final_info.count
         }
     }
 
@@ -380,7 +382,7 @@ impl MutationRoot {
             r#"
             DELETE FROM tasks
             WHERE id = $1
-            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels
+            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels, count
             "#,
             id,
         )
@@ -411,6 +413,7 @@ impl MutationRoot {
                 })
                 .unwrap_or(vec![]),
             owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            count: task.count
         }
     }
 

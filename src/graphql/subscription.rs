@@ -58,6 +58,7 @@ impl SubscriptionRoot {
                 project_id: None,
 
                 due_date: None,
+                count: 0,
             })
     }
 
@@ -81,6 +82,7 @@ impl SubscriptionRoot {
                 project_id: None,
 
                 due_date: None,
+                count: 0,
             })
     }
 
@@ -97,6 +99,9 @@ impl SubscriptionRoot {
                 description: None,
                 owner_id: Uuid::new_v4(),
                 prefix: "PX".to_string(),
+                lead_id: None,
+                start_date: None,
+                due_date: None,
             })
     }
 
@@ -112,6 +117,7 @@ impl SubscriptionRoot {
                 updated_at: Utc::now(),
                 owner_id: Uuid::new_v4(),
                 visibility: TeamVisibility::Public,
+                prefix: "TX".to_string(),
             })
     }
 }

@@ -21,10 +21,17 @@ pub struct Project {
     pub updated_at: DateTime<Utc>,
 
     pub name: String,
-    pub description: Option<String>,
     pub prefix: String,
 
     pub owner_id: Uuid,
+    pub description: Option<String>,
+
+    pub lead_id: Option<Uuid>,
+    pub start_date: Option<DateTime<Utc>>,
+    pub due_date: Option<DateTime<Utc>>,
+    
+
+    
 }
 
 #[ComplexObject]
@@ -108,6 +115,7 @@ impl Project {
                     })
                     .unwrap_or(vec![]),
                 owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                count: r.count,
             })
             .collect()
     }
