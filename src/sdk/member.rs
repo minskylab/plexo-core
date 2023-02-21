@@ -64,6 +64,7 @@ impl Member {
                     })
                     .unwrap_or(vec![]),
                 owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                count: r.count,
             })
             .collect()
     }
@@ -100,6 +101,7 @@ impl Member {
                     })
                     .unwrap_or(vec![]),
                 owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                count: r.count,
             })
             .collect()
     }
@@ -118,9 +120,13 @@ impl Member {
                 created_at: DateTimeBridge::from_offset_date_time(r.created_at),
                 updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
                 name: r.name.clone(),
-                description: None,
+                description: r.description.clone(),
                 prefix: r.prefix.clone(),
                 owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                lead_id: r.lead_id,
+                start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+
             })
             .collect()
     }

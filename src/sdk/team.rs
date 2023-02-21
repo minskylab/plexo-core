@@ -24,6 +24,8 @@ pub struct Team {
     pub owner_id: Uuid,
 
     pub visibility: TeamVisibility,
+
+    pub prefix: String,
 }
 
 #[ComplexObject]

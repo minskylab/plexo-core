@@ -1,5 +1,5 @@
 use chrono::{DateTime, FixedOffset, TimeZone, Utc};
-use sqlx::types::time::OffsetDateTime;
+use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime, Time as Tm,};
 
 pub struct DateTimeBridge;
 
@@ -21,5 +21,9 @@ impl DateTimeBridge {
         OffsetDateTime::from_unix_timestamp(date_time.timestamp())
         .unwrap()
             
+    }
+
+    pub fn from_primitive_to_date_time(date_time: DateTime<Utc>) -> PrimitiveDateTime{
+        PrimitiveDateTime::new(DateTimeBridge::from_date_time(date_time).date(), DateTimeBridge::from_date_time(date_time).time())
     }
 }
