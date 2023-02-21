@@ -1,5 +1,5 @@
 use chrono::{DateTime, FixedOffset, TimeZone, Utc};
-use sqlx::types::time::OffsetDateTime;
+use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime, Time as Tm,};
 
 pub struct DateTimeBridge;
 
@@ -22,4 +22,10 @@ impl DateTimeBridge {
         .unwrap()
             
     }
+
+    pub fn from_primitive_to_date_time(date_time: DateTime<Utc>) -> PrimitiveDateTime{
+        // let timezone = date_time.timezone();
+        // let date_utc = date_time.date().with_timezone(&timezone);
+        PrimitiveDateTime::new(date_time.date_naive().into(), date_time.time().into())
+}
 }

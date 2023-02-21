@@ -121,10 +121,10 @@ impl Task {
                 lead_id: project.lead_id,
                 start_date: project
                     .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
                 due_date: project
                     .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
             }),
             Err(_) => None,
         }

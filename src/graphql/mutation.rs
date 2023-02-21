@@ -2,7 +2,7 @@ use std::process::id;
 
 use async_graphql::{ComplexObject, Context, InputType, Object};
 use chrono::{DateTime, Utc};
-use sqlx::{postgres::PgRow, query, types::time::OffsetDateTime, Pool, Postgres, Row};
+use sqlx::{postgres::PgRow, query, types::time::OffsetDateTime, types::time::PrimitiveDateTime, Pool, Postgres, Row};
 use uuid::Uuid;
 
 use crate::{
@@ -157,8 +157,7 @@ impl MutationRoot {
 
         let task_final_info = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id, count
-            FROM tasks
+            SELECT * FROM tasks
             WHERE id = $1
             "#,
             task_create.id,
@@ -338,8 +337,7 @@ impl MutationRoot {
 
         let task_final_info = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id, count
-            FROM tasks
+            SELECT * FROM tasks
             WHERE id = $1
             "#,
             id.clone(),
@@ -469,8 +467,7 @@ impl MutationRoot {
 
         let member = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, email, github_id, google_id, photo_url, role
-            FROM members
+            SELECT * FROM members
             WHERE id = $1
             "#,
             id.clone(),
@@ -523,10 +520,13 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         name: String,
-        description: Option<String>,
-        owner_id: Uuid,
-        labels: Option<Vec<String>>,
         prefix: String,
+        owner_id: Uuid,
+        description: Option<String>,
+        lead_id: Option<Uuid>,
+        start_date: Option<DateTime<Utc>>,
+        due_date: Option<DateTime<Utc>>,
+        
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -545,48 +545,58 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        // if description.is_some() {
-        //     let _project_update_description = sqlx::query!(
-        //         r#"
-        //         UPDATE projects
-        //         SET description = $1
-        //         WHERE id = $2
-        //         "#,
-        //         description.unwrap(),
-        //         project_create.id.clone(),
-        //     ).execute(&plexo_engine.pool).await.unwrap();
+        if description.is_some() {
+            let _project_update_description = sqlx::query!(
+                r#"
+                UPDATE projects
+                SET description = $1
+                WHERE id = $2
+                "#,
+                description.unwrap(),
+                project_create.id.clone(),
+            ).execute(&plexo_engine.pool).await.unwrap();
 
-        // }
+        }
 
-        // if prefix.is_some() {
-        //     let _project_update_prefix = sqlx::query!(
-        //         r#"
-        //         UPDATE projects
-        //         SET prefix = $1
-        //         WHERE id = $2
-        //         "#,
-        //         prefix.unwrap(),
-        //         project_create.id.clone(),
-        //     ).execute(&plexo_engine.pool).await.unwrap();
+        if lead_id.is_some() {
+            let _project_update_lead_id = sqlx::query!(
+                r#"
+                UPDATE projects
+                SET lead_id = $1
+                WHERE id = $2
+                "#,
+                lead_id.unwrap(),
+                project_create.id.clone(),
+            ).execute(&plexo_engine.pool).await.unwrap();
+        }
 
-        // }
+        if start_date.is_some() {
+            let _project_update_start_date = sqlx::query!(
+                r#"
+                UPDATE projects
+                SET start_date = $1
+                WHERE id = $2
+                "#,
+                DateTimeBridge::from_primitive_to_date_time(start_date.unwrap()),
+                project_create.id.clone(),
+            ).execute(&plexo_engine.pool).await.unwrap();
+        }
 
-        // if labels.is_some() {
-        //     for label in labels.unwrap() {
-        //         let _project_create_label = sqlx::query!(
-        //             r#"
-        //             INSERT INTO labels (name, project_id)
-        //             VALUES ($1, $2)
-        //             "#,
-        //             label,
-        //             project_create.id.clone(),
-        //         ).execute(&plexo_engine.pool).await.unwrap();
-        //     }
-        // }
+        if due_date.is_some() {
+            let _project_update_due_date = sqlx::query!(
+                r#"
+                UPDATE projects
+                SET due_date = $1
+                WHERE id = $2
+                "#,
+                DateTimeBridge::from_primitive_to_date_time(due_date.unwrap()),
+                project_create.id.clone(),
+            ).execute(&plexo_engine.pool).await.unwrap();
+        }
 
         let project = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, owner_id, prefix
+            SELECT *
             FROM projects
             WHERE id = $1
             "#,
@@ -601,9 +611,17 @@ impl MutationRoot {
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
-            description: None,
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            description: project.description.clone(),
             prefix: project.prefix.clone(),
+            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            lead_id: project.lead_id,
+            start_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            due_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            
         }
     }
 
@@ -677,8 +695,7 @@ impl MutationRoot {
 
         let project = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, owner_id, prefix
-            FROM projects
+            SELECT * FROM projects
             WHERE id = $1
             "#,
             id.clone(),
@@ -692,9 +709,17 @@ impl MutationRoot {
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
-            description: None,
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            description: project.description.clone(),
             prefix: project.prefix.clone(),
+            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            lead_id: project.lead_id,
+            start_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            due_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            
         }
     }
 
@@ -704,10 +729,10 @@ impl MutationRoot {
 
         let project = sqlx::query!(
             r#"
-        DELETE FROM projects
-        WHERE id = $1
-        RETURNING id, created_at, updated_at, name, owner_id, prefix;
-        "#,
+            DELETE FROM projects
+            WHERE id = $1
+            RETURNING *
+            "#,
             id,
         )
         .fetch_one(&plexo_engine.pool)
@@ -719,9 +744,18 @@ impl MutationRoot {
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
-            description: None,
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            description: project.description.clone(),
             prefix: project.prefix.clone(),
+            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            lead_id: project.lead_id,
+            start_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            due_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            
+
         }
     }
 }

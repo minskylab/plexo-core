@@ -57,8 +57,7 @@ impl QueryRoot {
 
         let tasks = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels, count
-            FROM tasks
+            SELECT * FROM tasks
             "#
         ).fetch_all(&plexo_engine.pool).await.unwrap();
 
@@ -100,8 +99,7 @@ impl QueryRoot {
 
         let task = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels, count
-            FROM tasks
+            SELECT * FROM tasks
             WHERE id = $1
             "#,
             id
@@ -144,8 +142,7 @@ impl QueryRoot {
 
         let members = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, email, github_id, google_id, photo_url, role
-            FROM members
+            SELECT * FROM members
             "#
         )
         .fetch_all(&plexo_engine.pool)
@@ -191,8 +188,7 @@ impl QueryRoot {
 
         let member = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
-            FROM members
+            SELECT * FROM members
             WHERE id = $1
             "#,
             id
@@ -222,8 +218,7 @@ impl QueryRoot {
 
         let member = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
-            FROM members
+            SELECT * FROM members
             WHERE email = $1
             "#,
             email
@@ -253,8 +248,7 @@ impl QueryRoot {
 
         let projects = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, prefix, owner_id
-            FROM projects
+            SELECT * FROM projects
             "#
         )
         .fetch_all(&plexo_engine.pool)
@@ -268,9 +262,17 @@ impl QueryRoot {
                 created_at: DateTimeBridge::from_offset_date_time(r.created_at),
                 updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
                 name: r.name.clone(),
-                description: None,
                 prefix: r.prefix.clone(),
                 owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                description: r.description.clone(),
+                lead_id: r.lead_id.clone(),
+                start_date: r
+                    .due_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                due_date: r
+                    .due_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+
             })
             .collect()
     }
@@ -283,8 +285,7 @@ impl QueryRoot {
 
         let project = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, prefix, owner_id
-            FROM projects
+            SELECT * FROM projects
             WHERE id = $1
             "#,
             id
@@ -298,9 +299,17 @@ impl QueryRoot {
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
-            description: None,
+            description: project.description.clone(),
             prefix: project.prefix.clone(),
             owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            lead_id: project.lead_id,
+            start_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            due_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+
         }
     }
 
@@ -312,7 +321,7 @@ impl QueryRoot {
 
         let teams = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, owner_id, visibility
+            SELECT *
             FROM teams
             "#
         )
@@ -329,6 +338,8 @@ impl QueryRoot {
                 name: r.name.clone(),
                 owner_id: r.owner_id,
                 visibility: TeamVisibility::from_optional_str(&r.visibility),
+                prefix: r.prefix.clone().unwrap_or("".to_string()),
+
             })
             .collect()
     }
@@ -341,8 +352,7 @@ impl QueryRoot {
 
         let team = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, owner_id, visibility
-            FROM teams
+            SELECT * FROM teams
             WHERE id = $1
             "#,
             id
@@ -358,6 +368,7 @@ impl QueryRoot {
             name: team.name,
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
+            prefix: team.prefix.unwrap_or("".to_string()),
         }
     }
 }
