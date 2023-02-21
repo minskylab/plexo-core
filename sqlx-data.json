@@ -89,7 +89,7 @@
     },
     "query": "\n            DELETE FROM members\n            WHERE id = $1\n            RETURNING id, created_at, updated_at, name, email, github_id, google_id, photo_url, role;\n            "
   },
-  "0c9c99ed5ceccbe01384419691985c7bd5693696481b50ec91c6d33e317d8667": {
+  "0ec94b4737da8dbfb577fc9de324eb42e90c8a3a629322ca48f34d6901543744": {
     "describe": {
       "columns": [
         {
@@ -108,19 +108,54 @@
           "type_info": "Timestamptz"
         },
         {
-          "name": "name",
+          "name": "title",
           "ordinal": 3,
-          "type_info": "Varchar"
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
         },
         {
           "name": "owner_id",
-          "ordinal": 4,
+          "ordinal": 5,
           "type_info": "Uuid"
         },
         {
-          "name": "visibility",
-          "ordinal": 5,
+          "name": "status",
+          "ordinal": 6,
           "type_info": "Varchar"
+        },
+        {
+          "name": "priority",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "project_id",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 10,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "labels",
+          "ordinal": 11,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "count",
+          "ordinal": 12,
+          "type_info": "Int4"
         }
       ],
       "nullable": [
@@ -128,16 +163,21 @@
         false,
         false,
         false,
-        false,
-        true
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
       ],
       "parameters": {
-        "Left": [
-          "Uuid"
-        ]
+        "Left": []
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, name, owner_id, visibility\n            FROM teams\n            WHERE id = $1\n            "
+    "query": "\n            SELECT * FROM tasks\n            "
   },
   "101cb8d4e54e9f8e52c7b94733fbfbee005108a42c41782814f21d58f90a4ae9": {
     "describe": {
@@ -174,7 +214,7 @@
     },
     "query": "\n            INSERT INTO projects (name, owner_id, prefix)\n            VALUES ($1, $2, $3)\n            RETURNING id\n            "
   },
-  "16d2bd56a4f6465e809321673a2f339e8c8713064ac966d5d533a00ddaf6c777": {
+  "16e3d6d61724092cca92e4a9dc03564ae04bf081756644e72a28eecf2df6914b": {
     "describe": {
       "columns": [
         {
@@ -195,32 +235,22 @@
         {
           "name": "name",
           "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "email",
-          "ordinal": 4,
           "type_info": "Varchar"
         },
         {
-          "name": "github_id",
+          "name": "owner_id",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "visibility",
           "ordinal": 5,
           "type_info": "Varchar"
         },
         {
-          "name": "google_id",
+          "name": "prefix",
           "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "photo_url",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "role",
-          "ordinal": 8,
-          "type_info": "Varchar"
+          "type_info": "Text"
         }
       ],
       "nullable": [
@@ -230,17 +260,13 @@
         false,
         false,
         true,
-        true,
-        true,
         true
       ],
       "parameters": {
-        "Left": [
-          "Uuid"
-        ]
+        "Left": []
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, name, email, github_id, google_id, photo_url, role\n            FROM members\n            WHERE id = $1\n            "
+    "query": "\n            SELECT *\n            FROM teams\n            "
   },
   "1d590755cfdaf09c0e44dca775a2f22b397c319242588480ed307e5e700a36b2": {
     "describe": {
@@ -315,54 +341,6 @@
       }
     },
     "query": "SELECT * FROM projects WHERE owner_id = $1"
-  },
-  "243b062e34a47b997605222dae439e684e1391cc71a7b9b13f96c9ec6d3cea04": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 1,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "name",
-          "ordinal": 3,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "owner_id",
-          "ordinal": 4,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "visibility",
-          "ordinal": 5,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "\n            SELECT id, created_at, updated_at, name, owner_id, visibility\n            FROM teams\n            "
   },
   "24cfb5a1293fc6d4ef12720af7d15e5b16cc1a2f73d3c06ff7646f269cab25ca": {
     "describe": {
@@ -464,89 +442,18 @@
     },
     "query": "\n                UPDATE tasks\n                SET project_id = $1\n                WHERE id = $2\n                "
   },
-  "2f448a554f0282d8e2c480843624a4dadc6288d8559d7b7c88b08195d70f5ca0": {
+  "2b9e3103d24d48356f1fb3ac5656bebad461e308c2f8007c33d313b81989ac67": {
     "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 1,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "title",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "status",
-          "ordinal": 5,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "priority",
-          "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "due_date",
-          "ordinal": 7,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "project_id",
-          "ordinal": 8,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "lead_id",
-          "ordinal": 9,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "labels",
-          "ordinal": 10,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "owner_id",
-          "ordinal": 11,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
-        "Left": []
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id\n            FROM tasks\n            "
+    "query": "\n                UPDATE projects\n                SET description = $1\n                WHERE id = $2\n                "
   },
   "312ea7953760c4967e1ad31b51a47ba18f5767cd70a03918e021fd234a2b1707": {
     "describe": {
@@ -629,172 +536,7 @@
     },
     "query": "SELECT \n        members.id,\n        members.created_at,\n        members.updated_at,\n        members.name,\n        members.email,\n        members.github_id,\n        members.google_id,\n        members.photo_url,\n        members.role \n        FROM members_by_teams JOIN members\n         ON members_by_teams.member_id = members.id WHERE team_id = $1"
   },
-  "523fee283a8b15e59f6a9e71ad7a7fd641340e3610712548b35bfbf653b7332b": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 1,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "title",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "owner_id",
-          "ordinal": 5,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "status",
-          "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "priority",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "due_date",
-          "ordinal": 8,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "project_id",
-          "ordinal": 9,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "lead_id",
-          "ordinal": 10,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "labels",
-          "ordinal": 11,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            DELETE FROM tasks\n            WHERE id = $1\n            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels\n            "
-  },
-  "539c8c080077597a00ef943de4305051eda3ddc6a1c920f74f12fed21eb6b72b": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 1,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "name",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "email",
-          "ordinal": 4,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "github_id",
-          "ordinal": 5,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "google_id",
-          "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "photo_url",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "role",
-          "ordinal": 8,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "\n            SELECT id, created_at, updated_at, name, email, github_id, google_id, photo_url, role\n            FROM members\n            "
-  },
-  "57985045828d0369ff2708afb2a3b7898efc47041f00a4be10a0b0927716b8cc": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n                UPDATE projects\n                SET name = $1\n                WHERE id = $2\n                "
-  },
-  "7e662b45ddc6aa0433abe89725588263349ae19dc46a537b735ba3362fa7fa8d": {
+  "42347d1057824cec0b7517d6f3816b77df352bfacb22d8168da9987f373dddb2": {
     "describe": {
       "columns": [
         {
@@ -826,6 +568,26 @@
           "name": "owner_id",
           "ordinal": 5,
           "type_info": "Uuid"
+        },
+        {
+          "name": "description",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 7,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "start_date",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 9,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -834,15 +596,115 @@
         false,
         false,
         false,
+        true,
+        true,
+        true,
+        true,
         true
       ],
       "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n            SELECT * FROM projects\n            "
+  },
+  "53eb104be98be0908977822de06bb8472a956bfb8262d531c7f1f6619381d418": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "email",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "password_hash",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "github_id",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "google_id",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "photo_url",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "role",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n            SELECT * FROM members\n            "
+  },
+  "57985045828d0369ff2708afb2a3b7898efc47041f00a4be10a0b0927716b8cc": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
         "Left": [
+          "Text",
           "Uuid"
         ]
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, name, prefix, owner_id\n            FROM projects\n            WHERE id = $1\n            "
+    "query": "\n                UPDATE projects\n                SET name = $1\n                WHERE id = $2\n                "
+  },
+  "5d089bf6e82da7d2e6a43d81c523077e5851c49a685d5f2ea92d3ff7cf94634a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Timestamp",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                UPDATE projects\n                SET start_date = $1\n                WHERE id = $2\n                "
   },
   "812579ae59e11e3e03901cefd61b045b93775011b5304a4919711bf94db5a869": {
     "describe": {
@@ -1095,7 +957,7 @@
     },
     "query": "\n            SELECT\n                id,\n                email,\n                name,\n                created_at,\n                updated_at,\n                github_id,\n                google_id,\n                photo_url,\n                role\n            FROM members\n            WHERE\n                name = COALESCE($1, name) OR\n                email = COALESCE($2, email) OR\n                role = COALESCE($3, role) OR\n                github_id = COALESCE($4, github_id) OR\n                google_id = COALESCE($5, google_id)\n            "
   },
-  "9861f4d8327ae9999a33864f3ddd30f729cabd6cd1a8d348f35aecf01d38939a": {
+  "88760845f769ce307a63d0cddc313a581057fbae4b582a3b313e41ea38343162": {
     "describe": {
       "columns": [
         {
@@ -1114,34 +976,39 @@
           "type_info": "Timestamptz"
         },
         {
-          "name": "email",
-          "ordinal": 3,
-          "type_info": "Varchar"
-        },
-        {
           "name": "name",
-          "ordinal": 4,
+          "ordinal": 3,
           "type_info": "Text"
         },
         {
-          "name": "github_id",
+          "name": "prefix",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "owner_id",
           "ordinal": 5,
-          "type_info": "Varchar"
+          "type_info": "Uuid"
         },
         {
-          "name": "google_id",
+          "name": "description",
           "ordinal": 6,
-          "type_info": "Varchar"
+          "type_info": "Text"
         },
         {
-          "name": "photo_url",
+          "name": "lead_id",
           "ordinal": 7,
-          "type_info": "Varchar"
+          "type_info": "Uuid"
         },
         {
-          "name": "role",
+          "name": "start_date",
           "ordinal": 8,
-          "type_info": "Varchar"
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 9,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -1153,17 +1020,92 @@
         true,
         true,
         true,
+        true,
         true
       ],
       "parameters": {
         "Left": [
-          "Text"
+          "Uuid"
         ]
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role\n            FROM members\n            WHERE email = $1\n            "
+    "query": "\n            SELECT *\n            FROM projects\n            WHERE id = $1\n            "
   },
-  "9bd4bce793e4b14152c184c4d489028877cf0229298384a79a3822995251ecbf": {
+  "938db14251bb3889c9aef70189745babfcb965e32a7f2accd61a719b3e668a8c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "prefix",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "description",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 7,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "start_date",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 9,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM projects\n            WHERE id = $1\n            "
+  },
+  "93e54800883bb1ffed9bb272b2e0558b73306702ff925a0d7ea623497fa039b5": {
     "describe": {
       "columns": [
         {
@@ -1192,39 +1134,44 @@
           "type_info": "Text"
         },
         {
-          "name": "status",
+          "name": "owner_id",
           "ordinal": 5,
-          "type_info": "Varchar"
+          "type_info": "Uuid"
         },
         {
-          "name": "priority",
+          "name": "status",
           "ordinal": 6,
           "type_info": "Varchar"
         },
         {
-          "name": "due_date",
+          "name": "priority",
           "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 8,
           "type_info": "Timestamptz"
         },
         {
           "name": "project_id",
-          "ordinal": 8,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "lead_id",
           "ordinal": 9,
           "type_info": "Uuid"
         },
         {
-          "name": "labels",
+          "name": "lead_id",
           "ordinal": 10,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "labels",
+          "ordinal": 11,
           "type_info": "Jsonb"
         },
         {
-          "name": "owner_id",
-          "ordinal": 11,
-          "type_info": "Uuid"
+          "name": "count",
+          "ordinal": 12,
+          "type_info": "Int4"
         }
       ],
       "nullable": [
@@ -1239,7 +1186,8 @@
         true,
         true,
         true,
-        true
+        true,
+        false
       ],
       "parameters": {
         "Left": [
@@ -1247,7 +1195,7 @@
         ]
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id\n            FROM tasks\n            WHERE id = $1\n            "
+    "query": "\n            SELECT * FROM tasks\n            WHERE id = $1\n            "
   },
   "9c8523299f030c3d8283a81178d0b7066eed4f279ae4234d478eb334eaa5d54e": {
     "describe": {
@@ -1262,7 +1210,99 @@
     },
     "query": "\n                UPDATE members\n                SET name = $1\n                WHERE id = $2\n                "
   },
-  "a428f60e0519886e10dd3311468d46d6b5a77ecce378e818ed5f9a85fe252348": {
+  "a5eff913625df83b129fda50600c0469bac7d6c5b34cb9ed3bc828798b1ee112": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "title",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "status",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "priority",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "project_id",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 10,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "labels",
+          "ordinal": 11,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "count",
+          "ordinal": 12,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM tasks\n            WHERE id = $1\n            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels, count\n            "
+  },
+  "a6fb21fe0b5ae7e43476f4480786dcd8e83d4899797f440610614bda3cf7f429": {
     "describe": {
       "columns": [
         {
@@ -1283,7 +1323,7 @@
         {
           "name": "name",
           "ordinal": 3,
-          "type_info": "Text"
+          "type_info": "Varchar"
         },
         {
           "name": "owner_id",
@@ -1291,9 +1331,14 @@
           "type_info": "Uuid"
         },
         {
-          "name": "prefix",
+          "name": "visibility",
           "ordinal": 5,
           "type_info": "Varchar"
+        },
+        {
+          "name": "prefix",
+          "ordinal": 6,
+          "type_info": "Text"
         }
       ],
       "nullable": [
@@ -1301,8 +1346,9 @@
         false,
         false,
         false,
+        false,
         true,
-        false
+        true
       ],
       "parameters": {
         "Left": [
@@ -1310,7 +1356,7 @@
         ]
       }
     },
-    "query": "\n        DELETE FROM projects\n        WHERE id = $1\n        RETURNING id, created_at, updated_at, name, owner_id, prefix;\n        "
+    "query": "\n            SELECT * FROM teams\n            WHERE id = $1\n            "
   },
   "a738cce4f1f3798c90569638b7312ebae9fbce1ac2913051336797d372e9bffc": {
     "describe": {
@@ -1338,7 +1384,20 @@
     },
     "query": "\n                UPDATE tasks\n                SET priority = $1\n                WHERE id = $2\n                "
   },
-  "b0e5e3bfeda77c83031123e61a08c495cb253e4f2b6a73ede5ef9cefc699cdf0": {
+  "ab150e449fc1ac3c04010f0b769e03449ede4ff307092bfe2d0bb209b5fde53c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Timestamp",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                UPDATE projects\n                SET due_date = $1\n                WHERE id = $2\n                "
+  },
+  "bdf46ae26861a501ea571b139469ce42f1ffb428ff02ddaab741fcad62417b26": {
     "describe": {
       "columns": [
         {
@@ -1362,13 +1421,33 @@
           "type_info": "Text"
         },
         {
-          "name": "owner_id",
+          "name": "email",
           "ordinal": 4,
-          "type_info": "Uuid"
+          "type_info": "Varchar"
         },
         {
-          "name": "prefix",
+          "name": "password_hash",
           "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "github_id",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "google_id",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "photo_url",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "role",
+          "ordinal": 9,
           "type_info": "Varchar"
         }
       ],
@@ -1377,8 +1456,12 @@
         false,
         false,
         false,
+        false,
         true,
-        false
+        true,
+        true,
+        true,
+        true
       ],
       "parameters": {
         "Left": [
@@ -1386,55 +1469,7 @@
         ]
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, name, owner_id, prefix\n            FROM projects\n            WHERE id = $1\n            "
-  },
-  "c41bd69ec7fe1392e47eec6ad69194e539d93446e033045840b99504a2c75281": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 1,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "name",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "prefix",
-          "ordinal": 4,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "owner_id",
-          "ordinal": 5,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "\n            SELECT id, created_at, updated_at, name, prefix, owner_id\n            FROM projects\n            "
+    "query": "\n            SELECT * FROM members\n            WHERE id = $1\n            "
   },
   "dc563c55c73d5b1a2cfdfcbb552c755b63d2aff284877e36cf932fddc587d883": {
     "describe": {
@@ -1528,6 +1563,93 @@
     },
     "query": "SELECT * FROM tasks WHERE lead_id = $1"
   },
+  "dec4f58655da0470877d5e912fd388ff0112935119a3aeca5a66a00592392176": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "email",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "password_hash",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "github_id",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "google_id",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "photo_url",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "role",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM members\n            WHERE email = $1\n            "
+  },
+  "e645a11e32d723bfe1971e70ab7d2391d74bc92e2b57c899a6b82899fd548668": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                UPDATE projects\n                SET lead_id = $1\n                WHERE id = $2\n                "
+  },
   "eb03b86f612d10c51ef6cd15fbd534ae3d16a88d15565457454062dce2d97527": {
     "describe": {
       "columns": [],
@@ -1611,20 +1733,7 @@
     },
     "query": "\n            INSERT INTO members (email, name, github_id)\n            VALUES ($1, $2, $3)\n            RETURNING\n                id,\n                email,\n                name,\n                created_at,\n                updated_at,\n                github_id,\n                google_id,\n                photo_url,\n                role\n            "
   },
-  "f3f37a440e10e30670b88e5102e270665a300224eafad217e9c297bb9d1f886f": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n                UPDATE tasks\n                SET description = $1\n                WHERE id = $2\n                "
-  },
-  "f6bafce1a6baaaa969ae693c3dbb56a867ddd45d0dfa9adcf7ace6150ffab41b": {
+  "f378bfdeaa6c9802a8a651181eccfd595ad44e7678a77f4bfaf62cddc061e8ab": {
     "describe": {
       "columns": [
         {
@@ -1643,34 +1752,39 @@
           "type_info": "Timestamptz"
         },
         {
-          "name": "email",
-          "ordinal": 3,
-          "type_info": "Varchar"
-        },
-        {
           "name": "name",
-          "ordinal": 4,
+          "ordinal": 3,
           "type_info": "Text"
         },
         {
-          "name": "github_id",
+          "name": "prefix",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "owner_id",
           "ordinal": 5,
-          "type_info": "Varchar"
+          "type_info": "Uuid"
         },
         {
-          "name": "google_id",
+          "name": "description",
           "ordinal": 6,
-          "type_info": "Varchar"
+          "type_info": "Text"
         },
         {
-          "name": "photo_url",
+          "name": "lead_id",
           "ordinal": 7,
-          "type_info": "Varchar"
+          "type_info": "Uuid"
         },
         {
-          "name": "role",
+          "name": "start_date",
           "ordinal": 8,
-          "type_info": "Varchar"
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 9,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -1682,6 +1796,7 @@
         true,
         true,
         true,
+        true,
         true
       ],
       "parameters": {
@@ -1690,7 +1805,20 @@
         ]
       }
     },
-    "query": "\n            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role\n            FROM members\n            WHERE id = $1\n            "
+    "query": "\n            DELETE FROM projects\n            WHERE id = $1\n            RETURNING *\n            "
+  },
+  "f3f37a440e10e30670b88e5102e270665a300224eafad217e9c297bb9d1f886f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                UPDATE tasks\n                SET description = $1\n                WHERE id = $2\n                "
   },
   "f7e790a209f69253962c313dcf016e8967a1021c52910f73c45d7632766a3502": {
     "describe": {
