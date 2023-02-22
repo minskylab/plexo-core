@@ -338,7 +338,7 @@ impl QueryRoot {
                 name: r.name.clone(),
                 owner_id: r.owner_id,
                 visibility: TeamVisibility::from_optional_str(&r.visibility),
-                prefix: r.prefix.clone().unwrap_or("".to_string()),
+                prefix: r.prefix.clone(),
 
             })
             .collect()
@@ -368,7 +368,7 @@ impl QueryRoot {
             name: team.name,
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
-            prefix: team.prefix.unwrap_or("".to_string()),
+            prefix: team.prefix,
         }
     }
 }

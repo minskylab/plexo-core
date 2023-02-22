@@ -61,35 +61,61 @@ impl Project {
         }
     }
 
-    pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
-        todo!()
-        //------falta crear tabla
-        // let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        // let plexo_engine = ctx.data::<Engine>().unwrap();
-        // let projects = sqlx::query!(r#"SELECT * FROM members_by_projects WHERE project_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
-        // projects
-        //     .iter()
-        //     .map(|r| Member {
-        //         id: r.id,
-        //         created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-        //         updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-        //         name: r.name.clone(),
-        //         email: r.email.clone(),
-        //         github_id: r.github_id.clone(),
-        //         google_id: r.google_id.clone(),
-        //         photo_url: r.photo_url.clone(),
-        //         role: MemberRole::from_optional_str(&r.role),
-        //     })
-        //     .collect()
-    }
-
-    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
+    pub async fn members (&self, ctx: &Context<'_>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE project_id = $1"#, &self.id)
-            .fetch_all(&plexo_engine.pool)
-            .await
-            .unwrap();
+        let members = sqlx::query!(
+        r#"
+        SELECT * FROM members_by_projects JOIN members
+        ON members_by_projects.member_id = members.id WHERE project_id = $1"#,
+         &self.id)
+         .fetch_all(&plexo_engine.pool).await.unwrap();
+
+        members
+            .iter()
+            .map(|r| Member {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                email: r.email.clone(),
+                github_id: r.github_id.clone(),
+                google_id: r.google_id.clone(),
+                photo_url: r.photo_url.clone(),
+                role: MemberRole::from_optional_str(&r.role),
+            })
+            .collect()
+    }
+
+    pub async fn tasks (&self, ctx: &Context<'_>) -> Vec<Task> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let tasks = sqlx::query!(
+        r#"
+        SELECT 
+        tasks.id,
+        tasks.created_at,
+        tasks.updated_at,
+        tasks.title,
+        tasks.description,
+        tasks.status,
+        tasks.priority,
+        tasks.due_date,
+        tasks.project_id,
+        tasks.lead_id,
+        tasks.labels,
+        tasks.owner_id,
+        tasks.count
+        FROM tasks_by_projects JOIN tasks 
+        ON tasks_by_projects.task_id = tasks.id WHERE tasks_by_projects.project_id = $1
+        "#,
+        &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
+
         tasks
             .iter()
             .map(|r| Task {
@@ -119,4 +145,6 @@ impl Project {
             })
             .collect()
     }
+
+    
 }

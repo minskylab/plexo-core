@@ -25,7 +25,7 @@ pub struct Team {
 
     pub visibility: TeamVisibility,
 
-    pub prefix: String,
+    pub prefix: Option<String>,
 }
 
 #[ComplexObject]

@@ -117,7 +117,7 @@ impl SubscriptionRoot {
                 updated_at: Utc::now(),
                 owner_id: Uuid::new_v4(),
                 visibility: TeamVisibility::Public,
-                prefix: "TX".to_string(),
+                prefix: None,
             })
     }
 }
