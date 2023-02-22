@@ -1314,109 +1314,109 @@ impl MutationRoot {
 
     }
 
-    async fn add_task_to_project (
-        &self,
-        ctx: &Context<'_>,
-        project_id: Uuid,
-        task_id: Uuid,
-    ) -> Project {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+    // async fn add_task_to_project (
+    //     &self,
+    //     ctx: &Context<'_>,
+    //     project_id: Uuid,
+    //     task_id: Uuid,
+    // ) -> Project {
+    //     let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+    //     let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        let _project_assign_task = sqlx::query!(
-            r#"
-            INSERT INTO tasks_by_projects (project_id, task_id)
-            VALUES ($1, $2)
-            "#,
-            project_id,
-            task_id,
-        )
-        .execute(&plexo_engine.pool)
-        .await
-        .unwrap();
+    //     let _project_assign_task = sqlx::query!(
+    //         r#"
+    //         INSERT INTO tasks_by_projects (project_id, task_id)
+    //         VALUES ($1, $2)
+    //         "#,
+    //         project_id,
+    //         task_id,
+    //     )
+    //     .execute(&plexo_engine.pool)
+    //     .await
+    //     .unwrap();
 
-        let project = sqlx::query!(
-            r#"
-            SELECT * FROM projects
-            WHERE id = $1
-            "#,
-            project_id,
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await
-        .unwrap();
+    //     let project = sqlx::query!(
+    //         r#"
+    //         SELECT * FROM projects
+    //         WHERE id = $1
+    //         "#,
+    //         project_id,
+    //     )
+    //     .fetch_one(&plexo_engine.pool)
+    //     .await
+    //     .unwrap();
 
-        Project {
-            id: project.id,
-            created_at: DateTimeBridge::from_offset_date_time(project.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
-            name: project.name.clone(),
-            description: project.description.clone(),
-            prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
-            lead_id: project.lead_id,
-            start_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-            due_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+    //     Project {
+    //         id: project.id,
+    //         created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+    //         updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+    //         name: project.name.clone(),
+    //         description: project.description.clone(),
+    //         prefix: project.prefix.clone(),
+    //         owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+    //         lead_id: project.lead_id,
+    //         start_date: project
+    //             .due_date
+    //             .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+    //         due_date: project
+    //             .due_date
+    //             .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
             
-        }
+    //     }
 
-    }
+    // }
 
-    async fn delete_task_from_project (
-        &self,
-        ctx: &Context<'_>,
-        project_id: Uuid,
-        task_id: Uuid,
-    ) -> Project {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+    // async fn delete_task_from_project (
+    //     &self,
+    //     ctx: &Context<'_>,
+    //     project_id: Uuid,
+    //     task_id: Uuid,
+    // ) -> Project {
+    //     let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+    //     let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        let _project_assign_task = sqlx::query!(
-            r#"
-            DELETE FROM tasks_by_projects
-            WHERE project_id = $1 AND task_id = $2
-            "#,
-            project_id,
-            task_id,
-        )
-        .execute(&plexo_engine.pool)
-        .await
-        .unwrap();
+    //     let _project_assign_task = sqlx::query!(
+    //         r#"
+    //         DELETE FROM tasks_by_projects
+    //         WHERE project_id = $1 AND task_id = $2
+    //         "#,
+    //         project_id,
+    //         task_id,
+    //     )
+    //     .execute(&plexo_engine.pool)
+    //     .await
+    //     .unwrap();
 
-        let project = sqlx::query!(
-            r#"
-            SELECT * FROM projects
-            WHERE id = $1
-            "#,
-            project_id,
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await
-        .unwrap();
+    //     let project = sqlx::query!(
+    //         r#"
+    //         SELECT * FROM projects
+    //         WHERE id = $1
+    //         "#,
+    //         project_id,
+    //     )
+    //     .fetch_one(&plexo_engine.pool)
+    //     .await
+    //     .unwrap();
 
-        Project {
-            id: project.id,
-            created_at: DateTimeBridge::from_offset_date_time(project.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
-            name: project.name.clone(),
-            description: project.description.clone(),
-            prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
-            lead_id: project.lead_id,
-            start_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-            due_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+    //     Project {
+    //         id: project.id,
+    //         created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+    //         updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+    //         name: project.name.clone(),
+    //         description: project.description.clone(),
+    //         prefix: project.prefix.clone(),
+    //         owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+    //         lead_id: project.lead_id,
+    //         start_date: project
+    //             .due_date
+    //             .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+    //         due_date: project
+    //             .due_date
+    //             .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
             
-        }
+    //     }
 
-    }
+    // }
     
 
     async fn add_team_to_project (
