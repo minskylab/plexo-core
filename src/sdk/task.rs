@@ -61,7 +61,7 @@ impl Task {
         }
     }
 
-    pub async fn assignee(&self, ctx: &Context<'_>) -> Option<Member> {
+    pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -129,6 +129,33 @@ impl Task {
             Err(_) => None,
         }
     }
+    
+    pub async fn assignees (&self, ctx: &Context<'_>) -> Vec<Member> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        let members = sqlx::query!(r#"
+        SELECT * FROM tasks_by_assignees JOIN members
+        ON tasks_by_assignees.assignee_id = members.id WHERE task_id = $1"#,
+         &self.id)
+         .fetch_all(&plexo_engine.pool).await.unwrap();
+
+        members
+            .iter()
+            .map(|r| Member {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                email: r.email.clone(),
+                github_id: r.github_id.clone(),
+                google_id: r.google_id.clone(),
+                photo_url: r.photo_url.clone(),
+                role: MemberRole::from_optional_str(&r.role),
+            })
+            .collect()
+    } 
+
+
 }
 
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]

@@ -758,4 +758,180 @@ impl MutationRoot {
 
         }
     }
+
+    // async fn assign_member_to_project (
+    //     &self,
+    //     ctx: &Context<'_>,
+    //     project_id: Uuid,
+    //     member_id: Uuid,
+    // ) -> Project {
+    //     let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+    //     let plexo_engine = ctx.data::<Engine>().unwrap();
+
+    //     let _project_assign_member = sqlx::query!(
+    //         r#"
+    //         INSERT INTO members_by_projects (project_id, member_id)
+    //         VALUES ($1, $2)
+    //         "#,
+    //         project_id,
+    //         member_id,
+    //     )
+    //     .execute(&plexo_engine.pool)
+    //     .await
+    //     .unwrap();
+
+    //     let project = sqlx::query!(
+    //         r#"
+    //         SELECT * FROM projects
+    //         WHERE id = $1
+    //         "#,
+    //         project_id,
+    //     )
+    //     .fetch_one(&plexo_engine.pool)
+    //     .await
+    //     .unwrap();
+
+    //     Project {
+    //         id: project.id,
+    //         created_at: DateTimeBridge::from_offset_date_time(project.created_at),
+    //         updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
+    //         name: project.name.clone(),
+    //         description: project.description.clone(),
+    //         prefix: project.prefix.clone(),
+    //         owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+    //         lead_id: project.lead_id,
+    //         start_date: project
+    //             .due_date
+    //             .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+    //         due_date: project
+    //             .due_date
+    //             .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+            
+    //     }
+
+    async fn assign_member_to_task (
+        &self,
+        ctx: &Context<'_>,
+        task_id: Uuid,
+        member_id: Uuid,
+    ) -> Task {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let _task_assign_member = sqlx::query!(
+            r#"
+            INSERT INTO tasks_by_assignees (task_id, assignee_id)
+            VALUES ($1, $2)
+            "#,
+            task_id,
+            member_id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        let task = sqlx::query!(
+            r#"
+            SELECT * FROM tasks
+            WHERE id = $1
+            "#,
+            task_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Task {
+            id: task.id,
+            created_at: DateTimeBridge::from_offset_date_time(task.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(task.updated_at),
+            title: task.title,
+            description: task.description,
+            status: TaskStatus::from_optional_str(&task.status),
+            priority: TaskPriority::from_optional_str(&task.priority),
+            due_date: task
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+            project_id: task.project_id,
+            lead_id: task.lead_id,
+            labels: task
+                .labels
+                .as_ref()
+                .map(|l| {
+                    l.as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|s| s.as_str().unwrap().to_string())
+                        .collect()
+                })
+                .unwrap_or(vec![]),
+            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            count: task.count,
+
+        }
+
+    }
+
+    async fn delete_member_from_task (
+        &self,
+        ctx: &Context<'_>,
+        task_id: Uuid,
+        member_id: Uuid,
+    ) -> Task {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let _task_assign_member = sqlx::query!(
+            r#"
+            DELETE FROM tasks_by_assignees
+            WHERE task_id = $1 AND assignee_id = $2
+            "#,
+            task_id,
+            member_id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        let task = sqlx::query!(
+            r#"
+            SELECT * FROM tasks
+            WHERE id = $1
+            "#,
+            task_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Task {
+            id: task.id,
+            created_at: DateTimeBridge::from_offset_date_time(task.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(task.updated_at),
+            title: task.title,
+            description: task.description,
+            status: TaskStatus::from_optional_str(&task.status),
+            priority: TaskPriority::from_optional_str(&task.priority),
+            due_date: task
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+            project_id: task.project_id,
+            lead_id: task.lead_id,
+            labels: task
+                .labels
+                .as_ref()
+                .map(|l| {
+                    l.as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|s| s.as_str().unwrap().to_string())
+                        .collect()
+                })
+                .unwrap_or(vec![]),
+            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            count: task.count,
+
+        }
+    }
+    
 }
