@@ -21,7 +21,7 @@ pub struct Project {
     pub updated_at: DateTime<Utc>,
 
     pub name: String,
-    pub prefix: String,
+    pub prefix: Option<String>,
 
     pub owner_id: Uuid,
     pub description: Option<String>,

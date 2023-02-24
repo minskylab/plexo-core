@@ -521,7 +521,7 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         name: String,
-        prefix: String,
+        prefix: Option<String>,
         owner_id: Uuid,
         description: Option<String>,
         lead_id: Option<Uuid>,
@@ -534,17 +534,31 @@ impl MutationRoot {
 
         let project_create = sqlx::query!(
             r#"
-            INSERT INTO projects (name, owner_id, prefix)
-            VALUES ($1, $2, $3)
+            INSERT INTO projects (name, owner_id)
+            VALUES ($1, $2)
             RETURNING id
             "#,
             name,
             owner_id,
-            prefix,
         )
         .fetch_one(&plexo_engine.pool)
         .await
         .unwrap();
+
+        if prefix.is_some() {
+            let _project_update_prefix = sqlx::query!(
+                r#"
+                UPDATE projects
+                SET prefix = $1
+                WHERE id = $2
+                "#,
+                prefix.unwrap(),
+                project_create.id.clone(),
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
+        }
 
         if description.is_some() {
             let _project_update_description = sqlx::query!(

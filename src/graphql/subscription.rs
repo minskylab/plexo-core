@@ -98,7 +98,7 @@ impl SubscriptionRoot {
                 name: "Project X".to_string(),
                 description: None,
                 owner_id: Uuid::new_v4(),
-                prefix: "PX".to_string(),
+                prefix: None,
                 lead_id: None,
                 start_date: None,
                 due_date: None,

@@ -92,7 +92,7 @@
         false,
         false,
         false,
-        false,
+        true,
         true,
         true,
         true,
@@ -364,28 +364,6 @@
     },
     "query": "\n                UPDATE tasks\n                SET labels = $1\n                WHERE id = $2\n                "
   },
-  "138f6140dd56d08709f26ca96f0e4f0cd2134f542e69389cbd166a67747cb27f": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid",
-          "Varchar"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO projects (name, owner_id, prefix)\n            VALUES ($1, $2, $3)\n            RETURNING id\n            "
-  },
   "15a8a34cc8a38425e6582cf7703b30fbd445096ee63ad6d2781e1345adac7191": {
     "describe": {
       "columns": [],
@@ -616,7 +594,7 @@
         false,
         false,
         false,
-        false,
+        true,
         true,
         true,
         true,
@@ -643,6 +621,27 @@
       }
     },
     "query": "\n                UPDATE tasks\n                SET status = $1\n                WHERE id = $2\n                "
+  },
+  "292d51a1eb460e28b8916a7a810b3679758c88e3cf2a3d4b32934673ba6ee225": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO projects (name, owner_id)\n            VALUES ($1, $2)\n            RETURNING id\n            "
   },
   "29356ceade5be500173e8655241a35973a4333a3d19ec0b9e3dfabbd0bc97b8c": {
     "describe": {
@@ -703,7 +702,7 @@
         false,
         false,
         false,
-        false,
+        true,
         true,
         true,
         true,
@@ -923,7 +922,7 @@
         false,
         false,
         false,
-        false,
+        true,
         true,
         true,
         true,
@@ -1444,7 +1443,7 @@
         false,
         false,
         false,
-        false,
+        true,
         true,
         true,
         true,
@@ -1518,7 +1517,7 @@
         false,
         false,
         false,
-        false,
+        true,
         true,
         true,
         true,
@@ -2411,7 +2410,7 @@
         false,
         false,
         false,
-        false,
+        true,
         true,
         true,
         true,
