@@ -29,9 +29,6 @@ pub struct Project {
     pub lead_id: Option<Uuid>,
     pub start_date: Option<DateTime<Utc>>,
     pub due_date: Option<DateTime<Utc>>,
-    
-
-    
 }
 
 #[ComplexObject]
