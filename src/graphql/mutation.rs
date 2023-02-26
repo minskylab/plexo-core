@@ -13,7 +13,7 @@ use crate::{
         task::{Task, TaskPriority, TaskStatus},
         utilities::DateTimeBridge,
     },
-    system::core::Engine,
+    system::{core::Engine, subscriptions::SubscriptionManager},
 };
 
 pub struct MutationRoot;
@@ -33,6 +33,7 @@ impl MutationRoot {
         lead_id: Option<Uuid>,
         labels: Option<Vec<String>>,
     ) -> Task {
+        let subscription_manager = &ctx.data::<Engine>().unwrap().subscription_manager;
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -195,6 +196,13 @@ impl MutationRoot {
         //     .subscription_manager
         //     .broadcast_task_created(auth_token, task)
         //     .await;
+        
+        let event = subscription_manager.send_event("subscription_id".to_string(), "Task creado".to_string()).await;
+        if (event == Ok(())) {
+            println!("Event sent");
+        } else {
+            println!("Event not sent");
+        }
 
         task
     }

@@ -22,7 +22,7 @@ pub struct Project {
 
     pub name: String,
     pub description: Option<String>,
-    pub prefix: String,
+    pub prefix: Option<String>,
 
     pub owner_id: Uuid,
 }

@@ -1,72 +1,83 @@
 use async_graphql::{Enum, SimpleObject};
 use std::collections::HashMap;
+use std::error::Error;
+use std::iter::Map;
+use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::mpsc::Sender;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
 use tokio::sync::Mutex;
 use tokio::time::{interval, Duration, Instant};
 use tokio_stream::wrappers::IntervalStream;
+use tokio_stream::{Stream, StreamExt};
 
-use tokio_stream::StreamExt;
 use uuid::Uuid;
 
 // use tokio_stream::StreamExt;
 // use uuid::Uuid;
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
-pub enum DataDiffEventKind {
-    Created,
-    Updated,
-    Deleted,
+pub struct Subscription {
+    id: String,
+    sender: Sender<String>,
 }
 
-#[derive(SimpleObject, Clone)]
-pub struct DataDiffEvent {
-    pub kind: DataDiffEventKind,
-    pub data: String,
+impl Subscription {
+    fn new(id: String, sender: Sender<String>) -> Self {
+        Subscription {
+            id: id,
+            sender: sender,
+        }
+    }
 }
+
+type MyResult<T> = std::result::Result<T, String>;
+
 
 #[derive(Clone)]
 pub struct SubscriptionManager {
-    // pub tasks_subscription: Arc<IntervalStream>,
-    pub subscriptions: HashMap<String, Arc<IntervalStream>>,
+    pub subscriptions: Arc<Mutex<HashMap<String, Subscription>>>,
 }
 
 impl SubscriptionManager {
     pub fn new() -> Self {
         Self {
-            subscriptions: HashMap::new(),
+            subscriptions: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    pub fn add_subscription(&mut self, name: String) {
-        let stream_name = "table:tasks".to_string();
+    pub async fn add_subscription(&self, id: String, sender: Sender<String>) -> MyResult<String> {
+        let mut subscriptions = self.subscriptions.lock().await;
+    
+        if subscriptions.contains_key(&id) {
+            return Err(Box::<dyn Error>::from(format!(
+                "Subscription with id '{}' already exists",
+                id
+            )).to_string());
+        }
+    
+        subscriptions.insert(id.clone(), Subscription::new(id.clone(), sender));
+        Ok(id.clone())
+    }
 
-        let interval_stream = IntervalStream::new(tokio::time::interval(Duration::from_secs(1)));
+    async fn remove_subscription(&self, id: String) -> MyResult<bool>{
+        let mut subscriptions = self.subscriptions.lock().await;
 
-        let mapped_stream = interval_stream.map(move |_| DataDiffEvent {
-            kind: DataDiffEventKind::Created,
-            data: Uuid::new_v4().to_string(),
-        });
+        if !subscriptions.contains_key(&id) {
+            return Ok(false);
+        }
 
-        let stream = Arc::new(mapped_stream);
+        subscriptions.remove(&id);
+        Ok(true)
+    }
 
-        // self.subscriptions.insert(stream_name, stream);
+    pub async fn send_event(&self, id: String, event: String) -> MyResult<()> {
+        let subscriptions = self.subscriptions.lock().await;
 
-        // let (tx, rx) = unbounded_channel();
-        // let interval = IntervalStream::new(interval(Duration::from_secs(1)));
-        // let data = "some data".to_owned();
+        if let Some(subscription) = subscriptions.get(&id) {
+            subscription.sender.clone().send(event).unwrap();
+        }
 
-        // tokio::spawn(async move {
-        //     loop {
-        //         interval.next().await;
-        //         tx.send(DataDiffEvent {
-        //             kind: DataDiffEventKind::Created,
-        //             data: data.clone(),
-        //         })
-        //         .unwrap();
-        //     }
-        // });
-
-        // self.subscriptions.insert(name, rx);
+        Ok(())
     }
 }
+

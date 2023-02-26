@@ -1,8 +1,15 @@
-use std::time::Duration;
-
-use async_graphql::{futures_util::StreamExt, Context, Subscription};
+use std::sync::mpsc::RecvError;
+use std::{time::Duration, pin::Pin, sync::mpsc};
+use async_graphql::{Enum, SimpleObject};
+use tokio_stream::wrappers::IntervalStream;
+use async_graphql::{futures_util::StreamExt, Context, Subscription, async_stream::stream, Object, FieldResult};
 use chrono::Utc;
-use tokio::time::Instant;
+use tokio::{time::Instant, sync::futures};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
+
 use tokio_stream::Stream;
 use uuid::{uuid, Uuid};
 
@@ -14,9 +21,22 @@ use crate::{
     },
     system::{
         core::Engine,
-        subscriptions::{DataDiffEvent, DataDiffEventKind},
+        subscriptions::SubscriptionManager,
     },
 };
+
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+pub enum DataDiffEventKind {
+    Created,
+    Updated,
+    Deleted,
+}
+
+#[derive(SimpleObject, Clone)]
+pub struct DataDiffEvent {
+    pub kind: DataDiffEventKind,
+    pub data: String,
+}
 
 pub struct SubscriptionRoot;
 
@@ -30,26 +50,38 @@ impl SubscriptionRoot {
                 value
             })
     }
-
-    async fn example(&self, ctx: &Context<'_>) -> impl Stream<Item = Instant> {
-        let sub = ctx
-            .data::<Engine>()
-            .unwrap()
-            .subscription_manager
-            .subscriptions
-            .get("table:tasks")
-            .unwrap()
-            .clone();
-        // .unwrap()
-
-        // tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
-        //     .map(move |_| DataDiffEvent {
-        //         kind: DataDiffEventKind::Created,
-        //         data: Uuid::new_v4().to_string(),
-        //     })
-
-        sub
+    
+    async fn subscribe(&self, ctx: &Context<'_>) -> FieldResult<Pin<Box<dyn Stream<Item = String> + Send>>>{
+        let (sender, receiver) = mpsc::channel();
+        let subscription_manager = &ctx.data::<Engine>().unwrap().subscription_manager;
+    
+        let suscription_added = subscription_manager.add_subscription("subscription_id".to_string(), sender).await?;
+        if (suscription_added == "subscription_id".to_string()) {
+            println!("Subscription added");
+        }
+        let interval_stream = IntervalStream::new(tokio::time::interval(Duration::from_secs(1)));
+        let mapped_stream = interval_stream.map(move |_| 
+            if (receiver.try_recv().is_err()) {
+                "No hay eventos recibidos".to_string()
+            } else {
+                "Task creado".to_string()
+            }
+        );
+    
+        Ok(Box::pin(mapped_stream))    
     }
+
+    // async fn diffs(&self, ctx: &Context<'_>) -> FieldResult<Pin<Box<dyn Stream<Item = DataDiffEvent> + Send>>> {
+    //     let stream_name = "hola".to_string();
+
+    //     let interval_stream = IntervalStream::new(tokio::time::interval(Duration::from_secs(1)));
+    //     let mapped_stream = interval_stream.map(move |_| DataDiffEvent {
+    //         kind: DataDiffEventKind::Created,
+    //         data: Uuid::new_v4().to_string(),
+    //     });
+
+    //     Ok(Box::pin(mapped_stream))
+    // }
 
     async fn tasks(&self, ctx: &Context<'_>) -> impl Stream<Item = Task> {
         let auth_token = ctx.data::<String>().unwrap();
@@ -112,7 +144,7 @@ impl SubscriptionRoot {
                 name: "Project X".to_string(),
                 description: None,
                 owner_id: Uuid::new_v4(),
-                prefix: "PX".to_string(),
+                prefix: None,
             })
     }
 
