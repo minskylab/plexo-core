@@ -1,6 +1,5 @@
 use async_graphql::{Context, InputObject, Object};
 use chrono::{DateTime, Utc};
-use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
@@ -59,7 +58,10 @@ impl QueryRoot {
             r#"
             SELECT * FROM tasks
             "#
-        ).fetch_all(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         tasks
             .iter()
@@ -103,7 +105,10 @@ impl QueryRoot {
             WHERE id = $1
             "#,
             id
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         Task {
             id: task.id,
@@ -272,7 +277,6 @@ impl QueryRoot {
                 due_date: r
                     .due_date
                     .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-
             })
             .collect()
     }
@@ -309,7 +313,6 @@ impl QueryRoot {
             due_date: project
                 .due_date
                 .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-
         }
     }
 
@@ -339,7 +342,6 @@ impl QueryRoot {
                 owner_id: r.owner_id,
                 visibility: TeamVisibility::from_optional_str(&r.visibility),
                 prefix: r.prefix.clone(),
-
             })
             .collect()
     }
