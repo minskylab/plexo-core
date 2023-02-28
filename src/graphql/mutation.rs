@@ -33,6 +33,7 @@ impl MutationRoot {
         project_id: Option<Uuid>,
         lead_id: Option<Uuid>,
         labels: Option<Vec<String>>,
+        add_assignees_id: Option<Vec<Uuid>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -156,6 +157,10 @@ impl MutationRoot {
             .unwrap();
         }
 
+        if add_assignees_id.is_some() {
+            self.add_assignees_to_task(ctx, task_create.id, add_assignees_id.unwrap()).await;
+        }
+        
         let task_final_info = sqlx::query!(
             r#"
             SELECT * FROM tasks
@@ -212,6 +217,8 @@ impl MutationRoot {
         project_id: Option<Uuid>,
         lead_id: Option<Uuid>,
         labels: Option<Vec<String>>,
+        add_assignees_id: Option<Vec<Uuid>>,
+        delete_assignees_id: Option<Vec<Uuid>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -336,6 +343,15 @@ impl MutationRoot {
             .unwrap();
         }
 
+        if add_assignees_id.is_some() {
+            self.add_assignees_to_task(ctx, id, add_assignees_id.unwrap()).await;
+            
+        }
+
+        if delete_assignees_id.is_some() {
+            self.delete_assignees_from_task(ctx, id, delete_assignees_id.unwrap()).await;
+        }
+        
         let task_final_info = sqlx::query!(
             r#"
             SELECT * FROM tasks
@@ -387,6 +403,14 @@ impl MutationRoot {
         )
         .fetch_one(&plexo_engine.pool).await.unwrap();
 
+        let _deleted_assignees = sqlx::query!(
+            r#"
+            DELETE FROM tasks_by_assignees
+            WHERE task_id = $1
+            "#,
+            id,
+        ).execute(&plexo_engine.pool).await.unwrap();
+
         Task {
             id: task.id,
             created_at: DateTimeBridge::from_offset_date_time(task.created_at),
@@ -432,6 +456,11 @@ impl MutationRoot {
         id: Uuid,
         email: Option<String>,
         name: Option<String>,
+        add_projects_id: Option<Vec<Uuid>>,
+        delete_projects_id: Option<Vec<Uuid>>,
+        add_teams_id: Option<Vec<Uuid>>,
+        delete_teams_id: Option<Vec<Uuid>>,
+
     ) -> Member {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -465,6 +494,24 @@ impl MutationRoot {
             .await
             .unwrap();
         }
+
+        if add_projects_id.is_some() {
+            self.add_projects_to_member(ctx, id.clone(), add_projects_id.unwrap()).await;
+
+        }
+
+        if delete_projects_id.is_some() {
+            self.delete_projects_from_member(ctx, id.clone(), delete_projects_id.unwrap()).await;
+        }
+
+        if add_teams_id.is_some() {
+            self.add_teams_to_member(ctx, id.clone(), add_teams_id.unwrap()).await;
+        }
+
+        if delete_teams_id.is_some() {
+            self.delete_teams_from_member(ctx, id.clone(), delete_teams_id.unwrap()).await;
+        }
+
 
         let member = sqlx::query!(
             r#"
@@ -504,6 +551,30 @@ impl MutationRoot {
         )
         .fetch_one(&plexo_engine.pool).await.unwrap();
 
+        let _deleted_projects = sqlx::query!(
+            r#"
+            DELETE FROM members_by_projects
+            WHERE member_id = $1
+            "#,
+            id,
+        ).execute(&plexo_engine.pool).await.unwrap();
+
+        let _deleted_teams = sqlx::query!(
+            r#"
+            DELETE FROM members_by_teams
+            WHERE member_id = $1
+            "#,
+            id,
+        ).execute(&plexo_engine.pool).await.unwrap();
+
+        let _deleted_tasks = sqlx::query!(
+            r#"
+            DELETE FROM tasks_by_assignees
+            WHERE assignee_id = $1
+            "#,
+            id,
+        ).execute(&plexo_engine.pool).await.unwrap();
+
         Member {
             id: member.id,
             created_at: DateTimeBridge::from_offset_date_time(member.created_at),
@@ -527,7 +598,9 @@ impl MutationRoot {
         lead_id: Option<Uuid>,
         start_date: Option<DateTime<Utc>>,
         due_date: Option<DateTime<Utc>>,
-        
+        add_members_id: Option<Vec<Uuid>>,
+        add_teams_id: Option<Vec<Uuid>>,
+                
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -609,6 +682,15 @@ impl MutationRoot {
             ).execute(&plexo_engine.pool).await.unwrap();
         }
 
+        
+        if add_members_id.is_some() {
+            self.add_members_to_project(ctx, project_create.id.clone(), add_members_id.unwrap()).await;
+        }
+
+        if add_teams_id.is_some() {
+            self.add_teams_to_project(ctx, project_create.id.clone(), add_teams_id.unwrap()).await;
+        }
+
         let project = sqlx::query!(
             r#"
             SELECT *
@@ -651,6 +733,11 @@ impl MutationRoot {
         lead_id: Option<Uuid>,
         start_date: Option<DateTime<Utc>>,
         due_date: Option<DateTime<Utc>>,
+        add_members_id: Option<Vec<Uuid>>,
+        delete_members_id: Option<Vec<Uuid>>,
+        add_teams_id: Option<Vec<Uuid>>,
+        delete_teams_id: Option<Vec<Uuid>>,
+
     ) -> Project {
         
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
@@ -741,6 +828,23 @@ impl MutationRoot {
             ).execute(&plexo_engine.pool).await.unwrap();
         }
 
+        if add_members_id.is_some() {
+            self.add_members_to_project(ctx, id.clone(), add_members_id.unwrap()).await;
+        }
+
+        if delete_members_id.is_some() {
+            self.delete_members_from_project(ctx, id.clone(), delete_members_id.unwrap()).await;
+        }
+
+        if add_teams_id.is_some() {
+            self.add_teams_to_project(ctx, id.clone(), add_teams_id.unwrap()).await;
+        }
+
+        if delete_teams_id.is_some() {
+            self.delete_teams_from_project(ctx, id.clone(), delete_teams_id.unwrap()).await;
+        }
+
+
         let project = sqlx::query!(
             r#"
             SELECT *
@@ -789,6 +893,31 @@ impl MutationRoot {
         .await
         .unwrap();
 
+        let _deleted_members = sqlx::query!(
+            r#"
+            DELETE FROM members_by_projects
+            WHERE project_id = $1
+            "#,
+            id,
+        ).execute(&plexo_engine.pool).await.unwrap();
+
+        let _deleted_teams = sqlx::query!(
+            r#"
+            DELETE FROM teams_by_projects
+            WHERE project_id = $1
+            "#,
+            id,
+        ).execute(&plexo_engine.pool).await.unwrap();
+
+        let _deleted_tasks = sqlx::query!( 
+            r#"
+            UPDATE tasks
+            SET project_id = NULL
+            WHERE project_id = $1
+            "#,
+            id,
+        ).execute(&plexo_engine.pool).await.unwrap();
+
         Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
@@ -815,7 +944,9 @@ impl MutationRoot {
         name: String,
         owner_id: Uuid,
         visibility: Option<String>,
-        prefix: Option<String>
+        prefix: Option<String>,
+        add_members_id: Option<Vec<Uuid>>,
+        add_projects_id: Option<Vec<Uuid>>,
     ) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -863,6 +994,14 @@ impl MutationRoot {
             .unwrap();
         }
 
+        if add_members_id.is_some() {
+            self.add_members_to_team(ctx, _create_team.id.clone(), add_members_id.unwrap()).await;
+        }
+
+        if add_projects_id.is_some() {
+            self.add_projects_to_team(ctx, _create_team.id.clone(), add_projects_id.unwrap()).await;
+        }
+
         let team = sqlx::query!(
             r#"
             SELECT * FROM teams
@@ -893,7 +1032,12 @@ impl MutationRoot {
         name: Option<String>,
         owner_id: Option<Uuid>,
         visibility: Option<String>,
-        prefix: Option<String>
+        prefix: Option<String>,
+        add_members_id: Option<Vec<Uuid>>,
+        delete_members_id: Option<Vec<Uuid>>,
+        add_projects_id: Option<Vec<Uuid>>,
+        delete_projects_id: Option<Vec<Uuid>>,
+
     ) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -958,6 +1102,23 @@ impl MutationRoot {
             .unwrap();
         }
 
+        if add_members_id.is_some() {
+            self.add_members_to_team(ctx, id.clone(), add_members_id.unwrap()).await;
+        }
+        
+        if delete_members_id.is_some() {
+            self.delete_members_from_team(ctx, id.clone(), delete_members_id.unwrap()).await;
+        }
+
+        if add_projects_id.is_some() {
+            self.add_projects_to_team(ctx, id.clone(), add_projects_id.unwrap()).await;
+        }
+
+        if delete_projects_id.is_some() {
+            self.delete_projects_from_team(ctx, id.clone(), delete_projects_id.unwrap()).await;
+        }
+
+        
         let team = sqlx::query!(
             r#"
             SELECT * FROM teams
@@ -1000,6 +1161,24 @@ impl MutationRoot {
         .await
         .unwrap();
 
+        let _delete_team_members = sqlx::query!(
+            r#"
+            DELETE FROM members_by_teams
+            WHERE team_id = $1
+            "#,
+            id,
+        )
+        .execute(&plexo_engine.pool).await.unwrap();
+
+        let _delete_team_projects = sqlx::query!(
+            r#"
+            DELETE FROM teams_by_projects
+            WHERE team_id = $1
+            "#,
+            id,
+        )
+        .execute(&plexo_engine.pool).await.unwrap();
+
         Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
@@ -1011,26 +1190,29 @@ impl MutationRoot {
         }
     }
 
-    async fn add_assignee_to_task (
+    async fn add_assignees_to_task (
         &self,
         ctx: &Context<'_>,
         task_id: Uuid,
-        member_id: Uuid,
+        members_id: Vec<Uuid>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        let _task_assign_member = sqlx::query!(
-            r#"
-            INSERT INTO tasks_by_assignees (task_id, assignee_id)
-            VALUES ($1, $2)
-            "#,
-            task_id,
-            member_id,
-        )
-        .execute(&plexo_engine.pool)
-        .await
-        .unwrap();
+        for member_id in members_id {
+            let _task_assign_member = sqlx::query!(
+                r#"
+                INSERT INTO tasks_by_assignees (task_id, assignee_id)
+                VALUES ($1, $2)
+                "#,
+                task_id,
+                member_id,
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
+        }
+
 
         let task = sqlx::query!(
             r#"
@@ -1074,15 +1256,16 @@ impl MutationRoot {
 
     }
 
-    async fn delete_assignee_from_task (
+    async fn delete_assignees_from_task (
         &self,
         ctx: &Context<'_>,
         task_id: Uuid,
-        member_id: Uuid,
+        members_id: Vec<Uuid>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
+        for member_id in members_id {
         let _task_assign_member = sqlx::query!(
             r#"
             DELETE FROM tasks_by_assignees
@@ -1094,6 +1277,7 @@ impl MutationRoot {
         .execute(&plexo_engine.pool)
         .await
         .unwrap();
+        }
 
         let task = sqlx::query!(
             r#"
@@ -1136,15 +1320,111 @@ impl MutationRoot {
         }
     }
 
-    async fn add_member_to_project (
+
+    async fn add_projects_to_member (
+        &self,
+        ctx: &Context<'_>,
+        member_id: Uuid,
+        projects_id: Vec<Uuid>,
+    ) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        for project_id in projects_id {
+        let _member_assign_project = sqlx::query!(
+            r#"
+            INSERT INTO members_by_projects (project_id, member_id)
+            VALUES ($1, $2)
+            "#,
+            project_id,
+            member_id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+        }
+
+        let member = sqlx::query!(
+            r#"
+            SELECT * FROM members
+            WHERE id = $1
+            "#,
+            member_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id.clone(),
+            google_id: member.google_id.clone(),
+            photo_url: member.photo_url.clone(),
+            role: MemberRole::from_optional_str(&member.role),
+        }
+    }
+
+    async fn delete_projects_from_member (
+        &self,
+        ctx: &Context<'_>,
+        member_id: Uuid,
+        projects_id: Vec<Uuid>,
+    ) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        for project_id in projects_id {
+        let _member_assign_project = sqlx::query!(
+            r#"
+            DELETE FROM members_by_projects
+            WHERE project_id = $1 AND member_id = $2
+            "#,
+            project_id,
+            member_id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+        }
+
+        let member = sqlx::query!(
+            r#"
+            SELECT * FROM members
+            WHERE id = $1
+            "#,
+            member_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id.clone(),
+            google_id: member.google_id.clone(),
+            photo_url: member.photo_url.clone(),
+            role: MemberRole::from_optional_str(&member.role),
+        }
+    }
+
+    async fn add_members_to_project (
         &self,
         ctx: &Context<'_>,
         project_id: Uuid,
-        member_id: Uuid,
+        members_id: Vec<Uuid>
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
+        for member_id in members_id {
         let _project_assign_member = sqlx::query!(
             r#"
             INSERT INTO members_by_projects (project_id, member_id)
@@ -1156,6 +1436,7 @@ impl MutationRoot {
         .execute(&plexo_engine.pool)
         .await
         .unwrap();
+        }
 
         let project = sqlx::query!(
             r#"
@@ -1188,15 +1469,16 @@ impl MutationRoot {
 
     }
 
-    async fn delete_member_from_project (
+    async fn delete_members_from_project (
         &self,
         ctx: &Context<'_>,
         project_id: Uuid,
-        member_id: Uuid,
+        members_id: Vec<Uuid>,
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
+        for member_id in members_id {
         let _project_assign_member = sqlx::query!(
             r#"
             DELETE FROM members_by_projects
@@ -1208,6 +1490,7 @@ impl MutationRoot {
         .execute(&plexo_engine.pool)
         .await
         .unwrap();
+        }
 
         let project = sqlx::query!(
             r#"
@@ -1240,15 +1523,16 @@ impl MutationRoot {
 
     }
 
-    async fn add_member_to_team (
+    async fn add_members_to_team (
         &self,
         ctx: &Context<'_>,
         team_id: Uuid,
-        member_id: Uuid,
+        members_id: Vec<Uuid>,
     ) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
+        for member_id in members_id {
         let _team_assign_member = sqlx::query!(
             r#"
             INSERT INTO members_by_teams (team_id, member_id)
@@ -1260,6 +1544,7 @@ impl MutationRoot {
         .execute(&plexo_engine.pool)
         .await
         .unwrap();
+        }
 
         let team = sqlx::query!(
             r#"
@@ -1284,15 +1569,16 @@ impl MutationRoot {
 
     }
 
-    async fn delete_member_from_team (
+    async fn delete_members_from_team (
         &self,
         ctx: &Context<'_>,
         team_id: Uuid,
-        member_id: Uuid,
+        members_id: Vec<Uuid>,
     ) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
+        for member_id in members_id {
         let _team_assign_member = sqlx::query!(
             r#"
             DELETE FROM members_by_teams
@@ -1304,6 +1590,7 @@ impl MutationRoot {
         .execute(&plexo_engine.pool)
         .await
         .unwrap();
+        }
 
         let team = sqlx::query!(
             r#"
@@ -1328,6 +1615,100 @@ impl MutationRoot {
 
     }
 
+    async fn add_teams_to_member (
+        &self,
+        ctx: &Context<'_>,
+        member_id: Uuid,
+        teams_id: Vec<Uuid>,
+    ) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        for team_id in teams_id {
+        let _member_assign_team = sqlx::query!(
+            r#"
+            INSERT INTO members_by_teams (team_id, member_id)
+            VALUES ($1, $2)
+            "#,
+            team_id,
+            member_id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+        }
+
+        let member = sqlx::query!(
+            r#"
+            SELECT * FROM members
+            WHERE id = $1
+            "#,
+            member_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id.clone(),
+            google_id: member.google_id.clone(),
+            photo_url: member.photo_url.clone(),
+            role: MemberRole::from_optional_str(&member.role),
+        }
+    }
+
+    async fn delete_teams_from_member (
+        &self,
+        ctx: &Context<'_>,
+        member_id: Uuid,
+        teams_id: Vec<Uuid>,
+    ) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        for team_id in teams_id {
+        let _member_assign_team = sqlx::query!(
+            r#"
+            DELETE FROM members_by_teams
+            WHERE team_id = $1 AND member_id = $2
+            "#,
+            team_id,
+            member_id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+        }
+
+        let member = sqlx::query!(
+            r#"
+            SELECT * FROM members
+            WHERE id = $1
+            "#,
+            member_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id.clone(),
+            google_id: member.google_id.clone(),
+            photo_url: member.photo_url.clone(),
+            role: MemberRole::from_optional_str(&member.role),
+        }
+
+    }
     // async fn add_task_to_project (
     //     &self,
     //     ctx: &Context<'_>,
@@ -1432,27 +1813,29 @@ impl MutationRoot {
 
     // }
     
-
-    async fn add_team_to_project (
+    
+    async fn add_teams_to_project (
         &self,
         ctx: &Context<'_>,
         project_id: Uuid,
-        team_id: Uuid,
+        teams_id: Vec<Uuid>,
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        let _project_assign_team = sqlx::query!(
-            r#"
-            INSERT INTO teams_by_projects (project_id, team_id)
-            VALUES ($1, $2)
-            "#,
-            project_id,
-            team_id,
-        )
-        .execute(&plexo_engine.pool)
-        .await
-        .unwrap();
+        
+        for team_id in teams_id {
+            let _project_assign_team = sqlx::query!(
+                r#"
+                INSERT INTO teams_by_projects (project_id, team_id)
+                VALUES ($1, $2)
+                "#,
+                project_id,
+                team_id,
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
+        }
 
         let project = sqlx::query!(
             r#"
@@ -1485,26 +1868,28 @@ impl MutationRoot {
 
     }
 
-    async fn delete_team_from_project (
+    async fn delete_teams_from_project (
         &self,
         ctx: &Context<'_>,
         project_id: Uuid,
-        team_id: Uuid,
+        teams_id: Vec<Uuid>,
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        let _project_assign_team = sqlx::query!(
-            r#"
-            DELETE FROM teams_by_projects
-            WHERE project_id = $1 AND team_id = $2
-            "#,
-            project_id,
-            team_id,
-        )
-        .execute(&plexo_engine.pool)
-        .await
-        .unwrap();
+        for team_id in teams_id {
+            let _project_assign_team = sqlx::query!(
+                r#"
+                DELETE FROM teams_by_projects
+                WHERE project_id = $1 AND team_id = $2
+                "#,
+                project_id,
+                team_id,
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
+        }
 
         let project = sqlx::query!(
             r#"
@@ -1537,6 +1922,95 @@ impl MutationRoot {
 
     }
 
+    async fn add_projects_to_team (
+        &self,
+        ctx: &Context<'_>,
+        team_id: Uuid,
+        projects_id: Vec<Uuid>,
+    ) -> Team {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        
+        for project_id in projects_id {
+            let _project_assign_team = sqlx::query!(
+                r#"
+                INSERT INTO teams_by_projects (project_id, team_id)
+                VALUES ($1, $2)
+                "#,
+                project_id,
+                team_id,
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
+        }
 
+        let team = sqlx::query!(
+            r#"
+            SELECT * FROM teams
+            WHERE id = $1
+            "#,
+            team_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
+        Team {
+            id: team.id,
+            created_at: DateTimeBridge::from_offset_date_time(team.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
+            name: team.name,
+            owner_id: team.owner_id,
+            visibility: TeamVisibility::from_optional_str(&team.visibility),
+            prefix: team.prefix,
+        }
+
+    }
+
+    async fn delete_projects_from_team (
+        &self,
+        ctx: &Context<'_>,
+        team_id: Uuid,
+        projects_id: Vec<Uuid>,
+    ) -> Team {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        for project_id in projects_id {
+            let _project_assign_team = sqlx::query!(
+                r#"
+                DELETE FROM teams_by_projects
+                WHERE project_id = $1 AND team_id = $2
+                "#,
+                project_id,
+                team_id,
+            )
+            .execute(&plexo_engine.pool)
+            .await
+            .unwrap();
+        }
+
+        let team = sqlx::query!(
+            r#"
+            SELECT * FROM teams
+            WHERE id = $1
+            "#,
+            team_id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Team {
+            id: team.id,
+            created_at: DateTimeBridge::from_offset_date_time(team.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
+            name: team.name,
+            owner_id: team.owner_id,
+            visibility: TeamVisibility::from_optional_str(&team.visibility),
+            prefix: team.prefix,
+        }
+
+    }
 }

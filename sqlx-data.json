@@ -107,6 +107,18 @@
     },
     "query": "\n        SELECT * FROM members_by_projects JOIN projects\n        ON members_by_projects.project_id = projects.id WHERE member_id = $1"
   },
+  "0649d3fa9d28fbc44cb3e20e0fe17e8fbbd5fb02d8d48797ab1101528a24b5dc": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM members_by_teams\n            WHERE team_id = $1\n            "
+  },
   "0a9f04f2f1c5322d1d4c349f8e2532de31f00863b5d018319eb6a3b18bbae04b": {
     "describe": {
       "columns": [
@@ -350,6 +362,18 @@
       }
     },
     "query": "\n        SELECT * FROM members_by_projects JOIN members\n        ON members_by_projects.member_id = members.id WHERE project_id = $1"
+  },
+  "0ff32c7d91627ffb68fc7ae9b19ae4d4311a691b8642d30d537269501af37a4a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM tasks_by_assignees\n            WHERE task_id = $1\n            "
   },
   "101cb8d4e54e9f8e52c7b94733fbfbee005108a42c41782814f21d58f90a4ae9": {
     "describe": {
@@ -596,6 +620,18 @@
     },
     "query": "SELECT * FROM projects WHERE owner_id = $1"
   },
+  "245be9bc7ee3cdc2f785aa154ab149adc3e77cea9878f66952c745981dbd4e04": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM members_by_teams\n            WHERE member_id = $1\n            "
+  },
   "24cfb5a1293fc6d4ef12720af7d15e5b16cc1a2f73d3c06ff7646f269cab25ca": {
     "describe": {
       "columns": [],
@@ -717,6 +753,18 @@
     },
     "query": "\n                UPDATE tasks\n                SET project_id = $1\n                WHERE id = $2\n                "
   },
+  "2af1b337ecdbb0942fe63dee20b91694149da6ac461f5d7b8a82e1c2765b5fef": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM teams_by_projects\n            WHERE project_id = $1\n            "
+  },
   "2b9e3103d24d48356f1fb3ac5656bebad461e308c2f8007c33d313b81989ac67": {
     "describe": {
       "columns": [],
@@ -823,6 +871,18 @@
       }
     },
     "query": "\n                UPDATE teams\n                SET owner_id = $1\n                WHERE id = $2\n                "
+  },
+  "3849af8ca820538b04032f89babdc96db380a72c29070c6b026774f9108c855f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE tasks\n            SET project_id = NULL\n            WHERE project_id = $1\n            "
   },
   "38d3fca1cc91b91c0fb5686f93895cb07b340feb43b62bf8110524b82f078cd8": {
     "describe": {
@@ -1292,6 +1352,18 @@
     },
     "query": "\n        SELECT * FROM \n        teams_by_projects JOIN projects\n        ON teams_by_projects.project_id = projects.id WHERE team_id = $1"
   },
+  "6421646710cd736c16432cdb4e52b60fca5479dcad1903df23f9ff427554cdcd": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM members_by_projects\n            WHERE member_id = $1\n            "
+  },
   "65f7baadc854468f6dd8c578226b9502c8622d6fe1e37fb7483ba746103de156": {
     "describe": {
       "columns": [],
@@ -1612,6 +1684,18 @@
     },
     "query": "\n            SELECT *\n            FROM projects\n            WHERE id = $1\n            "
   },
+  "8c2147026856ddf7db4254b2074fae601b63917030ef4532601181f355eae22f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM members_by_projects\n            WHERE project_id = $1\n            "
+  },
   "8f3e126c68e352f300912b8f65b0f9173a39e4afa22b0db03a799cb475d50a1a": {
     "describe": {
       "columns": [],
@@ -1791,6 +1875,18 @@
     },
     "query": "\n            SELECT * FROM tasks\n            WHERE id = $1\n            "
   },
+  "970b1323be7868960192b9f85716cfac6ce55094f57f9378fa3ffa9402cd9ca7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM teams_by_projects\n            WHERE team_id = $1\n            "
+  },
   "9c8523299f030c3d8283a81178d0b7066eed4f279ae4234d478eb334eaa5d54e": {
     "describe": {
       "columns": [],
@@ -1859,6 +1955,18 @@
       }
     },
     "query": "\n            DELETE FROM teams\n            WHERE id = $1\n            RETURNING *\n            "
+  },
+  "a3c93d9eab82a06d9a168064689cb4886f48eace485ff0b46a27732184b52754": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM tasks_by_assignees\n            WHERE assignee_id = $1\n            "
   },
   "a5eff913625df83b129fda50600c0469bac7d6c5b34cb9ed3bc828798b1ee112": {
     "describe": {
