@@ -7,6 +7,7 @@ use crate::{
     auth::auth::PlexoAuthToken,
     sdk::{
         member::{Member, MemberRole},
+        project::Project,
         utilities::DateTimeBridge,
     },
     system::core::Engine,
@@ -82,6 +83,38 @@ impl Team {
                 google_id: r.google_id.clone(),
                 photo_url: r.photo_url.clone(),
                 role: MemberRole::from_optional_str(&r.role),
+            })
+            .collect()
+    }
+
+    pub async fn projects (&self, ctx: &Context<'_>) -> Vec<Project> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        let projects = sqlx::query!(
+        r#"
+        SELECT * FROM 
+        teams_by_projects JOIN projects
+        ON teams_by_projects.project_id = projects.id WHERE team_id = $1"#,
+        &self.id,
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        projects
+            .iter()
+            .map(|r| Project {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                description: r.description.clone(),
+                prefix: r.prefix.clone(),
+                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                lead_id: r.lead_id,
+                start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+
             })
             .collect()
     }

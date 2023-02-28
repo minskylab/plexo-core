@@ -183,6 +183,32 @@ impl Project {
     //         })
     //         .collect()
     // }
+ pub async fn teams (&self, ctx: &Context<'_>) -> Vec<Team> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
 
-    
+        let teams = sqlx::query!(
+        r#"
+        SELECT * FROM teams_by_projects JOIN teams
+        ON teams_by_projects.team_id = teams.id WHERE project_id = $1"#,
+         &self.id)
+         .fetch_all(&plexo_engine.pool).await.unwrap();
+
+        teams
+            .iter()
+            .map(|r| Team {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                owner_id: r.owner_id,
+                visibility: TeamVisibility::from_optional_str(&r.visibility),
+                prefix: r.prefix.clone(),
+            })
+            .collect()
+    }
+
+
+
+   
 }

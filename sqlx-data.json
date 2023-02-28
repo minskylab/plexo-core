@@ -364,19 +364,6 @@
     },
     "query": "\n                UPDATE tasks\n                SET labels = $1\n                WHERE id = $2\n                "
   },
-  "15a8a34cc8a38425e6582cf7703b30fbd445096ee63ad6d2781e1345adac7191": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO tasks_by_assignees (task_id, assignee_id)\n            VALUES ($1, $2)\n            "
-  },
   "16e3d6d61724092cca92e4a9dc03564ae04bf081756644e72a28eecf2df6914b": {
     "describe": {
       "columns": [
@@ -756,6 +743,74 @@
     },
     "query": "\n                UPDATE projects\n                SET prefix = $1\n                WHERE id = $2\n                "
   },
+  "321623b966cce3b1c01409a36ad6782d9b34377ddf3b12b9223de52700300e9a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "team_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "project_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "visibility",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "prefix",
+          "ordinal": 8,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        SELECT * FROM teams_by_projects JOIN teams\n        ON teams_by_projects.team_id = teams.id WHERE project_id = $1"
+  },
   "36d8b786488e2c971b00bc2d65e04a792cf6310bab0236ee28dcbbbfd93ad16d": {
     "describe": {
       "columns": [],
@@ -1033,6 +1088,19 @@
     },
     "query": "\n                UPDATE projects\n                SET name = $1\n                WHERE id = $2\n                "
   },
+  "582bbc1a519a074b8dff44df87778d14650b7e5b831c36b431e5c1ca4bc1db95": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                DELETE FROM teams_by_projects\n                WHERE project_id = $1 AND team_id = $2\n                "
+  },
   "5850af74cd7ca4a2ccea4a30f8d3266e1382b7ec25100b6c62fdbfa7a82ac1cb": {
     "describe": {
       "columns": [
@@ -1137,6 +1205,92 @@
       }
     },
     "query": "\n                UPDATE projects\n                SET start_date = $1\n                WHERE id = $2\n                "
+  },
+  "5d5e8dedc2c7dbb8121a53316c0406afb6337b07dfb8a12ed9386b9b525abe21": {
+    "describe": {
+      "columns": [
+        {
+          "name": "team_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "project_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "prefix",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 7,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "description",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "start_date",
+          "ordinal": 10,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        SELECT * FROM \n        teams_by_projects JOIN projects\n        ON teams_by_projects.project_id = projects.id WHERE team_id = $1"
   },
   "65f7baadc854468f6dd8c578226b9502c8622d6fe1e37fb7483ba746103de156": {
     "describe": {
@@ -1457,6 +1611,19 @@
       }
     },
     "query": "\n            SELECT *\n            FROM projects\n            WHERE id = $1\n            "
+  },
+  "8f3e126c68e352f300912b8f65b0f9173a39e4afa22b0db03a799cb475d50a1a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                INSERT INTO teams_by_projects (project_id, team_id)\n                VALUES ($1, $2)\n                "
   },
   "938db14251bb3889c9aef70189745babfcb965e32a7f2accd61a719b3e668a8c": {
     "describe": {
@@ -1906,19 +2073,6 @@
     },
     "query": "\n            DELETE FROM tasks_by_assignees\n            WHERE task_id = $1 AND assignee_id = $2\n            "
   },
-  "b6c9d084e3a03d6212f08b742413c54c43c03a6fb9df744f6898b8fd474f073f": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO teams_by_projects (project_id, team_id)\n            VALUES ($1, $2)\n            "
-  },
   "b7e771fedd96d65818684fe217f21070e2a01b9e0d12da88baac61aebe4f52cd": {
     "describe": {
       "columns": [],
@@ -1931,19 +2085,6 @@
       }
     },
     "query": "\n                UPDATE teams\n                SET visibility = $1\n                WHERE id = $2\n                "
-  },
-  "bb686023fab46e4ec4e49fb82d6b8f9ec6d841ccc985ab66c03bb95470ebce22": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            DELETE FROM teams_by_projects\n            WHERE project_id = $1 AND team_id = $2\n            "
   },
   "bdf46ae26861a501ea571b139469ce42f1ffb428ff02ddaab741fcad62417b26": {
     "describe": {
@@ -2018,6 +2159,19 @@
       }
     },
     "query": "\n            SELECT * FROM members\n            WHERE id = $1\n            "
+  },
+  "d4f73f5659dcf075ae2dfbd015267899b031c776f7b7d69b484f516f1556d38d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                INSERT INTO tasks_by_assignees (task_id, assignee_id)\n                VALUES ($1, $2)\n                "
   },
   "dc563c55c73d5b1a2cfdfcbb552c755b63d2aff284877e36cf932fddc587d883": {
     "describe": {
