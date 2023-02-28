@@ -13,16 +13,18 @@ use tokio_stream::{Stream, StreamExt};
 
 use uuid::Uuid;
 
+use crate::sdk::task::Task;
+
 // use tokio_stream::StreamExt;
 // use uuid::Uuid;
 
 pub struct Subscription {
     id: String,
-    sender: Sender<String>,
+    sender: Sender<Task>,
 }
 
 impl Subscription {
-    fn new(id: String, sender: Sender<String>) -> Self {
+    fn new(id: String, sender: Sender<Task>) -> Self {
         Subscription {
             id: id,
             sender: sender,
@@ -31,6 +33,7 @@ impl Subscription {
 }
 
 type MyResult<T> = std::result::Result<T, String>;
+type MyResultTask<T> = std::result::Result<T, Task>;
 
 
 #[derive(Clone)]
@@ -45,7 +48,7 @@ impl SubscriptionManager {
         }
     }
 
-    pub async fn add_subscription(&self, id: String, sender: Sender<String>) -> MyResult<String> {
+    pub async fn add_subscription(&self, id: String, sender: Sender<Task>) -> MyResult<String> {
         let mut subscriptions = self.subscriptions.lock().await;
     
         if subscriptions.contains_key(&id) {
@@ -70,14 +73,14 @@ impl SubscriptionManager {
         Ok(true)
     }
 
-    pub async fn send_event(&self, id: String, event: String) -> MyResult<()> {
+    pub async fn send_event(&self, id: String, event: Task) -> MyResult<Task> {
         let subscriptions = self.subscriptions.lock().await;
 
         if let Some(subscription) = subscriptions.get(&id) {
-            subscription.sender.clone().send(event).unwrap();
+            subscription.sender.clone().send(event.clone()).unwrap();
         }
 
-        Ok(())
+        Ok(event)
     }
 }
 

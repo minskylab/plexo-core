@@ -51,7 +51,7 @@ impl SubscriptionRoot {
             })
     }
     
-    async fn subscribe(&self, ctx: &Context<'_>) -> FieldResult<Pin<Box<dyn Stream<Item = String> + Send>>>{
+    async fn subscribe(&self, ctx: &Context<'_>) -> FieldResult<Pin<Box<dyn Stream<Item = Option<Task>> + Send>>>{
         let (sender, receiver) = mpsc::channel();
         let subscription_manager = &ctx.data::<Engine>().unwrap().subscription_manager;
     
@@ -60,12 +60,15 @@ impl SubscriptionRoot {
             println!("Subscription added");
         }
         let interval_stream = IntervalStream::new(tokio::time::interval(Duration::from_secs(1)));
-        let mapped_stream = interval_stream.map(move |_| 
-            if (receiver.try_recv().is_err()) {
-                "No hay eventos recibidos".to_string()
-            } else {
-                "Task creado".to_string()
+        let mut last_task: Option<Task>= None;
+        std::thread::spawn(|| suscription_added);
+        let mapped_stream = interval_stream.map(move |_| {
+            if let Ok(task) = receiver.try_recv() {
+                println!("{}", task.title);
+                last_task = Some(task);
             }
+            last_task.clone()
+        }
         );
     
         Ok(Box::pin(mapped_stream))    

@@ -9,7 +9,7 @@ use super::{
 };
 use crate::{auth::auth::PlexoAuthToken, sdk::utilities::DateTimeBridge, system::core::Engine};
 
-#[derive(SimpleObject, Clone)]
+#[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Task {
     pub id: Uuid,
@@ -121,7 +121,7 @@ impl Task {
     }
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TaskStatus {
     None,
     Backlog,
@@ -131,7 +131,7 @@ pub enum TaskStatus {
     Canceled,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TaskPriority {
     None,
     Low,

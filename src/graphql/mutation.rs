@@ -197,8 +197,8 @@ impl MutationRoot {
         //     .broadcast_task_created(auth_token, task)
         //     .await;
         
-        let event = subscription_manager.send_event("subscription_id".to_string(), "Task creado".to_string()).await;
-        if (event == Ok(())) {
+        let event = subscription_manager.send_event("subscription_id".to_string(), task.clone()).await;
+        if (event.is_ok()) {
             println!("Event sent");
         } else {
             println!("Event not sent");
