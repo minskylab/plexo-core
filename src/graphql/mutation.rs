@@ -2,10 +2,7 @@ use std::process::id;
 
 use async_graphql::{ComplexObject, Context, InputObject, InputType, Object};
 use chrono::{DateTime, Utc};
-use sqlx::{
-    postgres::PgRow, query, types::time::OffsetDateTime, types::time::PrimitiveDateTime, Pool,
-    Postgres, Row,
-};
+use sqlx;
 use uuid::Uuid;
 
 use crate::{
@@ -42,145 +39,62 @@ impl MutationRoot {
         project_id: Option<Uuid>,
         lead_id: Option<Uuid>,
         labels: Option<Vec<String>>,
-        add_assignees_id: Option<Vec<Uuid>>,
+        assignees: Option<Vec<Uuid>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        let task_create = sqlx::query!(
-            r#"
-            INSERT INTO tasks
-            (title, owner_id)
-            VALUES ($1, $2)
-            RETURNING id
-            "#,
-            title,
-            owner_id
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await
-        .unwrap();
-
-        if description.is_some() {
-            let _task_update_description = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET description = $1
-                WHERE id = $2
-                "#,
-                description.unwrap(),
-                task_create.id,
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if status.is_some() {
-            let _task_update_status = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET status = $1
-                WHERE id = $2
-                "#,
-                status.unwrap(),
-                task_create.id,
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if priority.is_some() {
-            let _task_update_priority = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET priority = $1
-                WHERE id = $2
-                "#,
-                priority.unwrap(),
-                task_create.id,
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if due_date.is_some() {
-            let _task_update_due_date = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET due_date = $1
-                WHERE id = $2
-                "#,
-                due_date.map(|d| DateTimeBridge::from_date_time(d)),
-                task_create.id,
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if project_id.is_some() {
-            let _task_update_project_id = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET project_id = $1
-                WHERE id = $2
-                "#,
-                project_id.unwrap(),
-                task_create.id,
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if lead_id.is_some() {
-            let _task_update_lead_id = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET lead_id = $1
-                WHERE id = $2
-                "#,
-                lead_id.unwrap(),
-                task_create.id,
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if labels.is_some() {
-            let _task_update_labels = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET labels = $1
-                WHERE id = $2
-                "#,
-                labels.map(|l| serde_json::to_value(l).unwrap()),
-                task_create.id,
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if add_assignees_id.is_some() {
-            self.add_assignees_to_task(ctx, task_create.id, add_assignees_id.unwrap())
-                .await;
-        }
-
+        println!("token: {}", auth_token);
+        
         let task_final_info = sqlx::query!(
             r#"
-            SELECT * FROM tasks
-            WHERE id = $1
+            INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, labels)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING * 
             "#,
-            task_create.id,
-        )
-        .fetch_one(&plexo_engine.pool)
+            title,
+            description,
+            owner_id,
+            status,
+            priority,
+            due_date.map(|d| DateTimeBridge::from_date_time(d)),
+            project_id,
+            lead_id,
+            labels.map(|l| serde_json::to_value(l).unwrap()),
+        ).fetch_one(&plexo_engine.pool)
         .await
         .unwrap();
+
+        let _a = match assignees {
+            Some(assignees) => {
+                let _delete_assignees = sqlx::query!(
+                    r#"
+                    DELETE FROM tasks_by_assignees
+                    WHERE task_id = $1
+                    "#,
+                    task_final_info.id,
+                )
+                .execute(&plexo_engine.pool)
+                .await
+                .unwrap();
+                
+
+                for assignee in assignees {
+                    let _add_assignee = sqlx::query!(
+                        r#"
+                        INSERT INTO tasks_by_assignees (task_id, assignee_id)
+                        VALUES ($1, $2)
+                        "#,
+                        task_final_info.id,
+                        assignee,
+                    )
+                    .execute(&plexo_engine.pool)
+                    .await
+                    .unwrap();
+                }
+
+            },
+            None => (),
+        };
 
         let task = Task {
             id: task_final_info.id,
@@ -213,8 +127,7 @@ impl MutationRoot {
         // plexo_engine
         //     .subscription_manager
         //     .broadcast_task_created(auth_token, task)
-        //     .await;
-
+        //     .await;        
         task
     }
 
@@ -230,183 +143,70 @@ impl MutationRoot {
         project_id: Option<Uuid>,
         lead_id: Option<Uuid>,
         labels: Option<Vec<String>>,
-
-        assignees: Option<AssigneesOperation>,
+        assignees: Option<Vec<Uuid>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
-        if title.is_some() {
-            let _task_update_description = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET title = $1
-                WHERE id = $2
-                "#,
-                title.unwrap().clone(),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
+        let task_final_info = sqlx::query!(
+            r#"
+            UPDATE tasks
+            SET title = $1, description = $2, status = $3, priority = $4, due_date = $5, project_id = $6, lead_id = $7, labels = $8
+            WHERE id = $9
+            RETURNING * 
+            "#,
+            title,
+            description,
+            status,
+            priority,
+            due_date.map(|d| DateTimeBridge::from_date_time(d)),
+            project_id,
+            lead_id,
+            labels.map(|l| serde_json::to_value(l).unwrap()),
+            id,
+        ).fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+        
+        let _a = match assignees {
+            Some(assignees) => {
+                let _delete_assignees = sqlx::query!(
+                    r#"
+                    DELETE FROM tasks_by_assignees
+                    WHERE task_id = $1
+                    "#,
+                    task_final_info.id,
+                )
+                .execute(&plexo_engine.pool)
+                .await
+                .unwrap();
+                
 
-        if description.is_some() {
-            let _task_update_description = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET description = $1
-                WHERE id = $2
-                "#,
-                description.unwrap().clone(),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if status.is_some() {
-            let _task_update_status = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET status = $1
-                WHERE id = $2
-                "#,
-                status.unwrap().clone(),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if priority.is_some() {
-            let _task_update_priority = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET priority = $1
-                WHERE id = $2
-                "#,
-                priority.unwrap().clone(),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if due_date.is_some() {
-            let _task_update_due_date = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET due_date = $1
-                WHERE id = $2
-                "#,
-                due_date.map(|d| DateTimeBridge::from_date_time(d)),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if project_id.is_some() {
-            let _task_update_project_id = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET project_id = $1
-                WHERE id = $2
-                "#,
-                project_id.unwrap(),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if lead_id.is_some() {
-            let _task_update_lead_id = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET lead_id = $1
-                WHERE id = $2
-                "#,
-                lead_id.unwrap(),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        if labels.is_some() {
-            let _task_update_labels = sqlx::query!(
-                r#"
-                UPDATE tasks
-                SET labels = $1
-                WHERE id = $2
-                "#,
-                labels.map(|l| serde_json::to_value(l).unwrap()),
-                id.clone(),
-            )
-            .execute(&plexo_engine.pool)
-            .await
-            .unwrap();
-        }
-
-        let a = match assignees {
-            Some(operation) => match operation {
-                AssigneesOperation {
-                    _append: None,
-                    _delete: None,
-                } => (),
-                AssigneesOperation {
-                    _append,
-                    _delete: None,
-                } => {
-                    self.add_assignees_to_task(ctx, id, _append.unwrap())
-                        .await
-                        .unwrap();
+                for assignee in assignees {
+                    let _add_assignee = sqlx::query!(
+                        r#"
+                        INSERT INTO tasks_by_assignees (task_id, assignee_id)
+                        VALUES ($1, $2)
+                        "#,
+                        task_final_info.id,
+                        assignee,
+                    )
+                    .execute(&plexo_engine.pool)
+                    .await
+                    .unwrap();
                 }
-                AssigneesOperation {
-                    _delete,
-                    _append: None,
-                } => {
-                    self.delete_assignees_from_task(ctx, id, _delete.unwrap())
-                        .await
-                        .unwrap();
-                }
-                AssigneesOperation { _append, _delete } => {
-                    self.add_assignees_to_task(ctx, id, _append.unwrap())
-                        .await
-                        .unwrap();
-                    self.delete_assignees_from_task(ctx, id, _delete.unwrap())
-                        .await
-                        .unwrap();
-                }
+
             },
             None => (),
         };
 
-        let task_final_info = sqlx::query!(
-            r#"
-            SELECT * FROM tasks
-            WHERE id = $1
-            "#,
-            id.clone(),
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await
-        .unwrap();
-
-        Task {
-            id: id,
+        let task = Task {
+            id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
-            title: task_final_info.title.clone(),
-            description: task_final_info.description.clone(),
+            title: task_final_info.title,
+            description: task_final_info.description,
             status: TaskStatus::from_optional_str(&task_final_info.status),
             priority: TaskPriority::from_optional_str(&task_final_info.priority),
             due_date: task_final_info
@@ -427,14 +227,17 @@ impl MutationRoot {
                 .unwrap_or(vec![]),
             owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
             count: task_final_info.count,
-        }
+        };
+   
+        task
     }
 
     async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
-        let task = sqlx::query!(
+        let task_final_info = sqlx::query!(
             r#"
             DELETE FROM tasks
             WHERE id = $1
@@ -455,20 +258,20 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Task {
-            id: task.id,
-            created_at: DateTimeBridge::from_offset_date_time(task.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(task.updated_at),
-            title: task.title.clone(),
-            description: task.description.clone(),
-            status: TaskStatus::from_optional_str(&task.status),
-            priority: TaskPriority::from_optional_str(&task.priority),
-            due_date: task
+        let task = Task {
+            id: task_final_info.id,
+            created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
+            title: task_final_info.title,
+            description: task_final_info.description,
+            status: TaskStatus::from_optional_str(&task_final_info.status),
+            priority: TaskPriority::from_optional_str(&task_final_info.priority),
+            due_date: task_final_info
                 .due_date
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
-            project_id: task.project_id,
-            lead_id: task.lead_id,
-            labels: task
+            project_id: task_final_info.project_id,
+            lead_id: task_final_info.lead_id,
+            labels: task_final_info
                 .labels
                 .as_ref()
                 .map(|l| {
@@ -479,9 +282,11 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
-            count: task.count,
-        }
+            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            count: task_final_info.count,
+        };
+   
+        task
     }
 
     // async fn create_member(
@@ -507,6 +312,7 @@ impl MutationRoot {
     ) -> Member {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         if email.is_some() {
             let _member_update_email = sqlx::query!(
@@ -585,6 +391,7 @@ impl MutationRoot {
     async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Member {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let member = sqlx::query!(
             r#"
@@ -657,6 +464,7 @@ impl MutationRoot {
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let project_create = sqlx::query!(
             r#"
@@ -804,6 +612,7 @@ impl MutationRoot {
     ) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         if name.is_some() {
             let _project_update_name = sqlx::query!(
@@ -963,6 +772,7 @@ impl MutationRoot {
     async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Project {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let project = sqlx::query!(
             r#"
@@ -1040,6 +850,7 @@ impl MutationRoot {
     ) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let _create_team = sqlx::query!(
             r#"
@@ -1131,6 +942,7 @@ impl MutationRoot {
     ) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         if name.is_some() {
             let _team_update_name = sqlx::query!(
@@ -1237,6 +1049,7 @@ impl MutationRoot {
     async fn delete_team(&self, ctx: &Context<'_>, id: Uuid) -> Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let team = sqlx::query!(
             r#"
@@ -1282,6 +1095,8 @@ impl MutationRoot {
             prefix: team.prefix.clone(),
         }
     }
+
+
 
     async fn add_assignees_to_task(
         &self,
