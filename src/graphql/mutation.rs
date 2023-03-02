@@ -1,6 +1,6 @@
 use std::process::id;
 
-use async_graphql::{ComplexObject, Context, InputType, Object};
+use async_graphql::{ComplexObject, Context, InputType, Object, futures_util::task::noop_waker_ref};
 use chrono::{DateTime, Utc};
 use sqlx::{postgres::PgRow, query, types::time::OffsetDateTime, Pool, Postgres, Row};
 use uuid::Uuid;
@@ -196,8 +196,8 @@ impl MutationRoot {
         //     .subscription_manager
         //     .broadcast_task_created(auth_token, task)
         //     .await;
-        
-        let event = subscription_manager.send_event("subscription_id".to_string(), task.clone()).await;
+        let mut context = core::task::Context::from_waker(&noop_waker_ref());
+        let event = subscription_manager.send_event("subscription_id".to_string(), task.clone(), &mut context).await;
         if (event.is_ok()) {
             println!("Event sent");
         } else {

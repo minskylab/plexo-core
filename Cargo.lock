@@ -1403,6 +1403,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "dotenvy",
+ "futures-channel",
  "jsonwebtoken",
  "lazy_static",
  "mime",

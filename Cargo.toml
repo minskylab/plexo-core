@@ -11,6 +11,7 @@ tracing = { version = "0.1.34" }
 tracing-subscriber = { version = "0.3.11" }
 lazy_static = { version = "1.4.0" }
 tokio-stream = "0.1.11"
+futures-channel = "0.3"
 sqlx = { version = "0.6.2", features = [ "runtime-tokio-native-tls" , "postgres", "uuid", "time", "json", "offline"] }
 tokio = { version = "1.17.0", features = ["full"] }
 dotenvy = "0.15.6"

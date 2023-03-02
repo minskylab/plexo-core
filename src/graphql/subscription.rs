@@ -9,10 +9,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
+use futures_channel::mpsc::{channel, Sender, Receiver};
+
 
 use tokio_stream::Stream;
 use uuid::{uuid, Uuid};
 
+use crate::sdk::task;
 use crate::{
     sdk::{
         project::Project,
@@ -52,24 +55,31 @@ impl SubscriptionRoot {
     }
     
     async fn subscribe(&self, ctx: &Context<'_>) -> FieldResult<Pin<Box<dyn Stream<Item = Option<Task>> + Send>>>{
-        let (sender, receiver) = mpsc::channel();
+        let (sender, mut receiver) = futures_channel::mpsc::channel(100);
         let subscription_manager = &ctx.data::<Engine>().unwrap().subscription_manager;
     
         let suscription_added = subscription_manager.add_subscription("subscription_id".to_string(), sender).await?;
         if (suscription_added == "subscription_id".to_string()) {
             println!("Subscription added");
         }
-        let interval_stream = IntervalStream::new(tokio::time::interval(Duration::from_secs(1)));
-        let mut last_task: Option<Task>= None;
-        std::thread::spawn(|| suscription_added);
-        let mapped_stream = interval_stream.map(move |_| {
-            if let Ok(task) = receiver.try_recv() {
-                println!("{}", task.title);
-                last_task = Some(task);
+
+        let mapped_stream = stream! {
+            let mut last_task: Option<Task>= None;
+            loop {
+                match receiver.next().await {
+                    Some(task) => {
+                        println!("{}", task.title);
+                        last_task = Some(task);
+                        yield last_task.clone();
+                    },
+                    None => {
+                        println!("None");
+                        yield None;
+                    },
+                }
             }
-            last_task.clone()
-        }
-        );
+        };
+
     
         Ok(Box::pin(mapped_stream))    
     }
