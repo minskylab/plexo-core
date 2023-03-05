@@ -4,12 +4,13 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use super::{
+    labels::Label,
     member::{Member, MemberRole},
     project::Project,
 };
 use crate::{auth::auth::PlexoAuthToken, sdk::utilities::DateTimeBridge, system::core::Engine};
 
-#[derive(SimpleObject, Clone)]
+#[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Task {
     pub id: Uuid,
@@ -28,11 +29,8 @@ pub struct Task {
 
     pub project_id: Option<Uuid>,
     pub lead_id: Option<Uuid>,
-    
-    pub labels: Vec<String>,
-    pub count: i32,
 
-    
+    pub count: i32,
 }
 
 #[ComplexObject]
@@ -98,6 +96,8 @@ impl Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
+        println!("token: {}", auth_token);
+
         if self.project_id.is_none() {
             return None;
         }
@@ -117,7 +117,7 @@ impl Task {
                 name: project.name.clone(),
                 description: project.description.clone(),
                 prefix: project.prefix.clone(),
-                owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: project.owner_id,
                 lead_id: project.lead_id,
                 start_date: project
                     .due_date
@@ -129,15 +129,22 @@ impl Task {
             Err(_) => None,
         }
     }
-    
-    pub async fn assignees (&self, ctx: &Context<'_>) -> Vec<Member> {
+
+    pub async fn assignees(&self, ctx: &Context<'_>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+
+        println!("token: {}", auth_token);
+
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let members = sqlx::query!(r#"
+        let members = sqlx::query!(
+            r#"
         SELECT * FROM tasks_by_assignees JOIN members
         ON tasks_by_assignees.assignee_id = members.id WHERE task_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         members
             .iter()
@@ -153,7 +160,7 @@ impl Task {
                 role: MemberRole::from_optional_str(&r.role),
             })
             .collect()
-    } 
+    }
 
     // pub async fn projects (&self, ctx: &Context<'_>) -> Vec<Project> {
     //     let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
@@ -173,7 +180,7 @@ impl Task {
     //             name: r.name.clone(),
     //             description: r.description.clone(),
     //             prefix: r.prefix.clone(),
-    //             owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+    //             owner_id: r.owner_id,
     //             lead_id: r.lead_id,
     //             start_date: r
     //                 .due_date
@@ -185,10 +192,36 @@ impl Task {
     //         .collect()
     // }
 
+    pub async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
 
+        println!("token: {}", auth_token);
+
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let labels = sqlx::query!(
+            r#"SELECT * FROM labels_by_tasks JOIN labels ON labels_by_tasks.label_id = labels.id WHERE task_id = $1"#,
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        labels
+            .iter()
+            .map(|r| Label {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                description: r.color.clone(),
+                color: r.color.clone(),
+            })
+            .collect()
+    }
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TaskStatus {
     None,
     Backlog,
@@ -198,7 +231,7 @@ pub enum TaskStatus {
     Canceled,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TaskPriority {
     None,
     Low,

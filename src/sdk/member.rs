@@ -7,8 +7,8 @@ use crate::{
     sdk::{
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
-        utilities::DateTimeBridge,
         team::{Team, TeamVisibility},
+        utilities::DateTimeBridge,
     },
     system::core::Engine,
 };
@@ -53,18 +53,18 @@ impl Member {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                labels: r
-                    .labels
-                    .as_ref()
-                    .map(|l| {
-                        l.as_array()
-                            .unwrap()
-                            .iter()
-                            .map(|s| s.as_str().unwrap().to_string())
-                            .collect()
-                    })
-                    .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                // labels: r
+                //     .labels
+                //     .as_ref()
+                //     .map(|l| {
+                //         l.as_array()
+                //             .unwrap()
+                //             .iter()
+                //             .map(|s| s.as_str().unwrap().to_string())
+                //             .collect()
+                //     })
+                //     .unwrap_or(vec![]),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
@@ -90,31 +90,35 @@ impl Member {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                labels: r
-                    .labels
-                    .as_ref()
-                    .map(|l| {
-                        l.as_array()
-                            .unwrap()
-                            .iter()
-                            .map(|s| s.as_str().unwrap().to_string())
-                            .collect()
-                    })
-                    .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                // labels: r
+                //     .labels
+                //     .as_ref()
+                //     .map(|l| {
+                //         l.as_array()
+                //             .unwrap()
+                //             .iter()
+                //             .map(|s| s.as_str().unwrap().to_string())
+                //             .collect()
+                //     })
+                //     .unwrap_or(vec![]),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
     }
 
-    pub async fn tasks (&self, ctx: &Context<'_>) -> Vec<Task> {
+    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let tasks = sqlx::query!(r#"
+        let tasks = sqlx::query!(
+            r#"
         SELECT * FROM tasks_by_assignees JOIN tasks
         ON tasks_by_assignees.task_id = tasks.id WHERE assignee_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         tasks
             .iter()
@@ -129,18 +133,18 @@ impl Member {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                labels: r
-                    .labels
-                    .as_ref()
-                    .map(|l| {
-                        l.as_array()
-                            .unwrap()
-                            .iter()
-                            .map(|s| s.as_str().unwrap().to_string())
-                            .collect()
-                    })
-                    .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                // labels: r
+                //     .labels
+                //     .as_ref()
+                //     .map(|l| {
+                //         l.as_array()
+                //             .unwrap()
+                //             .iter()
+                //             .map(|s| s.as_str().unwrap().to_string())
+                //             .collect()
+                //     })
+                //     .unwrap_or(vec![]),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
@@ -162,23 +166,30 @@ impl Member {
                 name: r.name.clone(),
                 description: r.description.clone(),
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 lead_id: r.lead_id,
-                start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-
+                start_date: r
+                    .start_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                due_date: r
+                    .due_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
             })
             .collect()
     }
 
-    pub async fn projects (&self, ctx: &Context<'_>) -> Vec<Project> {
+    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let projects = sqlx::query!(r#"
+        let projects = sqlx::query!(
+            r#"
         SELECT * FROM members_by_projects JOIN projects
         ON members_by_projects.project_id = projects.id WHERE member_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         projects
             .iter()
@@ -189,23 +200,30 @@ impl Member {
                 name: r.name.clone(),
                 description: r.description.clone(),
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 lead_id: r.lead_id,
-                start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-
+                start_date: r
+                    .start_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                due_date: r
+                    .due_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
             })
             .collect()
     }
 
-    pub async fn teams (&self, ctx: &Context<'_>) -> Vec<Team> {
+    pub async fn teams(&self, ctx: &Context<'_>) -> Vec<Team> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let teams = sqlx::query!(r#"
+        let teams = sqlx::query!(
+            r#"
         SELECT * FROM members_by_teams JOIN teams
         ON members_by_teams.team_id = teams.id WHERE member_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         teams
             .iter()
@@ -217,13 +235,10 @@ impl Member {
                 owner_id: r.owner_id,
                 visibility: TeamVisibility::from_optional_str(&r.visibility),
                 prefix: r.prefix.clone(),
-
             })
             .collect()
     }
 }
-
-
 
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]
 pub enum MemberRole {

@@ -35,13 +35,10 @@ impl Team {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        let member = sqlx::query!(
-            r#"SELECT * FROM members WHERE id = $1"#,
-            &self.owner_id
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await
-        .unwrap();
+        let member = sqlx::query!(r#"SELECT * FROM members WHERE id = $1"#, &self.owner_id)
+            .fetch_one(&plexo_engine.pool)
+            .await
+            .unwrap();
 
         Member {
             id: member.id,
@@ -53,13 +50,14 @@ impl Team {
             google_id: member.google_id,
             photo_url: member.photo_url,
             role: MemberRole::from_optional_str(&member.role),
-        }    
+        }
     }
 
     pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let members = sqlx::query!(r#"SELECT 
+        let members = sqlx::query!(
+            r#"SELECT 
         members.id,
         members.created_at,
         members.updated_at,
@@ -70,7 +68,12 @@ impl Team {
         members.photo_url,
         members.role 
         FROM members_by_teams JOIN members
-         ON members_by_teams.member_id = members.id WHERE team_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
+         ON members_by_teams.member_id = members.id WHERE team_id = $1"#,
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
         members
             .iter()
             .map(|r| Member {
@@ -87,15 +90,15 @@ impl Team {
             .collect()
     }
 
-    pub async fn projects (&self, ctx: &Context<'_>) -> Vec<Project> {
+    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         let projects = sqlx::query!(
-        r#"
+            r#"
         SELECT * FROM 
         teams_by_projects JOIN projects
         ON teams_by_projects.project_id = projects.id WHERE team_id = $1"#,
-        &self.id,
+            &self.id,
         )
         .fetch_all(&plexo_engine.pool)
         .await
@@ -110,11 +113,14 @@ impl Team {
                 name: r.name.clone(),
                 description: r.description.clone(),
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 lead_id: r.lead_id,
-                start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-
+                start_date: r
+                    .start_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                due_date: r
+                    .due_date
+                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
             })
             .collect()
     }

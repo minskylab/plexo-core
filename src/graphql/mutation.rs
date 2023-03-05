@@ -44,7 +44,7 @@ impl MutationRoot {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         println!("token: {}", auth_token);
-        
+
         let task_final_info = sqlx::query!(
             r#"
             INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, labels)
@@ -76,7 +76,6 @@ impl MutationRoot {
                 .execute(&plexo_engine.pool)
                 .await
                 .unwrap();
-                
 
                 for assignee in assignees {
                     let _add_assignee = sqlx::query!(
@@ -91,8 +90,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-
-            },
+            }
             None => (),
         };
 
@@ -109,25 +107,25 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
-            labels: task_final_info
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            // labels: task_final_info
+            //     .labels
+            //     .as_ref()
+            //     .map(|l| {
+            //         l.as_array()
+            //             .unwrap()
+            //             .iter()
+            //             .map(|s| s.as_str().unwrap().to_string())
+            //             .collect()
+            //     })
+            //     .unwrap_or(vec![]),
+            owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
 
         // plexo_engine
         //     .subscription_manager
         //     .broadcast_task_created(auth_token, task)
-        //     .await;        
+        //     .await;
         task
     }
 
@@ -168,7 +166,7 @@ impl MutationRoot {
         ).fetch_one(&plexo_engine.pool)
         .await
         .unwrap();
-        
+
         let _a = match assignees {
             Some(assignees) => {
                 let _delete_assignees = sqlx::query!(
@@ -181,7 +179,6 @@ impl MutationRoot {
                 .execute(&plexo_engine.pool)
                 .await
                 .unwrap();
-                
 
                 for assignee in assignees {
                     let _add_assignee = sqlx::query!(
@@ -196,8 +193,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-
-            },
+            }
             None => (),
         };
 
@@ -214,21 +210,21 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
-            labels: task_final_info
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            // labels: task_final_info
+            //     .labels
+            //     .as_ref()
+            //     .map(|l| {
+            //         l.as_array()
+            //             .unwrap()
+            //             .iter()
+            //             .map(|s| s.as_str().unwrap().to_string())
+            //             .collect()
+            //     })
+            //     .unwrap_or(vec![]),
+            owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
-   
+
         task
     }
 
@@ -271,21 +267,21 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
-            labels: task_final_info
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            // labels: task_final_info
+            //     .labels
+            //     .as_ref()
+            //     .map(|l| {
+            //         l.as_array()
+            //             .unwrap()
+            //             .iter()
+            //             .map(|s| s.as_str().unwrap().to_string())
+            //             .collect()
+            //     })
+            //     .unwrap_or(vec![]),
+            owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
-   
+
         task
     }
 
@@ -583,7 +579,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
@@ -758,7 +754,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
@@ -827,7 +823,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
@@ -1096,8 +1092,6 @@ impl MutationRoot {
         }
     }
 
-
-
     async fn add_assignees_to_task(
         &self,
         ctx: &Context<'_>,
@@ -1145,18 +1139,18 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task.project_id,
             lead_id: task.lead_id,
-            labels: task
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
-            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            // labels: task
+            //     .labels
+            //     .as_ref()
+            //     .map(|l| {
+            //         l.as_array()
+            //             .unwrap()
+            //             .iter()
+            //             .map(|s| s.as_str().unwrap().to_string())
+            //             .collect()
+            //     })
+            //     .unwrap_or(vec![]),
+            owner_id: task.owner_id,
             count: task.count,
         }
     }
@@ -1208,18 +1202,18 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task.project_id,
             lead_id: task.lead_id,
-            labels: task
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
-            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            // labels: task
+            //     .labels
+            //     .as_ref()
+            //     .map(|l| {
+            //         l.as_array()
+            //             .unwrap()
+            //             .iter()
+            //             .map(|s| s.as_str().unwrap().to_string())
+            //             .collect()
+            //     })
+            //     .unwrap_or(vec![]),
+            owner_id: task.owner_id,
             count: task.count,
         }
     }
@@ -1359,7 +1353,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
@@ -1411,7 +1405,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
@@ -1644,7 +1638,7 @@ impl MutationRoot {
     //         name: project.name.clone(),
     //         description: project.description.clone(),
     //         prefix: project.prefix.clone(),
-    //         owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+    //         owner_id: project.owner_id,
     //         lead_id: project.lead_id,
     //         start_date: project
     //             .due_date
@@ -1696,7 +1690,7 @@ impl MutationRoot {
     //         name: project.name.clone(),
     //         description: project.description.clone(),
     //         prefix: project.prefix.clone(),
-    //         owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+    //         owner_id: project.owner_id,
     //         lead_id: project.lead_id,
     //         start_date: project
     //             .due_date
@@ -1750,7 +1744,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
@@ -1802,7 +1796,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date

@@ -58,15 +58,18 @@ impl Project {
         }
     }
 
-    pub async fn members (&self, ctx: &Context<'_>) -> Vec<Member> {
+    pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         let members = sqlx::query!(
-        r#"
+            r#"
         SELECT * FROM members_by_projects JOIN members
         ON members_by_projects.member_id = members.id WHERE project_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         members
             .iter()
@@ -84,16 +87,19 @@ impl Project {
             .collect()
     }
 
-    pub async fn tasks (&self, ctx: &Context<'_>) -> Vec<Task> {
+    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
         let tasks = sqlx::query!(
-        r#"
+            r#"
         SELECT * FROM tasks
         WHERE project_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         tasks
             .iter()
@@ -108,22 +114,22 @@ impl Project {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                labels: r
-                    .labels
-                    .as_ref()
-                    .map(|l| {
-                        l.as_array()
-                            .unwrap()
-                            .iter()
-                            .map(|s| s.as_str().unwrap().to_string())
-                            .collect()
-                    })
-                    .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                // labels: r
+                //     .labels
+                //     .as_ref()
+                //     .map(|l| {
+                //         l.as_array()
+                //             .unwrap()
+                //             .iter()
+                //             .map(|s| s.as_str().unwrap().to_string())
+                //             .collect()
+                //     })
+                //     .unwrap_or(vec![]),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
-    } 
+    }
 
     // pub async fn tasks (&self, ctx: &Context<'_>) -> Vec<Task> {
     //     let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
@@ -131,7 +137,7 @@ impl Project {
 
     //     let tasks = sqlx::query!(
     //     r#"
-    //     SELECT 
+    //     SELECT
     //     tasks.id,
     //     tasks.created_at,
     //     tasks.updated_at,
@@ -145,7 +151,7 @@ impl Project {
     //     tasks.labels,
     //     tasks.owner_id,
     //     tasks.count
-    //     FROM tasks_by_projects JOIN tasks 
+    //     FROM tasks_by_projects JOIN tasks
     //     ON tasks_by_projects.task_id = tasks.id WHERE tasks_by_projects.project_id = $1
     //     "#,
     //     &self.id
@@ -178,21 +184,24 @@ impl Project {
     //                         .collect()
     //                 })
     //                 .unwrap_or(vec![]),
-    //             owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+    //             owner_id: r.owner_id,
     //             count: r.count,
     //         })
     //         .collect()
     // }
- pub async fn teams (&self, ctx: &Context<'_>) -> Vec<Team> {
+    pub async fn teams(&self, ctx: &Context<'_>) -> Vec<Team> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
         let teams = sqlx::query!(
-        r#"
+            r#"
         SELECT * FROM teams_by_projects JOIN teams
         ON teams_by_projects.team_id = teams.id WHERE project_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         teams
             .iter()
@@ -207,8 +216,4 @@ impl Project {
             })
             .collect()
     }
-
-
-
-   
 }

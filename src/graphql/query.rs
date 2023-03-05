@@ -5,6 +5,7 @@ use uuid::Uuid;
 use crate::{
     auth::auth::PlexoAuthToken,
     sdk::{
+        labels::Label,
         member::{Member, MemberRole},
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
@@ -76,18 +77,18 @@ impl QueryRoot {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                labels: r
-                    .labels
-                    .as_ref()
-                    .map(|l| {
-                        l.as_array()
-                            .unwrap()
-                            .iter()
-                            .map(|s| s.as_str().unwrap().to_string())
-                            .collect()
-                    })
-                    .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                // labels: r
+                //     .labels
+                //     .as_ref()
+                //     .map(|l| {
+                //         l.as_array()
+                //             .unwrap()
+                //             .iter()
+                //             .map(|s| s.as_str().unwrap().to_string())
+                //             .collect()
+                //     })
+                //     .unwrap_or(vec![]),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
@@ -123,18 +124,18 @@ impl QueryRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task.project_id,
             lead_id: task.lead_id,
-            labels: task
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
-            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            // labels: task
+            //     .labels
+            //     .as_ref()
+            //     .map(|l| {
+            //         l.as_array()
+            //             .unwrap()
+            //             .iter()
+            //             .map(|s| s.as_str().unwrap().to_string())
+            //             .collect()
+            //     })
+            //     .unwrap_or(vec![]),
+            owner_id: task.owner_id,
             count: task.count,
         }
     }
@@ -268,7 +269,7 @@ impl QueryRoot {
                 updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
                 name: r.name.clone(),
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 description: r.description.clone(),
                 lead_id: r.lead_id.clone(),
                 start_date: r
@@ -305,7 +306,7 @@ impl QueryRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
@@ -372,5 +373,33 @@ impl QueryRoot {
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix,
         }
+    }
+
+    async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let labels = sqlx::query!(
+            r#"
+            SELECT * FROM labels
+            "#
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        labels
+            .iter()
+            .map(|r| Label {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                color: r.color.clone(),
+                description: r.description.clone(),
+            })
+            .collect()
     }
 }
