@@ -86,7 +86,7 @@ impl QueryRoot {
                             .collect()
                     })
                     .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
             })
             .collect()
     }
@@ -130,7 +130,7 @@ impl QueryRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task.owner_id,
         }
     }
 
@@ -268,7 +268,7 @@ impl QueryRoot {
                 name: r.name.clone(),
                 description: None,
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
             })
             .collect()
     }
@@ -298,7 +298,7 @@ impl QueryRoot {
             name: project.name.clone(),
             description: None,
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
         }
     }
 

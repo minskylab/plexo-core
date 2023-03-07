@@ -1,6 +1,5 @@
 use std::process::id;
-
-use async_graphql::{ComplexObject, Context, InputType, Object, futures_util::task::noop_waker_ref};
+use async_graphql::{ComplexObject, Context, InputType, Object};
 use chrono::{DateTime, Utc};
 use sqlx::{postgres::PgRow, query, types::time::OffsetDateTime, Pool, Postgres, Row};
 use uuid::Uuid;
@@ -189,15 +188,14 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task_final_info.owner_id,
         };
 
         // plexo_engine
         //     .subscription_manager
         //     .broadcast_task_created(auth_token, task)
         //     .await;
-        let mut context = core::task::Context::from_waker(&noop_waker_ref());
-        let event = subscription_manager.send_event("subscription_id".to_string(), task.clone(), &mut context).await;
+        let event = subscription_manager.send_event("subscription_id".to_string(), task.clone()).await;
         if (event.is_ok()) {
             println!("Event sent");
         } else {
@@ -376,7 +374,7 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task_final_info.owner_id,
         }
     }
 
@@ -418,7 +416,7 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task.owner_id,
         }
     }
 
@@ -607,7 +605,7 @@ impl MutationRoot {
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
             description: None,
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             prefix: project.prefix.clone(),
         }
     }
@@ -698,7 +696,7 @@ impl MutationRoot {
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
             description: None,
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             prefix: project.prefix.clone(),
         }
     }
@@ -725,7 +723,7 @@ impl MutationRoot {
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
             description: None,
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             prefix: project.prefix.clone(),
         }
     }

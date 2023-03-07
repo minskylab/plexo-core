@@ -1,24 +1,11 @@
-use async_graphql::{Enum, SimpleObject};
+
 use std::collections::HashMap;
 use std::error::Error;
-use std::iter::Map;
-use std::task::Poll;
-use futures_channel::mpsc::{channel, Sender, Receiver};
-use std::pin::Pin;
 use std::sync::Arc;
-use core::task::{Context,Waker};
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
+use tokio::sync::mpsc::Sender;
 use tokio::sync::Mutex;
-use tokio::time::{interval, Duration, Instant};
-use tokio_stream::wrappers::IntervalStream;
-use tokio_stream::{Stream, StreamExt};
-
-use uuid::Uuid;
-
+//use uuid::Uuid;
 use crate::sdk::task::Task;
-
-// use tokio_stream::StreamExt;
-// use uuid::Uuid;
 
 pub struct Subscription {
     id: String,
@@ -75,23 +62,11 @@ impl SubscriptionManager {
         Ok(true)
     }
 
-    pub async fn send_event(&self, id: String, event: Task, ctx: &mut Context<'_>) -> MyResult<Task> {
+    pub async fn send_event(&self, id: String, event: Task) -> MyResult<Task> {
         let mut subscriptions = self.subscriptions.lock().await;
 
         if let Some(subscription) = subscriptions.get_mut(&id) {
-            let poll = subscription.sender.poll_ready(ctx);
-            match poll {
-                Poll::Ready(Ok(_)) => {
-                    println!("Ready to send");
-                    subscription.sender.clone().start_send(event.clone()).unwrap();
-                }
-                Poll::Ready(Err(_)) => {
-                    println!("Error");
-                }
-                Poll::Pending => {
-                    println!("Pending");
-                }
-            }
+            subscription.sender.clone().try_send(event.clone());
         }
 
         Ok(event)

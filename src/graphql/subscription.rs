@@ -1,4 +1,3 @@
-use std::sync::mpsc::RecvError;
 use std::{time::Duration, pin::Pin, sync::mpsc};
 use async_graphql::{Enum, SimpleObject};
 use tokio_stream::wrappers::IntervalStream;
@@ -8,14 +7,11 @@ use tokio::{time::Instant, sync::futures};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
-use futures_channel::mpsc::{channel, Sender, Receiver};
+use tokio::sync::mpsc::{channel, Sender, Receiver};
 
 
 use tokio_stream::Stream;
 use uuid::{uuid, Uuid};
-
-use crate::sdk::task;
 use crate::{
     sdk::{
         project::Project,
@@ -55,7 +51,7 @@ impl SubscriptionRoot {
     }
     
     async fn subscribe(&self, ctx: &Context<'_>) -> FieldResult<Pin<Box<dyn Stream<Item = Option<Task>> + Send>>>{
-        let (sender, mut receiver) = futures_channel::mpsc::channel(100);
+        let (sender, mut receiver) = channel(100);
         let subscription_manager = &ctx.data::<Engine>().unwrap().subscription_manager;
     
         let suscription_added = subscription_manager.add_subscription("subscription_id".to_string(), sender).await?;
@@ -66,7 +62,7 @@ impl SubscriptionRoot {
         let mapped_stream = stream! {
             let mut last_task: Option<Task>= None;
             loop {
-                match receiver.next().await {
+                match receiver.recv().await {
                     Some(task) => {
                         println!("{}", task.title);
                         last_task = Some(task);

@@ -107,7 +107,7 @@ impl Project {
                             .collect()
                     })
                     .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
             })
             .collect()
     }
