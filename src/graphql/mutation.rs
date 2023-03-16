@@ -108,7 +108,7 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
 
@@ -213,7 +213,7 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
    
@@ -270,7 +270,7 @@ impl MutationRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task_final_info.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
    
@@ -527,7 +527,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .start_date
@@ -641,7 +641,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .start_date
@@ -710,7 +710,7 @@ impl MutationRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .start_date

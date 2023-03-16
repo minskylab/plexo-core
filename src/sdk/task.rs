@@ -117,7 +117,7 @@ impl Task {
                 name: project.name.clone(),
                 description: project.description.clone(),
                 prefix: project.prefix.clone(),
-                owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: project.owner_id,
                 lead_id: project.lead_id,
                 start_date: project
                     .start_date

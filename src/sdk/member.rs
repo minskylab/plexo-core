@@ -64,7 +64,7 @@ impl Member {
                             .collect()
                     })
                     .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
@@ -101,7 +101,7 @@ impl Member {
                             .collect()
                     })
                     .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
@@ -140,7 +140,7 @@ impl Member {
                             .collect()
                     })
                     .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
@@ -162,7 +162,7 @@ impl Member {
                 name: r.name.clone(),
                 description: r.description.clone(),
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 lead_id: r.lead_id,
                 start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
@@ -189,7 +189,7 @@ impl Member {
                 name: r.name.clone(),
                 description: r.description.clone(),
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 lead_id: r.lead_id,
                 start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),

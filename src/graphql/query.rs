@@ -87,7 +87,7 @@ impl QueryRoot {
                             .collect()
                     })
                     .unwrap_or(vec![]),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 count: r.count,
             })
             .collect()
@@ -134,7 +134,7 @@ impl QueryRoot {
                         .collect()
                 })
                 .unwrap_or(vec![]),
-            owner_id: task.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: task.owner_id,
             count: task.count,
         }
     }
@@ -268,7 +268,7 @@ impl QueryRoot {
                 updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
                 name: r.name.clone(),
                 prefix: r.prefix.clone(),
-                owner_id: r.owner_id.unwrap_or(Uuid::nil()),
+                owner_id: r.owner_id,
                 description: r.description.clone(),
                 lead_id: r.lead_id.clone(),
                 start_date: r
@@ -305,7 +305,7 @@ impl QueryRoot {
             name: project.name.clone(),
             description: project.description.clone(),
             prefix: project.prefix.clone(),
-            owner_id: project.owner_id.unwrap_or(Uuid::nil()),
+            owner_id: project.owner_id,
             lead_id: project.lead_id,
             start_date: project
                 .due_date
