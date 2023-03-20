@@ -114,17 +114,6 @@ impl Project {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                // labels: r
-                //     .labels
-                //     .as_ref()
-                //     .map(|l| {
-                //         l.as_array()
-                //             .unwrap()
-                //             .iter()
-                //             .map(|s| s.as_str().unwrap().to_string())
-                //             .collect()
-                //     })
-                //     .unwrap_or(vec![]),
                 owner_id: r.owner_id,
                 count: r.count,
             })

@@ -120,7 +120,7 @@ impl Task {
                 owner_id: project.owner_id,
                 lead_id: project.lead_id,
                 start_date: project
-                    .due_date
+                    .start_date
                     .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
                 due_date: project
                     .due_date
@@ -183,7 +183,7 @@ impl Task {
     //             owner_id: r.owner_id,
     //             lead_id: r.lead_id,
     //             start_date: r
-    //                 .due_date
+    //                 .start_date
     //                 .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
     //             due_date: r
     //                 .due_date

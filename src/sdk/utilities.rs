@@ -23,7 +23,14 @@ impl DateTimeBridge {
             
     }
 
-    pub fn from_primitive_to_date_time(date_time: DateTime<Utc>) -> PrimitiveDateTime{
-        PrimitiveDateTime::new(DateTimeBridge::from_date_time(date_time).date(), DateTimeBridge::from_date_time(date_time).time())
+    pub fn from_primitive_to_date_time(date_time: Option<DateTime<Utc>>) -> Option<PrimitiveDateTime>{
+        match date_time {
+            Some(date_time) => {
+                Option::Some(PrimitiveDateTime::new(DateTimeBridge::from_date_time(date_time).date(), DateTimeBridge::from_date_time(date_time).time()))
+            },
+            None => {
+                Option::None
+            }
+        }
     }
 }

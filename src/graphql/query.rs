@@ -77,17 +77,6 @@ impl QueryRoot {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                // labels: r
-                //     .labels
-                //     .as_ref()
-                //     .map(|l| {
-                //         l.as_array()
-                //             .unwrap()
-                //             .iter()
-                //             .map(|s| s.as_str().unwrap().to_string())
-                //             .collect()
-                //     })
-                //     .unwrap_or(vec![]),
                 owner_id: r.owner_id,
                 count: r.count,
             })
@@ -124,17 +113,6 @@ impl QueryRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task.project_id,
             lead_id: task.lead_id,
-            // labels: task
-            //     .labels
-            //     .as_ref()
-            //     .map(|l| {
-            //         l.as_array()
-            //             .unwrap()
-            //             .iter()
-            //             .map(|s| s.as_str().unwrap().to_string())
-            //             .collect()
-            //     })
-            //     .unwrap_or(vec![]),
             owner_id: task.owner_id,
             count: task.count,
         }
