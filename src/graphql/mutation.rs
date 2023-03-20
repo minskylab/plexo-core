@@ -38,17 +38,17 @@ impl MutationRoot {
         due_date: Option<DateTime<Utc>>,
         project_id: Option<Uuid>,
         lead_id: Option<Uuid>,
-        labels: Option<Vec<String>>,
+        labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         println!("token: {}", auth_token);
-        
+
         let task_final_info = sqlx::query!(
             r#"
-            INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, labels)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING * 
             "#,
             title,
@@ -58,14 +58,24 @@ impl MutationRoot {
             priority,
             due_date.map(|d| DateTimeBridge::from_date_time(d)),
             project_id,
-            lead_id,
-            labels.map(|l| serde_json::to_value(l).unwrap()),
+            lead_id
         ).fetch_one(&plexo_engine.pool)
         .await
         .unwrap();
 
         let _a = match assignees {
             Some(assignees) => {
+                let _delete_assignees = sqlx::query!(
+                    r#"
+                    DELETE FROM tasks_by_assignees
+                    WHERE task_id = $1
+                    "#,
+                    task_final_info.id,
+                )
+                .execute(&plexo_engine.pool)
+                .await
+                .unwrap();
+
                 for assignee in assignees {
                     let _add_assignee = sqlx::query!(
                         r#"
@@ -79,8 +89,37 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
+            }
+            None => (),
+        };
 
-            },
+        let _l = match labels {
+            Some(labels) => {
+                let _delete_labels = sqlx::query!(
+                    r#"
+                    DELETE FROM labels_by_tasks
+                    WHERE task_id = $1
+                    "#,
+                    task_final_info.id,
+                )
+                .execute(&plexo_engine.pool)
+                .await
+                .unwrap();
+
+                for label in labels {
+                    let _add_label = sqlx::query!(
+                        r#"
+                        INSERT INTO labels_by_tasks (task_id, label_id)
+                        VALUES ($1, $2)
+                        "#,
+                        task_final_info.id,
+                        label,
+                    )
+                    .execute(&plexo_engine.pool)
+                    .await
+                    .unwrap();
+                }
+            }
             None => (),
         };
 
@@ -97,17 +136,6 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
-            labels: task_final_info
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
@@ -115,7 +143,7 @@ impl MutationRoot {
         // plexo_engine
         //     .subscription_manager
         //     .broadcast_task_created(auth_token, task)
-        //     .await;        
+        //     .await;
         task
     }
 
@@ -130,7 +158,7 @@ impl MutationRoot {
         due_date: Option<DateTime<Utc>>,
         project_id: Option<Uuid>,
         lead_id: Option<Uuid>,
-        labels: Option<Vec<String>>,
+        labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
@@ -140,8 +168,8 @@ impl MutationRoot {
         let task_final_info = sqlx::query!(
             r#"
             UPDATE tasks
-            SET title = $1, description = $2, status = $3, priority = $4, due_date = $5, project_id = $6, lead_id = $7, labels = $8
-            WHERE id = $9
+            SET title = $1, description = $2, status = $3, priority = $4, due_date = $5, project_id = $6, lead_id = $7
+            WHERE id = $8
             RETURNING * 
             "#,
             title,
@@ -151,12 +179,11 @@ impl MutationRoot {
             due_date.map(|d| DateTimeBridge::from_date_time(d)),
             project_id,
             lead_id,
-            labels.map(|l| serde_json::to_value(l).unwrap()),
             id,
         ).fetch_one(&plexo_engine.pool)
         .await
         .unwrap();
-        
+
         let _a = match assignees {
             Some(assignees) => {
                 let _delete_assignees = sqlx::query!(
@@ -169,7 +196,6 @@ impl MutationRoot {
                 .execute(&plexo_engine.pool)
                 .await
                 .unwrap();
-                
 
                 for assignee in assignees {
                     let _add_assignee = sqlx::query!(
@@ -184,8 +210,37 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
+            }
+            None => (),
+        };
 
-            },
+        let _l = match labels {
+            Some(labels) => {
+                let _delete_labels = sqlx::query!(
+                    r#"
+                    DELETE FROM labels_by_tasks
+                    WHERE task_id = $1
+                    "#,
+                    task_final_info.id,
+                )
+                .execute(&plexo_engine.pool)
+                .await
+                .unwrap();
+
+                for label in labels {
+                    let _add_label = sqlx::query!(
+                        r#"
+                        INSERT INTO labels_by_tasks (task_id, label_id)
+                        VALUES ($1, $2)
+                        "#,
+                        task_final_info.id,
+                        label,
+                    )
+                    .execute(&plexo_engine.pool)
+                    .await
+                    .unwrap();
+                }
+            }
             None => (),
         };
 
@@ -202,21 +257,10 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
-            labels: task_final_info
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
-   
+
         task
     }
 
@@ -229,7 +273,7 @@ impl MutationRoot {
             r#"
             DELETE FROM tasks
             WHERE id = $1
-            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, labels, count
+            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, count
             "#,
             id,
         )
@@ -238,6 +282,17 @@ impl MutationRoot {
         let _deleted_assignees = sqlx::query!(
             r#"
             DELETE FROM tasks_by_assignees
+            WHERE task_id = $1
+            "#,
+            id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        let _deleted_labels = sqlx::query!(
+            r#"
+            DELETE FROM labels_by_tasks
             WHERE task_id = $1
             "#,
             id,
@@ -259,21 +314,10 @@ impl MutationRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
-            labels: task_final_info
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
         };
-   
+
         task
     }
 

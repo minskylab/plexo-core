@@ -1,6 +1,6 @@
 pub mod statics;
 
-use async_graphql::Schema;
+use async_graphql::{dataloader::DataLoader, Schema};
 use dotenvy::dotenv;
 use plexo::{
     auth::{
@@ -12,6 +12,7 @@ use plexo::{
     },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
+    sdk::labels::TaskLoader,
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
@@ -38,6 +39,10 @@ async fn main() {
 
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
         .data(plexo_engine.clone()) // TODO: Optimize this
+        .data(DataLoader::new(
+            TaskLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
         .finish();
 
     let app = Route::new()

@@ -52,8 +52,7 @@ impl SubscriptionRoot {
 
                 owner_id: Uuid::new_v4(),
 
-                labels: vec![],
-
+                // labels: vec![],
                 lead_id: None,
                 project_id: None,
 
@@ -76,8 +75,7 @@ impl SubscriptionRoot {
 
                 owner_id: Uuid::new_v4(),
 
-                labels: vec![],
-
+                // labels: vec![],
                 lead_id: None,
                 project_id: None,
 

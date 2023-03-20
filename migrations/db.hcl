@@ -1,162 +1,52 @@
-table "event_invocation_logs" {
-  schema = schema.hdb_catalog
+table "labels" {
+  schema = schema.public
   column "id" {
     null    = false
-    type    = text
-    default = sql("hdb_catalog.gen_hasura_uuid()")
-  }
-  column "trigger_name" {
-    null = true
-    type = text
-  }
-  column "event_id" {
-    null = true
-    type = text
-  }
-  column "status" {
-    null = true
-    type = integer
-  }
-  column "request" {
-    null = true
-    type = json
-  }
-  column "response" {
-    null = true
-    type = json
+    type    = uuid
+    default = sql("gen_random_uuid()")
   }
   column "created_at" {
-    null    = true
-    type    = timestamp
+    null    = false
+    type    = timestamptz
     default = sql("now()")
   }
-  primary_key {
-    columns = [column.id]
-  }
-  index "event_invocation_logs_event_id_idx" {
-    columns = [column.event_id]
-  }
-}
-table "event_log" {
-  schema = schema.hdb_catalog
-  column "id" {
+  column "updated_at" {
     null    = false
-    type    = text
-    default = sql("hdb_catalog.gen_hasura_uuid()")
-  }
-  column "schema_name" {
-    null = false
-    type = text
-  }
-  column "table_name" {
-    null = false
-    type = text
-  }
-  column "trigger_name" {
-    null = false
-    type = text
-  }
-  column "payload" {
-    null = false
-    type = jsonb
-  }
-  column "delivered" {
-    null    = false
-    type    = boolean
-    default = false
-  }
-  column "error" {
-    null    = false
-    type    = boolean
-    default = false
-  }
-  column "tries" {
-    null    = false
-    type    = integer
-    default = 0
-  }
-  column "created_at" {
-    null    = true
-    type    = timestamp
+    type    = timestamptz
     default = sql("now()")
   }
-  column "locked" {
-    null = true
-    type = timestamptz
+  column "name" {
+    null = false
+    type = text
   }
-  column "next_retry_at" {
+  column "description" {
     null = true
-    type = timestamp
+    type = text
   }
-  column "archived" {
-    null    = false
-    type    = boolean
-    default = false
+  column "color" {
+    null = true
+    type = character_varying
   }
   primary_key {
     columns = [column.id]
   }
-  index "event_log_fetch_events" {
-    columns = [column.locked, column.next_retry_at, column.created_at]
-    where   = "((delivered = false) AND (error = false) AND (archived = false))"
-  }
-  index "event_log_trigger_name_idx" {
-    columns = [column.trigger_name]
-  }
-}
-table "hdb_event_log_cleanups" {
-  schema = schema.hdb_catalog
-  column "id" {
-    null    = false
-    type    = text
-    default = sql("hdb_catalog.gen_hasura_uuid()")
-  }
-  column "trigger_name" {
-    null = false
-    type = text
-  }
-  column "scheduled_at" {
-    null = false
-    type = timestamp
-  }
-  column "deleted_event_logs" {
-    null = true
-    type = integer
-  }
-  column "deleted_event_invocation_logs" {
-    null = true
-    type = integer
-  }
-  column "status" {
-    null = false
-    type = text
-  }
-  primary_key {
-    columns = [column.id]
-  }
-  index "hdb_event_log_cleanups_trigger_name_scheduled_at_key" {
+  index "labels_name_key" {
     unique  = true
-    columns = [column.trigger_name, column.scheduled_at]
-  }
-  check "hdb_event_log_cleanups_status_check" {
-    expr = "(status = ANY (ARRAY['scheduled'::text, 'paused'::text, 'completed'::text, 'dead'::text]))"
+    columns = [column.name]
   }
 }
-table "hdb_source_catalog_version" {
-  schema = schema.hdb_catalog
-  column "version" {
+table "labels_by_tasks" {
+  schema = schema.public
+  column "label_id" {
     null = false
-    type = text
+    type = uuid
   }
-  column "upgraded_on" {
+  column "task_id" {
     null = false
-    type = timestamptz
+    type = uuid
   }
-  index "hdb_source_catalog_version_one_row" {
-    unique = true
-    on {
-      expr = "((version IS NOT NULL))"
-    }
+  primary_key {
+    columns = [column.label_id, column.task_id]
   }
 }
 table "members" {
@@ -271,11 +161,11 @@ table "projects" {
     type = text
   }
   column "prefix" {
-    null = false
+    null = true
     type = character_varying
   }
   column "owner_id" {
-    null = true
+    null = false
     type = uuid
   }
   column "description" {
@@ -302,10 +192,6 @@ table "projects" {
     ref_columns = [table.members.column.id]
     on_update   = CASCADE
     on_delete   = SET_NULL
-  }
-  index "projects_prefix_key" {
-    unique  = true
-    columns = [column.prefix]
   }
 }
 table "self" {
@@ -359,7 +245,7 @@ table "tasks" {
     type = text
   }
   column "owner_id" {
-    null = true
+    null = false
     type = uuid
   }
   column "status" {
@@ -506,8 +392,6 @@ table "teams_by_projects" {
   primary_key {
     columns = [column.team_id, column.project_id]
   }
-}
-schema "hdb_catalog" {
 }
 schema "public" {
 }
