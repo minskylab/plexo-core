@@ -1,5 +1,3 @@
-use std::process::id;
-
 use async_graphql::{Context, InputObject,  Object};
 use chrono::{DateTime, Utc};
 use sqlx;
@@ -521,8 +519,8 @@ impl MutationRoot {
             owner_id,
             description,
             lead_id,
-            DateTimeBridge::from_primitive_to_date_time(start_date),
-            DateTimeBridge::from_primitive_to_date_time(due_date),
+            start_date.map(|d| DateTimeBridge::from_date_time(d)),
+            due_date.map(|d| DateTimeBridge::from_date_time(d)),
         )
         .fetch_one(&plexo_engine.pool).await.unwrap();
 
@@ -575,10 +573,10 @@ impl MutationRoot {
             lead_id: project.lead_id,
             start_date: project
                 .start_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
             due_date: project
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
         }
     }
 
@@ -612,8 +610,8 @@ impl MutationRoot {
             owner_id,
             description,
             lead_id,
-            DateTimeBridge::from_primitive_to_date_time(start_date),
-            DateTimeBridge::from_primitive_to_date_time(due_date),
+            start_date.map(|d| DateTimeBridge::from_date_time(d)),
+            due_date.map(|d| DateTimeBridge::from_date_time(d)),
             id,
         )
         .fetch_one(&plexo_engine.pool).await.unwrap();
@@ -689,10 +687,10 @@ impl MutationRoot {
             lead_id: project.lead_id,
             start_date: project
                 .start_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
             due_date: project
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
         }
     }
 
@@ -758,10 +756,10 @@ impl MutationRoot {
             lead_id: project.lead_id,
             start_date: project
                 .start_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
             due_date: project
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
         }
     }
 

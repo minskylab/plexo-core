@@ -36,6 +36,8 @@ impl Member {
     pub async fn owned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
         let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE owner_id = $1"#, &self.id)
             .fetch_all(&plexo_engine.pool)
             .await
@@ -62,6 +64,8 @@ impl Member {
     pub async fn leading_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
         let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE lead_id = $1"#, &self.id)
             .fetch_all(&plexo_engine.pool)
             .await
@@ -88,6 +92,8 @@ impl Member {
     pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
         let tasks = sqlx::query!(
             r#"
         SELECT * FROM tasks_by_assignees JOIN tasks
@@ -120,6 +126,8 @@ impl Member {
     pub async fn owned_projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
         let projects = sqlx::query!(r#"SELECT * FROM projects WHERE owner_id = $1"#, &self.id)
             .fetch_all(&plexo_engine.pool)
             .await
@@ -137,10 +145,10 @@ impl Member {
                 lead_id: r.lead_id,
                 start_date: r
                     .start_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
                 due_date: r
                     .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
             })
             .collect()
     }
@@ -148,6 +156,8 @@ impl Member {
     pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
         let projects = sqlx::query!(
             r#"
         SELECT * FROM members_by_projects JOIN projects
@@ -171,10 +181,10 @@ impl Member {
                 lead_id: r.lead_id,
                 start_date: r
                     .start_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
                 due_date: r
                     .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
             })
             .collect()
     }
@@ -182,6 +192,8 @@ impl Member {
     pub async fn teams(&self, ctx: &Context<'_>) -> Vec<Team> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
         let teams = sqlx::query!(
             r#"
         SELECT * FROM members_by_teams JOIN teams

@@ -80,6 +80,7 @@ impl Label {
     pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
 

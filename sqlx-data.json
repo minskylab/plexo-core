@@ -46,12 +46,12 @@
         {
           "name": "start_date",
           "ordinal": 8,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 9,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -73,8 +73,8 @@
           "Uuid",
           "Text",
           "Uuid",
-          "Timestamp",
-          "Timestamp",
+          "Timestamptz",
+          "Timestamptz",
           "Uuid"
         ]
       }
@@ -137,12 +137,12 @@
         {
           "name": "start_date",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 11,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -651,12 +651,12 @@
         {
           "name": "start_date",
           "ordinal": 8,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 9,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -829,12 +829,12 @@
         {
           "name": "start_date",
           "ordinal": 8,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 9,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -1135,12 +1135,12 @@
         {
           "name": "start_date",
           "ordinal": 8,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 9,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -1588,12 +1588,12 @@
         {
           "name": "start_date",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 11,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -1980,12 +1980,12 @@
         {
           "name": "start_date",
           "ordinal": 8,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 9,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -2250,12 +2250,12 @@
         {
           "name": "start_date",
           "ordinal": 8,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 9,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [
@@ -2277,8 +2277,8 @@
           "Uuid",
           "Text",
           "Uuid",
-          "Timestamp",
-          "Timestamp"
+          "Timestamptz",
+          "Timestamptz"
         ]
       }
     },
@@ -2943,12 +2943,12 @@
         {
           "name": "start_date",
           "ordinal": 8,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "name": "due_date",
           "ordinal": 9,
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "nullable": [

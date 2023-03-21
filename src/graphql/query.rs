@@ -252,10 +252,10 @@ impl QueryRoot {
                 lead_id: r.lead_id.clone(),
                 start_date: r
                     .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
                 due_date: r
                     .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
             })
             .collect()
     }
@@ -288,10 +288,10 @@ impl QueryRoot {
             lead_id: project.lead_id,
             start_date: project
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
             due_date: project
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
         }
     }
 

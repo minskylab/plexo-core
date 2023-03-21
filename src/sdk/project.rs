@@ -37,6 +37,7 @@ impl Project {
         //cambiado a Option, pq hay un id que no tiene user
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let member = sqlx::query!(r#"SELECT * FROM members WHERE id = $1"#, &self.owner_id)
             .fetch_one(&plexo_engine.pool)
@@ -61,6 +62,8 @@ impl Project {
     pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
         let members = sqlx::query!(
             r#"
         SELECT * FROM members_by_projects JOIN members
@@ -90,6 +93,7 @@ impl Project {
     pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let tasks = sqlx::query!(
             r#"
@@ -181,6 +185,7 @@ impl Project {
     pub async fn teams(&self, ctx: &Context<'_>) -> Vec<Team> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
 
         let teams = sqlx::query!(
             r#"
