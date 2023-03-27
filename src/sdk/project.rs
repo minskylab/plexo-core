@@ -210,4 +210,37 @@ impl Project {
             })
             .collect()
     }
+
+    pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        if self.lead_id.is_none() {
+            return None;
+        }
+
+        let member = sqlx::query!(
+            r#"SELECT * FROM members WHERE id = $1"#,
+            &self.lead_id.unwrap()
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await;
+
+        match member {
+            Ok(member) => Some(Member {
+                id: member.id,
+                created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+                name: member.name.clone(),
+                email: member.email.clone(),
+                github_id: member.github_id.clone(),
+                google_id: member.google_id.clone(),
+                photo_url: member.photo_url.clone(),
+                role: MemberRole::from_optional_str(&member.role),
+            }),
+            Err(_) => None,
+        }
+    }
 }
