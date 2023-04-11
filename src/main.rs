@@ -12,7 +12,13 @@ use plexo::{
     },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
-    sdk::labels::TaskLoader,
+    sdk::loaders::{
+        TaskLoader,
+        ProjectLoader,
+        MemberLoader,
+        LabelLoader,
+        TeamLoader,
+        },
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
@@ -43,6 +49,23 @@ async fn main() {
             TaskLoader::new(plexo_engine.clone()),
             tokio::spawn,
         ))
+        .data(DataLoader::new(
+            ProjectLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+        .data(DataLoader::new(
+            LabelLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+        .data(DataLoader::new(
+            MemberLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+        .data(DataLoader::new(
+            TeamLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+
         .finish();
 
     let app = Route::new()

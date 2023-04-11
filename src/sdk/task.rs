@@ -2,14 +2,23 @@ use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 
 use uuid::Uuid;
+use async_graphql::{
+    dataloader::{DataLoader},
+};
 
 use super::{
     labels::Label,
-    member::{Member, MemberRole},
+    member::{Member},
     project::Project,
 };
-use crate::{auth::auth::PlexoAuthToken, sdk::utilities::DateTimeBridge, system::core::Engine};
 
+use crate::{auth::auth::PlexoAuthToken, system::core::Engine};
+use super::loaders::{
+    MemberLoader,
+    ProjectLoader,
+    LabelLoader,
+    
+};
 #[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Task {
@@ -35,189 +44,85 @@ pub struct Task {
 
 #[ComplexObject]
 impl Task {
-    pub async fn owner(&self, ctx: &Context<'_>) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+    pub async fn owner(&self, ctx: &Context<'_>) -> Option<Member> {
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        println!("token: {}", auth_token);
-
-        let member = sqlx::query!(r#"SELECT * FROM members WHERE id = $1"#, &self.owner_id)
-            .fetch_one(&plexo_engine.pool)
-            .await
-            .unwrap();
-
-        Member {
-            id: member.id,
-            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-            name: member.name.clone(),
-            email: member.email.clone(),
-            github_id: member.github_id.clone(),
-            google_id: member.google_id.clone(),
-            photo_url: member.photo_url.clone(),
-            role: MemberRole::from_optional_str(&member.role),
+        //match to see is project_id is none
+        let member = loader.load_one(self.owner_id).await.unwrap();
+        match member {
+            Some(member) => Some(member),
+            None => None,
+            
         }
+                
+
     }
 
     pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
-
-        if self.lead_id.is_none() {
-            return None;
-        }
-
-        let member = sqlx::query!(
-            r#"SELECT * FROM members WHERE id = $1"#,
-            &self.lead_id.unwrap()
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await;
-
-        match member {
-            Ok(member) => Some(Member {
-                id: member.id,
-                created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-                name: member.name.clone(),
-                email: member.email.clone(),
-                github_id: member.github_id.clone(),
-                google_id: member.google_id.clone(),
-                photo_url: member.photo_url.clone(),
-                role: MemberRole::from_optional_str(&member.role),
-            }),
-            Err(_) => None,
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
+        
+        //match to see is project_id is none
+        match self.lead_id {
+            Some(lead_id) => {
+                let member = loader.load_one(lead_id).await.unwrap();
+                match member {
+                    Some(member) => Some(member),
+                    None => None,
+                    
+                }
+                
+            },
+            None => None,
         }
     }
 
     pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
-
-        if self.project_id.is_none() {
-            return None;
+        let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
+        
+        //match to see is project_id is none
+        match self.project_id {
+            Some(project_id) => {
+                let project = loader.load_one(project_id).await.unwrap();
+                match project {
+                    Some(project) => Some(project),
+                    None => None,
+                    
+                }
+                
+            },
+            None => None,
         }
 
-        let project = sqlx::query!(
-            r#"SELECT * FROM projects WHERE id = $1"#,
-            &self.project_id.unwrap()
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await;
-
-        match project {
-            Ok(project) => Some(Project {
-                id: project.id,
-                created_at: DateTimeBridge::from_offset_date_time(project.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
-                name: project.name.clone(),
-                description: project.description.clone(),
-                prefix: project.prefix.clone(),
-                owner_id: project.owner_id,
-                lead_id: project.lead_id,
-                start_date: project
-                    .start_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
-                due_date: project
-                    .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
-            }),
-            Err(_) => None,
-        }
     }
-
-    pub async fn assignees(&self, ctx: &Context<'_>) -> Vec<Member> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-
-        println!("token: {}", auth_token);
-
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        let members = sqlx::query!(
-            r#"
-        SELECT * FROM tasks_by_assignees JOIN members
-        ON tasks_by_assignees.assignee_id = members.id WHERE task_id = $1"#,
-            &self.id
-        )
-        .fetch_all(&plexo_engine.pool)
-        .await
-        .unwrap();
-
-        members
-            .iter()
-            .map(|r| Member {
-                id: r.id,
-                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-                name: r.name.clone(),
-                email: r.email.clone(),
-                github_id: r.github_id.clone(),
-                google_id: r.google_id.clone(),
-                photo_url: r.photo_url.clone(),
-                role: MemberRole::from_optional_str(&r.role),
-            })
-            .collect()
-    }
-
-    // pub async fn projects (&self, ctx: &Context<'_>) -> Vec<Project> {
-    //     let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-    //     let plexo_engine = ctx.data::<Engine>().unwrap();
-    //     let projects = sqlx::query!(r#"
-    //     SELECT * FROM tasks_by_projects JOIN projects
-    //     ON tasks_by_projects.project_id = projects.id WHERE task_id = $1"#,
-    //      &self.id)
-    //      .fetch_all(&plexo_engine.pool).await.unwrap();
-
-    //     projects
-    //         .iter()
-    //         .map(|r| Project {
-    //             id: r.id,
-    //             created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-    //             updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-    //             name: r.name.clone(),
-    //             description: r.description.clone(),
-    //             prefix: r.prefix.clone(),
-    //             owner_id: r.owner_id,
-    //             lead_id: r.lead_id,
-    //             start_date: r
-    //                 .start_date
-    //                 .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-    //             due_date: r
-    //                 .due_date
-    //                 .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-    //         })
-    //         .collect()
-    // }
 
     pub async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-
+        let plexo_engine = ctx.data::<Engine>().unwrap();
         println!("token: {}", auth_token);
 
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+        let loader = ctx.data::<DataLoader<LabelLoader>>().unwrap();
 
-        let labels = sqlx::query!(
-            r#"SELECT * FROM labels_by_tasks JOIN labels ON labels_by_tasks.label_id = labels.id WHERE task_id = $1"#,
+        let ids : Vec<Uuid>= sqlx::query!(
+            r#"
+            SELECT label_id FROM labels_by_tasks
+            WHERE task_id = $1
+            "#,
             &self.id
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap();
+        .unwrap().into_iter().map(|id| id.label_id).collect();
 
-        labels
-            .iter()
-            .map(|r| Label {
-                id: r.id,
-                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-                name: r.name.clone(),
-                description: r.color.clone(),
-                color: r.color.clone(),
-            })
-            .collect()
+        let labels_map = loader.load_many(ids.clone()).await.unwrap();
+
+        let labels: &Vec<Label> = &ids
+            .into_iter()
+            .map(|id|  {
+                labels_map.get(&id).unwrap().clone()
+        } )
+            .collect();
+
+        labels.clone()       
     }
 }
 
