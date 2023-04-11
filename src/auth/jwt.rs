@@ -85,7 +85,7 @@ impl JWT {
         refresh_token: &str,
     ) -> Result<String, jsonwebtoken::errors::Error> {
         let mut claims_access_token = self.decode_access_token(access_token)?;
-        let claims_refresh_token = self.decode_refresh_token(refresh_token)?;
+        let _claims_refresh_token = self.decode_refresh_token(refresh_token)?;
 
         claims_access_token.exp += 1000; // TODO
 

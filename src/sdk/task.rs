@@ -1,24 +1,15 @@
+use std::str::FromStr;
+
 use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 
+use async_graphql::dataloader::DataLoader;
 use uuid::Uuid;
-use async_graphql::{
-    dataloader::{DataLoader},
-};
 
-use super::{
-    labels::Label,
-    member::{Member},
-    project::Project,
-};
+use super::{labels::Label, member::Member, project::Project};
 
+use super::loaders::{LabelLoader, MemberLoader, ProjectLoader};
 use crate::{auth::auth::PlexoAuthToken, system::core::Engine};
-use super::loaders::{
-    MemberLoader,
-    ProjectLoader,
-    LabelLoader,
-    
-};
 #[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Task {
@@ -48,51 +39,27 @@ impl Task {
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
         //match to see is project_id is none
-        let member = loader.load_one(self.owner_id).await.unwrap();
-        match member {
-            Some(member) => Some(member),
-            None => None,
-            
-        }
-                
-
+        loader.load_one(self.owner_id).await.unwrap()
     }
 
     pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
-        
+
         //match to see is project_id is none
         match self.lead_id {
-            Some(lead_id) => {
-                let member = loader.load_one(lead_id).await.unwrap();
-                match member {
-                    Some(member) => Some(member),
-                    None => None,
-                    
-                }
-                
-            },
+            Some(lead_id) => loader.load_one(lead_id).await.unwrap(),
             None => None,
         }
     }
 
     pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
         let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
-        
+
         //match to see is project_id is none
         match self.project_id {
-            Some(project_id) => {
-                let project = loader.load_one(project_id).await.unwrap();
-                match project {
-                    Some(project) => Some(project),
-                    None => None,
-                    
-                }
-                
-            },
+            Some(project_id) => loader.load_one(project_id).await.unwrap(),
             None => None,
         }
-
     }
 
     pub async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
@@ -102,7 +69,7 @@ impl Task {
 
         let loader = ctx.data::<DataLoader<LabelLoader>>().unwrap();
 
-        let ids : Vec<Uuid>= sqlx::query!(
+        let ids: Vec<Uuid> = sqlx::query!(
             r#"
             SELECT label_id FROM labels_by_tasks
             WHERE task_id = $1
@@ -111,18 +78,19 @@ impl Task {
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap().into_iter().map(|id| id.label_id).collect();
+        .unwrap()
+        .into_iter()
+        .map(|id| id.label_id)
+        .collect();
 
         let labels_map = loader.load_many(ids.clone()).await.unwrap();
 
         let labels: &Vec<Label> = &ids
             .into_iter()
-            .map(|id|  {
-                labels_map.get(&id).unwrap().clone()
-        } )
+            .map(|id| labels_map.get(&id).unwrap().clone())
             .collect();
 
-        labels.clone()       
+        labels.clone()
     }
 }
 
@@ -148,20 +116,8 @@ pub enum TaskPriority {
 impl TaskStatus {
     pub fn from_optional_str(s: &Option<String>) -> Self {
         match s {
-            Some(s) => Self::from_str(s.as_str()),
+            Some(s) => Self::from_str(s.as_str()).unwrap_or(Self::None),
             None => Self::None,
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "None" => Self::None,
-            "Backlog" => Self::Backlog,
-            "ToDo" => Self::ToDo,
-            "InProgress" => Self::InProgress,
-            "Done" => Self::Done,
-            "Canceled" => Self::Canceled,
-            _ => Self::None,
         }
     }
 
@@ -177,22 +133,27 @@ impl TaskStatus {
     }
 }
 
+impl FromStr for TaskStatus {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(Self::None),
+            "Backlog" => Ok(Self::Backlog),
+            "ToDo" => Ok(Self::ToDo),
+            "InProgress" => Ok(Self::InProgress),
+            "Done" => Ok(Self::Done),
+            "Canceled" => Ok(Self::Canceled),
+            _ => Err(()),
+        }
+    }
+}
+
 impl TaskPriority {
     pub fn from_optional_str(s: &Option<String>) -> Self {
         match s {
-            Some(s) => Self::from_str(s.as_str()),
+            Some(s) => Self::from_str(s.as_str()).unwrap_or(Self::None),
             None => Self::None,
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "None" => Self::None,
-            "Low" => Self::Low,
-            "Medium" => Self::Medium,
-            "High" => Self::High,
-            "Urgent" => Self::Urgent,
-            _ => Self::None,
         }
     }
 
@@ -203,6 +164,21 @@ impl TaskPriority {
             Self::Medium => "Medium",
             Self::High => "High",
             Self::Urgent => "Urgent",
+        }
+    }
+}
+
+impl FromStr for TaskPriority {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(Self::None),
+            "Low" => Ok(Self::Low),
+            "Medium" => Ok(Self::Medium),
+            "High" => Ok(Self::High),
+            "Urgent" => Ok(Self::Urgent),
+            _ => Err(()),
         }
     }
 }

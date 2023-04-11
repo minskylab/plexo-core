@@ -3,7 +3,7 @@ use chrono::{Duration, Utc};
 use oauth2::AuthorizationCode;
 use poem::web::cookie::Cookie;
 use poem::web::{Data, Query, Redirect};
-use poem::{handler, Body, IntoResponse, Request, Response, ResponseBuilder};
+use poem::{handler, Body, IntoResponse, Request, Response};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -14,7 +14,7 @@ use crate::system::members::{MembersFilter, NewMemberPayload, NewMemberPayloadAu
 #[derive(Debug, Deserialize)]
 pub struct GithubCallbackParams {
     code: String,
-    state: String,
+    _state: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -26,7 +26,7 @@ pub struct AuthenticationResponse {
 
 pub struct PlexoAuthToken(pub String);
 
-const GITHUB_USER_API: &'static str = "https://api.github.com/user";
+const GITHUB_USER_API: &str = "https://api.github.com/user";
 
 // pub async fn example_auth() {}
 

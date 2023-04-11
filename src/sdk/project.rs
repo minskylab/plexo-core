@@ -2,24 +2,18 @@ use async_graphql::{ComplexObject, Context, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use async_graphql::{
-    dataloader::{DataLoader},
-};
+use async_graphql::dataloader::DataLoader;
 
+use super::loaders::{MemberLoader, TeamLoader};
 use crate::{
     auth::auth::PlexoAuthToken,
     sdk::{
-        member::{Member},
+        member::Member,
         task::{Task, TaskPriority, TaskStatus},
-        team::{Team},
+        team::Team,
         utilities::DateTimeBridge,
     },
     system::core::Engine,
-};
-use super::loaders::{
-    MemberLoader,
-    TeamLoader,
-    
 };
 
 #[derive(SimpleObject, Clone)]
@@ -46,11 +40,8 @@ impl Project {
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
         //match to see is project_id is none
-        let member = loader.load_one(self.owner_id).await.unwrap();
-        match member {
-            Some(member) => Some(member),
-            None => None,
-        }        
+
+        loader.load_one(self.owner_id).await.unwrap()
     }
 
     pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
@@ -60,7 +51,7 @@ impl Project {
 
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        let ids : Vec<Uuid>= sqlx::query!(
+        let ids: Vec<Uuid> = sqlx::query!(
             r#"
             SELECT member_id FROM members_by_projects
             WHERE project_id = $1
@@ -69,23 +60,23 @@ impl Project {
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap().into_iter().map(|id| id.member_id).collect();
+        .unwrap()
+        .into_iter()
+        .map(|id| id.member_id)
+        .collect();
 
-        
         let members_map = loader.load_many(ids.clone()).await.unwrap();
 
         let members: &Vec<Member> = &ids
             .into_iter()
-            .map(|id|  {
-                members_map.get(&id).unwrap().clone()
-        } )
+            .map(|id| members_map.get(&id).unwrap().clone())
             .collect();
 
         members.clone()
     }
 
     pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        //este caso específico necesita revisión 
+        //este caso específico necesita revisión
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         println!("token: {}", auth_token);
@@ -110,7 +101,7 @@ impl Project {
                 description: r.description.clone(),
                 status: TaskStatus::from_optional_str(&r.status),
                 priority: TaskPriority::from_optional_str(&r.priority),
-                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+                due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
                 owner_id: r.owner_id,
@@ -119,7 +110,6 @@ impl Project {
             .collect()
     }
 
-
     pub async fn teams(&self, ctx: &Context<'_>) -> Vec<Team> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -127,7 +117,7 @@ impl Project {
 
         let loader = ctx.data::<DataLoader<TeamLoader>>().unwrap();
 
-        let ids : Vec<Uuid>= sqlx::query!(
+        let ids: Vec<Uuid> = sqlx::query!(
             r#"
             SELECT team_id FROM teams_by_projects
             WHERE project_id = $1
@@ -136,15 +126,16 @@ impl Project {
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap().into_iter().map(|id| id.team_id).collect();
+        .unwrap()
+        .into_iter()
+        .map(|id| id.team_id)
+        .collect();
 
         let teams_map = loader.load_many(ids.clone()).await.unwrap();
 
         let teams: &Vec<Team> = &ids
             .into_iter()
-            .map(|id|  {
-                teams_map.get(&id).unwrap().clone()
-        } )
+            .map(|id| teams_map.get(&id).unwrap().clone())
             .collect();
 
         teams.clone()
@@ -152,18 +143,10 @@ impl Project {
 
     pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
-        
+
         //match to see is project_id is none
         match self.lead_id {
-            Some(lead_id) => {
-                let member = loader.load_one(lead_id).await.unwrap();
-                match member {
-                    Some(member) => Some(member),
-                    None => None,
-                    
-                }
-                
-            },
+            Some(lead_id) => loader.load_one(lead_id).await.unwrap(),
             None => None,
         }
     }

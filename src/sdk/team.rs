@@ -1,26 +1,17 @@
+use std::str::FromStr;
+
 use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 
-use serde_json::de;
-use uuid::Uuid;
-use async_graphql::{
-    dataloader::{DataLoader},
-};
 use crate::{
     auth::auth::PlexoAuthToken,
-    sdk::{
-        member::{Member},
-        project::Project,
-    },
+    sdk::{member::Member, project::Project},
     system::core::Engine,
 };
+use async_graphql::dataloader::DataLoader;
+use uuid::Uuid;
 
-use super::loaders::{
-    MemberLoader,
-    ProjectLoader,
-    LabelLoader,
-    
-};
+use super::loaders::{MemberLoader, ProjectLoader};
 
 #[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
@@ -44,14 +35,7 @@ impl Team {
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
         //match to see is project_id is none
-        let member = loader.load_one(self.owner_id).await.unwrap();
-        match member {
-            Some(member) => Some(member),
-            None => None,
-            
-        }
-                
-
+        loader.load_one(self.owner_id).await.unwrap()
     }
 
     pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
@@ -61,7 +45,7 @@ impl Team {
 
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        let ids : Vec<Uuid>= sqlx::query!(
+        let ids: Vec<Uuid> = sqlx::query!(
             r#"
             SELECT member_id FROM members_by_teams
             WHERE team_id = $1
@@ -70,16 +54,16 @@ impl Team {
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap().into_iter().map(|id| id.member_id).collect();
+        .unwrap()
+        .into_iter()
+        .map(|id| id.member_id)
+        .collect();
 
-        
         let members_map = loader.load_many(ids.clone()).await.unwrap();
 
         let members: &Vec<Member> = &ids
             .into_iter()
-            .map(|id|  {
-                members_map.get(&id).unwrap().clone()
-        } )
+            .map(|id| members_map.get(&id).unwrap().clone())
             .collect();
 
         members.clone()
@@ -92,7 +76,7 @@ impl Team {
 
         let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
 
-        let ids : Vec<Uuid>= sqlx::query!(
+        let ids: Vec<Uuid> = sqlx::query!(
             r#"
             SELECT project_id FROM teams_by_projects
             WHERE team_id = $1
@@ -101,15 +85,16 @@ impl Team {
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap().into_iter().map(|id| id.project_id).collect();
+        .unwrap()
+        .into_iter()
+        .map(|id| id.project_id)
+        .collect();
 
         let projects_map = loader.load_many(ids.clone()).await.unwrap();
 
         let projects: &Vec<Project> = &ids
             .into_iter()
-            .map(|id|  {
-                projects_map.get(&id).unwrap().clone()
-        } )
+            .map(|id| projects_map.get(&id).unwrap().clone())
             .collect();
 
         projects.clone()
@@ -127,18 +112,8 @@ pub enum TeamVisibility {
 impl TeamVisibility {
     pub fn from_optional_str(s: &Option<String>) -> Self {
         match s {
-            Some(s) => Self::from_str(s.as_str()),
+            Some(s) => Self::from_str(s.as_str()).unwrap_or(Self::None),
             None => Self::None,
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "None" => Self::None,
-            "Public" => Self::Public,
-            "Private" => Self::Private,
-            "Internal" => Self::Internal,
-            _ => Self::None,
         }
     }
 
@@ -148,6 +123,20 @@ impl TeamVisibility {
             Self::Public => "Public",
             Self::Private => "Private",
             Self::Internal => "Internal",
+        }
+    }
+}
+
+impl FromStr for TeamVisibility {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(Self::None),
+            "Public" => Ok(Self::Public),
+            "Private" => Ok(Self::Private),
+            "Internal" => Ok(Self::Internal),
+            _ => Err(()),
         }
     }
 }
