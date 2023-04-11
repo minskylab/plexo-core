@@ -10,6 +10,7 @@ use crate::{
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
         team::{Team, TeamVisibility},
+        labels::Label,
         utilities::DateTimeBridge,
     },
     system::core::Engine,
@@ -991,4 +992,116 @@ impl MutationRoot {
             prefix: team.prefix.clone(),
         }
     }
+
+    async fn create_label (
+        &self,
+        ctx: &Context<'_>,
+        name: String,
+        description: Option<String>,
+        color: Option<String>,
+        
+    ) -> Label {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
+        let label = sqlx::query!(
+            r#"
+            INSERT INTO labels (name, description, color)
+            VALUES ($1, $2, $3)
+            RETURNING *
+            "#,
+            name,
+            description,
+            color,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Label {
+            id: label.id,
+            created_at: DateTimeBridge::from_offset_date_time(label.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
+            name: label.name.clone(),
+            description: label.description.clone(),
+            color: label.color.clone(),
+        }
+    }
+
+    async fn update_label (
+        &self,
+        ctx: &Context<'_>,
+        id: Uuid,
+        name: Option<String>,
+        description: Option<String>,
+        color: Option<String>,
+    ) -> Label {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
+        let label = sqlx::query!(
+            r#"
+            UPDATE labels
+            SET name = $1, description = $2, color = $3
+            WHERE id = $4
+            RETURNING *
+            "#,
+            name,
+            description,
+            color,
+            id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Label {
+            id: label.id,
+            created_at: DateTimeBridge::from_offset_date_time(label.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
+            name: label.name.clone(),
+            description: label.description.clone(),
+            color: label.color.clone(),
+        }
+    }
+
+    async fn delete_label (&self, ctx: &Context<'_>, id: Uuid) -> Label {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
+        let label = sqlx::query!(
+            r#"
+            DELETE FROM labels
+            WHERE id = $1
+            RETURNING *
+            "#,
+            id,
+        )
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        let _deleted_labels = sqlx::query!(
+            r#"
+            DELETE FROM labels_by_tasks
+            WHERE label_id = $1
+            "#,
+            id,
+        )
+        .execute(&plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Label {
+            id: label.id,
+            created_at: DateTimeBridge::from_offset_date_time(label.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
+            name: label.name.clone(),
+            description: label.description.clone(),
+            color: label.color.clone(),
+        }
+    }   
 }

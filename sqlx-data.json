@@ -1650,6 +1650,58 @@
     },
     "query": "\n            SELECT * FROM tasks\n            WHERE id = $1\n            "
   },
+  "9607deea66adfbd9458760e85e42dc571fe1c1972276d618a5054604342b5889": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "color",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO labels (name, description, color)\n            VALUES ($1, $2, $3)\n            RETURNING *\n            "
+  },
   "968070fb3d5e352df7dd50e54467efeef320089e5ab883e28ad2d10c59d5c144": {
     "describe": {
       "columns": [],
@@ -1693,6 +1745,18 @@
       }
     },
     "query": "\n            SELECT project_id FROM members_by_projects\n            WHERE member_id = $1\n            "
+  },
+  "a020c3960002d6b54d7586007468893135596ed4e9a37b808222a1ec283dc083": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM labels_by_tasks\n            WHERE label_id = $1\n            "
   },
   "a0b29f706955a01104a95701d4a817af02c23d8f2fa93589a232fc6bddadc6b0": {
     "describe": {
@@ -2270,6 +2334,59 @@
     },
     "query": "SELECT * FROM tasks WHERE lead_id = $1"
   },
+  "dde6b64a9a547b924e8fca14b64afd6bde4136b16f83044066ca15841290dfa8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "color",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Varchar",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE labels\n            SET name = $1, description = $2, color = $3\n            WHERE id = $4\n            RETURNING *\n            "
+  },
   "dec4f58655da0470877d5e912fd388ff0112935119a3aeca5a66a00592392176": {
     "describe": {
       "columns": [
@@ -2404,6 +2521,56 @@
       }
     },
     "query": "\n                        INSERT INTO labels_by_tasks (task_id, label_id)\n                        VALUES ($1, $2)\n                        "
+  },
+  "ea21c94ce5d144136cd379d09e03570327c5ac104584db147e7fb0a716d277a3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "color",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM labels\n            WHERE id = $1\n            RETURNING *\n            "
   },
   "f1bd9c3c2aeb32a12fd06fdbfbf74206d1f5ee3a932969b062f75dc215003f6d": {
     "describe": {
