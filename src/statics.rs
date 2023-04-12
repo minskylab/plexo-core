@@ -179,7 +179,7 @@ impl Endpoint for StaticFilesEndpointHTMLTrimmed {
         if file_path.with_extension("html").exists() {
             return Ok(StaticFileRequest::from_request_without_body(&req)
                 .await?
-                .create_response(&file_path.with_extension("html"), self.prefer_utf8)?
+                .create_response(file_path.with_extension("html"), self.prefer_utf8)?
                 .into_response());
         }
 

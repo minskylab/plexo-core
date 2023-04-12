@@ -1,17 +1,10 @@
-use std::{collections::HashMap, sync::Arc};
-
-use crate::{auth::auth::PlexoAuthToken, sdk::utilities::DateTimeBridge, system::core::Engine};
-use async_graphql::{
-    dataloader::{DataLoader, Loader},
-    ComplexObject, Context, SimpleObject,
-};
+use crate::{auth::auth::PlexoAuthToken, system::core::Engine};
+use async_graphql::{dataloader::DataLoader, ComplexObject, Context, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use super::task::{Task, TaskPriority, TaskStatus};
 use super::loaders::TaskLoader;
-
-
+use super::task::Task;
 
 #[derive(SimpleObject, Clone)]
 #[graphql(complex)]
@@ -33,8 +26,8 @@ impl Label {
         println!("token: {}", auth_token);
 
         let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
-        
-        let ids : Vec<Uuid>= sqlx::query!(
+
+        let ids: Vec<Uuid> = sqlx::query!(
             r#"
             SELECT task_id FROM labels_by_tasks
             WHERE label_id = $1
@@ -43,16 +36,17 @@ impl Label {
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap().into_iter().map(|id| id.task_id).collect();
+        .unwrap()
+        .into_iter()
+        .map(|id| id.task_id)
+        .collect();
 
         let tasks_map = loader.load_many(ids.clone()).await.unwrap();
 
         let tasks: &Vec<Task> = &ids
             .into_iter()
-            .map(|id|  {
-                tasks_map.get(&id).unwrap().clone()
-        } )
-        .collect();
+            .map(|id| tasks_map.get(&id).unwrap().clone())
+            .collect();
 
         tasks.clone()
     }

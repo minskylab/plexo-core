@@ -1,4 +1,4 @@
-use async_graphql::{Context, InputObject,  Object};
+use async_graphql::{Context, InputObject, Object};
 use chrono::{DateTime, Utc};
 use sqlx;
 use uuid::Uuid;
@@ -6,11 +6,11 @@ use uuid::Uuid;
 use crate::{
     auth::auth::PlexoAuthToken,
     sdk::{
+        labels::Label,
         member::{Member, MemberRole},
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
         team::{Team, TeamVisibility},
-        labels::Label,
         utilities::DateTimeBridge,
     },
     system::core::Engine,
@@ -62,7 +62,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        let _a = match assignees {
+        match assignees {
             Some(assignees) => {
                 let _delete_assignees = sqlx::query!(
                     r#"
@@ -92,7 +92,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let _l = match labels {
+        match labels {
             Some(labels) => {
                 let _delete_labels = sqlx::query!(
                     r#"
@@ -356,8 +356,10 @@ impl MutationRoot {
             role,
             id,
         )
-        .fetch_one(&plexo_engine.pool).await.unwrap();
-        
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
+
         let _a = match projects {
             Some(projects) => {
                 let _deleted_projects = sqlx::query!(
@@ -384,7 +386,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -414,7 +416,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -540,7 +542,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -559,7 +561,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -643,7 +645,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -673,7 +675,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -808,7 +810,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -827,7 +829,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -870,7 +872,9 @@ impl MutationRoot {
             prefix,
             id,
         )
-        .fetch_one(&plexo_engine.pool).await.unwrap();
+        .fetch_one(&plexo_engine.pool)
+        .await
+        .unwrap();
 
         let _a = match members {
             Some(members) => {
@@ -898,7 +902,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -928,7 +932,7 @@ impl MutationRoot {
                     .await
                     .unwrap();
                 }
-            },
+            }
             None => (),
         };
 
@@ -993,13 +997,12 @@ impl MutationRoot {
         }
     }
 
-    async fn create_label (
+    async fn create_label(
         &self,
         ctx: &Context<'_>,
         name: String,
         description: Option<String>,
         color: Option<String>,
-        
     ) -> Label {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -1029,7 +1032,7 @@ impl MutationRoot {
         }
     }
 
-    async fn update_label (
+    async fn update_label(
         &self,
         ctx: &Context<'_>,
         id: Uuid,
@@ -1067,7 +1070,7 @@ impl MutationRoot {
         }
     }
 
-    async fn delete_label (&self, ctx: &Context<'_>, id: Uuid) -> Label {
+    async fn delete_label(&self, ctx: &Context<'_>, id: Uuid) -> Label {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
         println!("token: {}", auth_token);
@@ -1103,5 +1106,5 @@ impl MutationRoot {
             description: label.description.clone(),
             color: label.color.clone(),
         }
-    }   
+    }
 }

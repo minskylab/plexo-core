@@ -33,13 +33,13 @@ impl Engine {
         }
     }
 
-    pub fn me<'ctx>(&self, ctx: &'ctx Context) {
+    pub fn me(&self, ctx: &Context) {
         let data = ctx.data::<String>().unwrap();
 
         println!("{}", data);
     }
 
-    pub async fn get_member(&self, id: Uuid) -> Member {
+    pub async fn get_member(&self, _id: Uuid) -> Member {
         todo!()
     }
 
@@ -128,11 +128,11 @@ impl Engine {
         }
     }
 
-    pub async fn update_member(&self, member: Member) -> Member {
+    pub async fn update_member(&self, _member: Member) -> Member {
         todo!()
     }
 
-    pub async fn delete_member(&self, member: Member) -> Member {
+    pub async fn delete_member(&self, _member: Member) -> Member {
         todo!()
     }
 }

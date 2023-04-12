@@ -12,13 +12,7 @@ use plexo::{
     },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
-    sdk::loaders::{
-        TaskLoader,
-        ProjectLoader,
-        MemberLoader,
-        LabelLoader,
-        TeamLoader,
-        },
+    sdk::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader, TeamLoader},
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
@@ -33,13 +27,13 @@ async fn main() {
     let plexo_engine = Engine::new(
         PgPoolOptions::new()
             .max_connections(5)
-            .connect(&*DATABASE_URL)
+            .connect(&DATABASE_URL)
             .await
             .unwrap(),
         AuthEngine::new(
-            &*GITHUB_CLIENT_ID,
-            &*GITHUB_CLIENT_SECRET,
-            &*GITHUB_REDIRECT_URL,
+            &GITHUB_CLIENT_ID,
+            &GITHUB_CLIENT_SECRET,
+            &GITHUB_REDIRECT_URL,
         ),
     );
 
@@ -65,7 +59,6 @@ async fn main() {
             TeamLoader::new(plexo_engine.clone()),
             tokio::spawn,
         ))
-
         .finish();
 
     let app = Route::new()
