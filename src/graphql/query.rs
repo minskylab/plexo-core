@@ -49,7 +49,7 @@ pub struct ProjectFilter {
 
 #[Object]
 impl QueryRoot {
-    async fn tasks(&self, ctx: &Context<'_>, filter: Option<TaskFilter>) -> Vec<Task> {
+    async fn tasks(&self, ctx: &Context<'_>, _filter: Option<TaskFilter>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -118,7 +118,7 @@ impl QueryRoot {
         }
     }
 
-    async fn members(&self, ctx: &Context<'_>, filter: Option<MemberFilter>) -> Vec<Member> {
+    async fn members(&self, ctx: &Context<'_>, _filter: Option<MemberFilter>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -224,7 +224,7 @@ impl QueryRoot {
         }
     }
 
-    async fn projects(&self, ctx: &Context<'_>, filter: Option<ProjectFilter>) -> Vec<Project> {
+    async fn projects(&self, ctx: &Context<'_>, _filter: Option<ProjectFilter>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -295,7 +295,7 @@ impl QueryRoot {
         }
     }
 
-    async fn teams(&self, ctx: &Context<'_>, filter: Option<TeamFilter>) -> Vec<Team> {
+    async fn teams(&self, ctx: &Context<'_>, _filter: Option<TeamFilter>) -> Vec<Team> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 

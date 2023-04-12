@@ -62,6 +62,37 @@ impl Task {
         }
     }
 
+    pub async fn assignees(&self, ctx: &Context<'_>) -> Vec<Member> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
+
+        let ids : Vec<Uuid>= sqlx::query!(
+            r#"
+            SELECT assignee_id FROM tasks_by_assignees
+            WHERE task_id = $1
+            "#,
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|id| id.assignee_id)
+        .collect();
+
+        let members_map = loader.load_many(ids.clone()).await.unwrap();
+
+        let members: &Vec<Member> = &ids
+            .into_iter()
+            .map(|id| members_map.get(&id).unwrap().clone())
+            .collect();
+
+        members.clone()
+    }
+
     pub async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();

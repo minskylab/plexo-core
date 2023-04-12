@@ -1030,6 +1030,26 @@
     },
     "query": "\n            UPDATE members\n            SET email = $1, name = $2, role = $3\n            WHERE id = $4\n            RETURNING id, created_at, updated_at, email, name, github_id, google_id, photo_url, role\n            "
   },
+  "578d26cecd34b6cb97661372a60ff9a41324d3cc975a22da9a87055b09816d9a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "assignee_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT assignee_id FROM tasks_by_assignees\n            WHERE task_id = $1\n            "
+  },
   "5850af74cd7ca4a2ccea4a30f8d3266e1382b7ec25100b6c62fdbfa7a82ac1cb": {
     "describe": {
       "columns": [
