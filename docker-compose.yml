@@ -1,16 +1,22 @@
-version: '3'
+version: '3.7'
 services:
   postgres:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_USER: plexo
-      POSTGRES_PASSWORD: example
-    ports:
-      - 5432:5432
-    volumes:
-      - ./migrations:/migrations
-      - ./migrations:/docker-entrypoint-initdb.d/
+      image: postgres:15.2
+      restart: always
+      environment: 
+        - POSTGRES_USER=plexo
+        - POSTGRES_PASSWORD=example
+      logging:
+        options:
+          max-size: 10m
+          max-file: "3"
+      ports:
+        - '5438:5432'
+      volumes:
+        - ./postgres-data:/var/lib/postgresql/data
+        - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+        # copy the sql script to fill tables
+
 
   pgadmin:
     container_name: pgadmin4_container
