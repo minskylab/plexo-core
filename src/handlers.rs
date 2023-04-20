@@ -71,7 +71,7 @@ pub async fn on_connection_init(value: Value) -> async_graphql::Result<Data> {
             if let Some(Value::String(token)) = map.get("Authorization") {
                 let mut data = Data::default();
                 data.insert(token.to_string());
-                return Ok(data);
+                Ok(data)
             } else {
                 Err("Authorization token is required".into())
             }

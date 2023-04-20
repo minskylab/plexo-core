@@ -1,7 +1,7 @@
 use std::env;
 
 use oauth2::{
-    basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, Client, ClientId,
+    basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
     ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
 };
 use reqwest::Url;
@@ -13,7 +13,7 @@ pub struct AuthEngine {
     pub jwt_engine: JWT,
 
     github_client: BasicClient,
-    google_client: Option<BasicClient>,
+    _google_client: Option<BasicClient>,
 }
 
 impl AuthEngine {
@@ -51,7 +51,7 @@ impl AuthEngine {
         Self {
             jwt_engine,
             github_client,
-            google_client: None,
+            _google_client: None,
         }
     }
 
@@ -60,8 +60,6 @@ impl AuthEngine {
             .authorize_url(CsrfToken::new_random)
             .add_scope(Scope::new("user:email".to_string()))
             .url()
-            .clone()
-
         // authorize_url.to_string()
     }
 

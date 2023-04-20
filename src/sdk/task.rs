@@ -1,15 +1,16 @@
+use std::str::FromStr;
+
 use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 
+use async_graphql::dataloader::DataLoader;
 use uuid::Uuid;
 
-use super::{
-    member::{Member, MemberRole},
-    project::Project,
-};
-use crate::{auth::auth::PlexoAuthToken, sdk::utilities::DateTimeBridge, system::core::Engine};
+use super::{labels::Label, member::Member, project::Project};
 
-#[derive(SimpleObject, Clone)]
+use super::loaders::{LabelLoader, MemberLoader, ProjectLoader};
+use crate::{auth::auth::PlexoAuthToken, system::core::Engine};
+#[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Task {
     pub id: Uuid,
@@ -28,167 +29,103 @@ pub struct Task {
 
     pub project_id: Option<Uuid>,
     pub lead_id: Option<Uuid>,
-    
-    pub labels: Vec<String>,
-    pub count: i32,
 
-    
+    pub count: i32,
 }
 
 #[ComplexObject]
 impl Task {
-    pub async fn owner(&self, ctx: &Context<'_>) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+    pub async fn owner(&self, ctx: &Context<'_>) -> Option<Member> {
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        println!("token: {}", auth_token);
-
-        let member = sqlx::query!(r#"SELECT * FROM members WHERE id = $1"#, &self.owner_id)
-            .fetch_one(&plexo_engine.pool)
-            .await
-            .unwrap();
-
-        Member {
-            id: member.id,
-            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-            name: member.name.clone(),
-            email: member.email.clone(),
-            github_id: member.github_id.clone(),
-            google_id: member.google_id.clone(),
-            photo_url: member.photo_url.clone(),
-            role: MemberRole::from_optional_str(&member.role),
-        }
+        //match to see is project_id is none
+        loader.load_one(self.owner_id).await.unwrap()
     }
 
     pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        println!("token: {}", auth_token);
-
-        if self.lead_id.is_none() {
-            return None;
-        }
-
-        let member = sqlx::query!(
-            r#"SELECT * FROM members WHERE id = $1"#,
-            &self.lead_id.unwrap()
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await;
-
-        match member {
-            Ok(member) => Some(Member {
-                id: member.id,
-                created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-                name: member.name.clone(),
-                email: member.email.clone(),
-                github_id: member.github_id.clone(),
-                google_id: member.google_id.clone(),
-                photo_url: member.photo_url.clone(),
-                role: MemberRole::from_optional_str(&member.role),
-            }),
-            Err(_) => None,
+        //match to see is project_id is none
+        match self.lead_id {
+            Some(lead_id) => loader.load_one(lead_id).await.unwrap(),
+            None => None,
         }
     }
 
     pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+        let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
 
-        if self.project_id.is_none() {
-            return None;
-        }
-
-        let project = sqlx::query!(
-            r#"SELECT * FROM projects WHERE id = $1"#,
-            &self.project_id.unwrap()
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await;
-
-        match project {
-            Ok(project) => Some(Project {
-                id: project.id,
-                created_at: DateTimeBridge::from_offset_date_time(project.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
-                name: project.name.clone(),
-                description: project.description.clone(),
-                prefix: project.prefix.clone(),
-                owner_id: project.owner_id,
-                lead_id: project.lead_id,
-                start_date: project
-                    .start_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-                due_date: project
-                    .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-            }),
-            Err(_) => None,
+        //match to see is project_id is none
+        match self.project_id {
+            Some(project_id) => loader.load_one(project_id).await.unwrap(),
+            None => None,
         }
     }
-    
-    pub async fn assignees (&self, ctx: &Context<'_>) -> Vec<Member> {
+
+    pub async fn assignees(&self, ctx: &Context<'_>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let members = sqlx::query!(r#"
-        SELECT * FROM tasks_by_assignees JOIN members
-        ON tasks_by_assignees.assignee_id = members.id WHERE task_id = $1"#,
-         &self.id)
-         .fetch_all(&plexo_engine.pool).await.unwrap();
+        println!("token: {}", auth_token);
 
-        members
-            .iter()
-            .map(|r| Member {
-                id: r.id,
-                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-                name: r.name.clone(),
-                email: r.email.clone(),
-                github_id: r.github_id.clone(),
-                google_id: r.google_id.clone(),
-                photo_url: r.photo_url.clone(),
-                role: MemberRole::from_optional_str(&r.role),
-            })
-            .collect()
-    } 
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-    // pub async fn projects (&self, ctx: &Context<'_>) -> Vec<Project> {
-    //     let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-    //     let plexo_engine = ctx.data::<Engine>().unwrap();
-    //     let projects = sqlx::query!(r#"
-    //     SELECT * FROM tasks_by_projects JOIN projects
-    //     ON tasks_by_projects.project_id = projects.id WHERE task_id = $1"#,
-    //      &self.id)
-    //      .fetch_all(&plexo_engine.pool).await.unwrap();
+        let ids : Vec<Uuid>= sqlx::query!(
+            r#"
+            SELECT assignee_id FROM tasks_by_assignees
+            WHERE task_id = $1
+            "#,
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|id| id.assignee_id)
+        .collect();
 
-    //     projects
-    //         .iter()
-    //         .map(|r| Project {
-    //             id: r.id,
-    //             created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-    //             updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-    //             name: r.name.clone(),
-    //             description: r.description.clone(),
-    //             prefix: r.prefix.clone(),
-    //             owner_id: r.owner_id.unwrap_or(Uuid::nil()),
-    //             lead_id: r.lead_id,
-    //             start_date: r
-    //                 .start_date
-    //                 .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-    //             due_date: r
-    //                 .due_date
-    //                 .map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-    //         })
-    //         .collect()
-    // }
+        let members_map = loader.load_many(ids.clone()).await.unwrap();
 
+        let members: &Vec<Member> = &ids
+            .into_iter()
+            .map(|id| members_map.get(&id).unwrap().clone())
+            .collect();
 
+        members.clone()
+    }
+
+    pub async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
+        let loader = ctx.data::<DataLoader<LabelLoader>>().unwrap();
+
+        let ids: Vec<Uuid> = sqlx::query!(
+            r#"
+            SELECT label_id FROM labels_by_tasks
+            WHERE task_id = $1
+            "#,
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|id| id.label_id)
+        .collect();
+
+        let labels_map = loader.load_many(ids.clone()).await.unwrap();
+
+        let labels: &Vec<Label> = &ids
+            .into_iter()
+            .map(|id| labels_map.get(&id).unwrap().clone())
+            .collect();
+
+        labels.clone()
+    }
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TaskStatus {
     None,
     Backlog,
@@ -198,7 +135,7 @@ pub enum TaskStatus {
     Canceled,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TaskPriority {
     None,
     Low,
@@ -210,20 +147,8 @@ pub enum TaskPriority {
 impl TaskStatus {
     pub fn from_optional_str(s: &Option<String>) -> Self {
         match s {
-            Some(s) => Self::from_str(s.as_str()),
+            Some(s) => Self::from_str(s.as_str()).unwrap_or(Self::None),
             None => Self::None,
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "None" => Self::None,
-            "Backlog" => Self::Backlog,
-            "ToDo" => Self::ToDo,
-            "InProgress" => Self::InProgress,
-            "Done" => Self::Done,
-            "Canceled" => Self::Canceled,
-            _ => Self::None,
         }
     }
 
@@ -239,22 +164,27 @@ impl TaskStatus {
     }
 }
 
+impl FromStr for TaskStatus {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(Self::None),
+            "Backlog" => Ok(Self::Backlog),
+            "ToDo" => Ok(Self::ToDo),
+            "InProgress" => Ok(Self::InProgress),
+            "Done" => Ok(Self::Done),
+            "Canceled" => Ok(Self::Canceled),
+            _ => Err(()),
+        }
+    }
+}
+
 impl TaskPriority {
     pub fn from_optional_str(s: &Option<String>) -> Self {
         match s {
-            Some(s) => Self::from_str(s.as_str()),
+            Some(s) => Self::from_str(s.as_str()).unwrap_or(Self::None),
             None => Self::None,
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "None" => Self::None,
-            "Low" => Self::Low,
-            "Medium" => Self::Medium,
-            "High" => Self::High,
-            "Urgent" => Self::Urgent,
-            _ => Self::None,
         }
     }
 
@@ -265,6 +195,21 @@ impl TaskPriority {
             Self::Medium => "Medium",
             Self::High => "High",
             Self::Urgent => "Urgent",
+        }
+    }
+}
+
+impl FromStr for TaskPriority {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(Self::None),
+            "Low" => Ok(Self::Low),
+            "Medium" => Ok(Self::Medium),
+            "High" => Ok(Self::High),
+            "Urgent" => Ok(Self::Urgent),
+            _ => Err(()),
         }
     }
 }

@@ -1,19 +1,19 @@
+use std::str::FromStr;
+
 use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 
-use uuid::Uuid;
-
 use crate::{
     auth::auth::PlexoAuthToken,
-    sdk::{
-        member::{Member, MemberRole},
-        project::Project,
-        utilities::DateTimeBridge,
-    },
+    sdk::{member::Member, project::Project},
     system::core::Engine,
 };
+use async_graphql::dataloader::DataLoader;
+use uuid::Uuid;
 
-#[derive(SimpleObject, Clone)]
+use super::loaders::{MemberLoader, ProjectLoader};
+
+#[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Team {
     pub id: Uuid,
@@ -31,96 +31,77 @@ pub struct Team {
 
 #[ComplexObject]
 impl Team {
-    pub async fn owner(&self, ctx: &Context<'_>) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
+    pub async fn owner(&self, ctx: &Context<'_>) -> Option<Member> {
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        let member = sqlx::query!(
-            r#"SELECT * FROM members WHERE id = $1"#,
-            &self.owner_id
-        )
-        .fetch_one(&plexo_engine.pool)
-        .await
-        .unwrap();
-
-        Member {
-            id: member.id,
-            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-            name: member.name,
-            email: member.email,
-            github_id: member.github_id,
-            google_id: member.google_id,
-            photo_url: member.photo_url,
-            role: MemberRole::from_optional_str(&member.role),
-        }    
+        //match to see is project_id is none
+        loader.load_one(self.owner_id).await.unwrap()
     }
 
     pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        let members = sqlx::query!(r#"SELECT 
-        members.id,
-        members.created_at,
-        members.updated_at,
-        members.name,
-        members.email,
-        members.github_id,
-        members.google_id,
-        members.photo_url,
-        members.role 
-        FROM members_by_teams JOIN members
-         ON members_by_teams.member_id = members.id WHERE team_id = $1"#, &self.id).fetch_all(&plexo_engine.pool).await.unwrap();
-        members
-            .iter()
-            .map(|r| Member {
-                id: r.id,
-                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-                name: r.name.clone(),
-                email: r.email.clone(),
-                github_id: r.github_id.clone(),
-                google_id: r.google_id.clone(),
-                photo_url: r.photo_url.clone(),
-                role: MemberRole::from_optional_str(&r.role),
-            })
-            .collect()
-    }
+        println!("token: {}", auth_token);
 
-    pub async fn projects (&self, ctx: &Context<'_>) -> Vec<Project> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        let projects = sqlx::query!(
-        r#"
-        SELECT * FROM 
-        teams_by_projects JOIN projects
-        ON teams_by_projects.project_id = projects.id WHERE team_id = $1"#,
-        &self.id,
+        let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
+
+        let ids: Vec<Uuid> = sqlx::query!(
+            r#"
+            SELECT member_id FROM members_by_teams
+            WHERE team_id = $1
+            "#,
+            &self.id
         )
         .fetch_all(&plexo_engine.pool)
         .await
-        .unwrap();
+        .unwrap()
+        .into_iter()
+        .map(|id| id.member_id)
+        .collect();
 
-        projects
-            .iter()
-            .map(|r| Project {
-                id: r.id,
-                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-                name: r.name.clone(),
-                description: r.description.clone(),
-                prefix: r.prefix.clone(),
-                owner_id: r.owner_id,
-                lead_id: r.lead_id,
-                start_date: r.start_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
-                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d.assume_utc())),
+        let members_map = loader.load_many(ids.clone()).await.unwrap();
 
-            })
-            .collect()
+        let members: &Vec<Member> = &ids
+            .into_iter()
+            .map(|id| members_map.get(&id).unwrap().clone())
+            .collect();
+
+        members.clone()
+    }
+
+    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+        println!("token: {}", auth_token);
+
+        let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
+
+        let ids: Vec<Uuid> = sqlx::query!(
+            r#"
+            SELECT project_id FROM teams_by_projects
+            WHERE team_id = $1
+            "#,
+            &self.id
+        )
+        .fetch_all(&plexo_engine.pool)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|id| id.project_id)
+        .collect();
+
+        let projects_map = loader.load_many(ids.clone()).await.unwrap();
+
+        let projects: &Vec<Project> = &ids
+            .into_iter()
+            .map(|id| projects_map.get(&id).unwrap().clone())
+            .collect();
+
+        projects.clone()
     }
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TeamVisibility {
     None,
     Public,
@@ -131,18 +112,8 @@ pub enum TeamVisibility {
 impl TeamVisibility {
     pub fn from_optional_str(s: &Option<String>) -> Self {
         match s {
-            Some(s) => Self::from_str(s.as_str()),
+            Some(s) => Self::from_str(s.as_str()).unwrap_or(Self::None),
             None => Self::None,
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "None" => Self::None,
-            "Public" => Self::Public,
-            "Private" => Self::Private,
-            "Internal" => Self::Internal,
-            _ => Self::None,
         }
     }
 
@@ -152,6 +123,20 @@ impl TeamVisibility {
             Self::Public => "Public",
             Self::Private => "Private",
             Self::Internal => "Internal",
+        }
+    }
+}
+
+impl FromStr for TeamVisibility {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(Self::None),
+            "Public" => Ok(Self::Public),
+            "Private" => Ok(Self::Private),
+            "Internal" => Ok(Self::Internal),
+            _ => Err(()),
         }
     }
 }

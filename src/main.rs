@@ -1,6 +1,6 @@
 pub mod statics;
 
-use async_graphql::Schema;
+use async_graphql::{dataloader::DataLoader, Schema};
 use dotenvy::dotenv;
 use plexo::{
     auth::{
@@ -12,6 +12,7 @@ use plexo::{
     },
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
+    sdk::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader, TeamLoader},
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
@@ -26,18 +27,38 @@ async fn main() {
     let plexo_engine = Engine::new(
         PgPoolOptions::new()
             .max_connections(5)
-            .connect(&*DATABASE_URL)
+            .connect(&DATABASE_URL)
             .await
             .unwrap(),
         AuthEngine::new(
-            &*GITHUB_CLIENT_ID,
-            &*GITHUB_CLIENT_SECRET,
-            &*GITHUB_REDIRECT_URL,
+            &GITHUB_CLIENT_ID,
+            &GITHUB_CLIENT_SECRET,
+            &GITHUB_REDIRECT_URL,
         ),
     );
 
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
         .data(plexo_engine.clone()) // TODO: Optimize this
+        .data(DataLoader::new(
+            TaskLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+        .data(DataLoader::new(
+            ProjectLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+        .data(DataLoader::new(
+            LabelLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+        .data(DataLoader::new(
+            MemberLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
+        .data(DataLoader::new(
+            TeamLoader::new(plexo_engine.clone()),
+            tokio::spawn,
+        ))
         .finish();
 
     let app = Route::new()

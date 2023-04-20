@@ -3,7 +3,7 @@ use std::time::Duration;
 use async_graphql::{futures_util::StreamExt, Context, Subscription};
 use chrono::Utc;
 use tokio_stream::Stream;
-use uuid::{uuid, Uuid};
+use uuid::Uuid;
 
 use crate::{
     sdk::{
@@ -27,7 +27,7 @@ impl SubscriptionRoot {
             })
     }
 
-    async fn example(&self, ctx: &Context<'_>) -> impl Stream<Item = DataDiffEvent> {
+    async fn example(&self, _ctx: &Context<'_>) -> impl Stream<Item = DataDiffEvent> {
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(move |_| DataDiffEvent {
                 kind: DataDiffEventKind::Created,
@@ -52,8 +52,7 @@ impl SubscriptionRoot {
 
                 owner_id: Uuid::new_v4(),
 
-                labels: vec![],
-
+                // labels: vec![],
                 lead_id: None,
                 project_id: None,
 
@@ -76,8 +75,7 @@ impl SubscriptionRoot {
 
                 owner_id: Uuid::new_v4(),
 
-                labels: vec![],
-
+                // labels: vec![],
                 lead_id: None,
                 project_id: None,
 
