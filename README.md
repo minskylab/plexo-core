@@ -11,6 +11,18 @@ Plexo is a next generation planning tool for project management. It also include
 
 Plexo-Core specifically is the backend part of the Plexo-platform project. Its purpose is to serve as a connection between the frontend and the Hashura database. Plexo-core has built 7 core "objects" around which the platform works. They are "tasks", "members", "teams", "projects", "labels", and "organizations". Around all of them, the features are distributed as an interconnection between the basic conceptual relationships every core object has. For example, tasks have a due date, a leader, members as assignees, labels, etc. Projects have also due date, teams associated, an owner, a leader, etc.
 
+## Live Demo
+
+<img align="right" height="255" src="/public/plexo-live-1.svg" alt="Image of tasks on board view" title="Board view Plexo">
+
+<img align="right" height="255" src="/public/plexo-live-2.svg" alt="Image of task creation with tasks list view on the back" title="Task creation Plexo">
+
+<img align="right" height="255" src="/public/plexo-live-3.svg" alt="View of one of the projects" title="In project view Plexo">
+
+**Try our live demo!** [Live demo](https://plexo-demo.internal.minsky.cc/)
+
+If you find any bug or are eager to ask for a feature, create a github issue [here] (https://github.com/minskylab/plexo-core/issues)
+
 ## Technologies and Programming Languages
 
 The project uses Rust as its language and the other main functional technologies are async GraphQL and Hashura with a Postgresql database. On the other hand, Docker is used to deploy other instances.
