@@ -34,7 +34,7 @@ To install and run Plexo-core on their machines, users can follow these steps:
 ## Usage Instructions and Examples
 
 To use Plexo-core, users can run a GraphQL playground and test the queries, mutations, and subscriptions.
-If you are using a local deployment of the project go to [0.0.0.0:8080/playground](0.0.0.0:8080/playground) or [localhost:8080/playground](localhost:8080/playground)
+If you are using a local deployment of the project go to [0.0.0.0:8080/playground](https://0.0.0.0:8080/playground) or [localhost:8080/playground](https://localhost:8080/playground).
 # Development Progress and Roadmap
 
 - [x] User Creation
