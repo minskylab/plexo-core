@@ -34,7 +34,7 @@ impl Label {
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()

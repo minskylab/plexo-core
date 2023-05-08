@@ -64,7 +64,7 @@ impl Loader<Uuid> for TaskLoader {
             "#,
             &keys
         )
-        .fetch_all(&self.0.pool)
+        .fetch_all(&*self.0.pool)
         .await
         .unwrap();
 
@@ -111,7 +111,7 @@ impl Loader<Uuid> for ProjectLoader {
             "#,
             &keys
         )
-        .fetch_all(&self.0.pool)
+        .fetch_all(&*self.0.pool)
         .await
         .unwrap();
 
@@ -158,7 +158,7 @@ impl Loader<Uuid> for MemberLoader {
             "#,
             &keys
         )
-        .fetch_all(&self.0.pool)
+        .fetch_all(&*self.0.pool)
         .await
         .unwrap();
 
@@ -202,7 +202,7 @@ impl Loader<Uuid> for LabelLoader {
             "#,
             &keys
         )
-        .fetch_all(&self.0.pool)
+        .fetch_all(&*self.0.pool)
         .await
         .unwrap();
 
@@ -243,7 +243,7 @@ impl Loader<Uuid> for TeamLoader {
             "#,
             &keys
         )
-        .fetch_all(&self.0.pool)
+        .fetch_all(&*self.0.pool)
         .await
         .unwrap();
 

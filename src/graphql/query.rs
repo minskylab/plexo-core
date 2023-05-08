@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::{
     auth::auth::PlexoAuthToken,
+    llm::suggestions::TaskSuggestion,
     sdk::{
         labels::Label,
         member::{Member, MemberRole},
@@ -60,7 +61,7 @@ impl QueryRoot {
             SELECT * FROM tasks
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -96,7 +97,7 @@ impl QueryRoot {
             "#,
             id
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -129,7 +130,7 @@ impl QueryRoot {
             SELECT * FROM members
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -177,7 +178,7 @@ impl QueryRoot {
             "#,
             id
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -207,7 +208,7 @@ impl QueryRoot {
             "#,
             email
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -235,7 +236,7 @@ impl QueryRoot {
             SELECT * FROM projects
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -250,12 +251,8 @@ impl QueryRoot {
                 owner_id: r.owner_id,
                 description: r.description.clone(),
                 lead_id: r.lead_id.clone(),
-                start_date: r
-                    .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
-                due_date: r
-                    .due_date
-                    .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                start_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
             })
             .collect()
     }
@@ -273,7 +270,7 @@ impl QueryRoot {
             "#,
             id
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -307,7 +304,7 @@ impl QueryRoot {
             FROM teams
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -338,7 +335,7 @@ impl QueryRoot {
             "#,
             id
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -364,7 +361,7 @@ impl QueryRoot {
             SELECT * FROM labels
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -379,5 +376,19 @@ impl QueryRoot {
                 description: r.description.clone(),
             })
             .collect()
+    }
+
+    async fn suggest_new_task(&self, ctx: &Context<'_>, task: TaskSuggestion) -> String {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        // TODO: change the return type to TaskSuggestion
+
+        plexo_engine
+            .auto_suggestions_engine
+            .get_suggestions(task)
+            .await
     }
 }

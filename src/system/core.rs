@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::{
     auth::engine::AuthEngine,
+    llm::suggestions::AutoSuggestionsEngine,
     sdk::{
         member::{Member, MemberRole},
         utilities::DateTimeBridge,
@@ -17,19 +18,23 @@ use super::{
 
 #[derive(Clone)]
 pub struct Engine {
-    pub pool: Pool<Postgres>,
+    pub pool: Box<Pool<Postgres>>,
     pub auth: AuthEngine,
     pub subscription_manager: SubscriptionManager,
+    pub auto_suggestions_engine: AutoSuggestionsEngine,
 }
 
 impl Engine {
     pub fn new(pool: Pool<Postgres>, auth: AuthEngine) -> Self {
+        let pool = Box::new(pool);
         let subscription_manager = SubscriptionManager::new();
+        let auto_suggestions_engine = AutoSuggestionsEngine::new(pool.clone());
 
         Self {
             pool,
             auth,
             subscription_manager,
+            auto_suggestions_engine,
         }
     }
 
@@ -70,7 +75,7 @@ impl Engine {
             filter.github_id,
             filter.google_id,
         )
-        .fetch_all(&self.pool)
+        .fetch_all(&*self.pool)
         .await
         .unwrap();
 
@@ -109,7 +114,7 @@ impl Engine {
             payload.name,
             payload.auth_id,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&*self.pool)
         .await
         .unwrap();
 
