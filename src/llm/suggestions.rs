@@ -1,4 +1,4 @@
-use async_graphql::InputObject;
+use async_graphql::{InputObject, SimpleObject};
 use chrono::{DateTime, Utc};
 use sqlx::{query, Pool, Postgres};
 
@@ -15,7 +15,7 @@ pub struct AutoSuggestionsEngine {
     pool: Box<Pool<Postgres>>,
 }
 
-#[derive(InputObject)]
+#[derive(InputObject, SimpleObject, Clone)]
 pub struct TaskSuggestion {
     pub title: Option<String>,
     pub description: Option<String>,
@@ -71,7 +71,7 @@ impl AutoSuggestionsEngine {
             task_suggestion
                 .due_date
                 .map(|d| d.to_rfc3339())
-                .unwrap_or("<No due date>".to_string()),
+                .unwrap_or("<suggest>".to_string()),
         )
     }
 
@@ -111,11 +111,11 @@ impl AutoSuggestionsEngine {
 
         let user_message = format!(
             "Current Tasks Context: 
-            {}
-            With the above context, Complete the following task, only fill the <suggest> fields:
-            {}
-            ",
-            tasks_fingerprints.join("\n"),
+{}
+With the above context, Complete the following task, only fill the <suggest> fields:
+{}
+",
+            tasks_fingerprints.join("\n\n"),
             Self::calculate_task_suggestion_fingerprint(proto_task),
         );
 

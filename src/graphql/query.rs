@@ -378,17 +378,28 @@ impl QueryRoot {
             .collect()
     }
 
-    async fn suggest_new_task(&self, ctx: &Context<'_>, task: TaskSuggestion) -> String {
+    async fn suggest_new_task(&self, ctx: &Context<'_>, task: TaskSuggestion) -> TaskSuggestion {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
         println!("token: {}", auth_token);
 
-        // TODO: change the return type to TaskSuggestion
-
-        plexo_engine
+        let raw_suggestion = plexo_engine
             .auto_suggestions_engine
             .get_suggestions(task)
-            .await
+            .await;
+
+        // TODO: parse raw_suggestion to TaskSuggestion
+
+        // Example of response:
+        // "Task Title: Boostrap github project\nTask Description: Bootstrap a new Github project with necessary codebase and documentation.\nTask Status: InProgress\nTask Priority: High\nTask Due Date: 2023-04-28T05:00:00+00:00"
+
+        TaskSuggestion {
+            title: None,
+            description: None,
+            status: None,
+            priority: None,
+            due_date: None,
+        }
     }
 }
