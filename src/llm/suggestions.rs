@@ -15,13 +15,22 @@ pub struct AutoSuggestionsEngine {
     pool: Box<Pool<Postgres>>,
 }
 
-#[derive(InputObject, SimpleObject, Clone)]
+#[derive(InputObject, Clone)]
 pub struct TaskSuggestion {
     pub title: Option<String>,
     pub description: Option<String>,
     pub status: Option<TaskStatus>,
     pub priority: Option<TaskPriority>,
     pub due_date: Option<DateTime<Utc>>,
+}
+
+#[derive(SimpleObject, Clone)]
+pub struct TaskSuggestionResult {
+    pub title: String,
+    pub description: String,
+    pub status: TaskStatus,
+    pub priority: TaskPriority,
+    pub due_date: DateTime<Utc>,
 }
 
 impl AutoSuggestionsEngine {

@@ -14,7 +14,7 @@ use crate::system::members::{MembersFilter, NewMemberPayload, NewMemberPayloadAu
 #[derive(Debug, Deserialize)]
 pub struct GithubCallbackParams {
     code: String,
-    _state: String,
+    state: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

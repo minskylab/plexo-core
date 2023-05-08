@@ -1,10 +1,12 @@
+use std::str::FromStr;
+
 use async_graphql::{Context, InputObject, Object};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
     auth::auth::PlexoAuthToken,
-    llm::suggestions::TaskSuggestion,
+    llm::suggestions::{TaskSuggestion, TaskSuggestionResult},
     sdk::{
         labels::Label,
         member::{Member, MemberRole},
@@ -378,7 +380,11 @@ impl QueryRoot {
             .collect()
     }
 
-    async fn suggest_new_task(&self, ctx: &Context<'_>, task: TaskSuggestion) -> TaskSuggestion {
+    async fn suggest_new_task(
+        &self,
+        ctx: &Context<'_>,
+        task: TaskSuggestion,
+    ) -> TaskSuggestionResult {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -389,17 +395,32 @@ impl QueryRoot {
             .get_suggestions(task)
             .await;
 
+        let parts = raw_suggestion
+            .split("\n")
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>();
+
+        let title = parts[0].replace("Task Title:", "").trim().to_string();
+        let description = parts[1].replace("Task Description:", "").trim().to_string();
+        let status = parts[2].replace("Task Status:", "").trim().to_string();
+        let priority = parts[3].replace("Task Priority:", "").trim().to_string();
+        let due_date = parts[4].replace("Task Due Date:", "").trim().to_string();
+
         // TODO: parse raw_suggestion to TaskSuggestion
 
         // Example of response:
         // "Task Title: Boostrap github project\nTask Description: Bootstrap a new Github project with necessary codebase and documentation.\nTask Status: InProgress\nTask Priority: High\nTask Due Date: 2023-04-28T05:00:00+00:00"
 
-        TaskSuggestion {
-            title: None,
-            description: None,
-            status: None,
-            priority: None,
-            due_date: None,
+        let status = TaskStatus::from_str(&status).unwrap();
+        let priority = TaskPriority::from_str(&priority).unwrap();
+        let due_date = DateTime::<Utc>::from_str(&due_date).unwrap();
+
+        TaskSuggestionResult {
+            title,
+            description,
+            status,
+            priority,
+            due_date,
         }
     }
 }
