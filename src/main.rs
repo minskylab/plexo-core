@@ -1,10 +1,11 @@
-pub mod statics;
-
 use async_graphql::{dataloader::DataLoader, Schema};
 use dotenvy::dotenv;
 use plexo::{
     auth::{
-        auth::{github_callback_handler, github_sign_in_handler, refresh_token_handler},
+        auth::{
+            email_basic_login_handler, github_callback_handler, github_sign_in_handler,
+            refresh_token_handler,
+        },
         engine::AuthEngine,
     },
     config::{
@@ -13,12 +14,11 @@ use plexo::{
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
     sdk::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader, TeamLoader},
+    statics::StaticFilesEndpointHTMLTrimmed,
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
 use sqlx::postgres::PgPoolOptions;
-
-use crate::statics::StaticFilesEndpointHTMLTrimmed;
 
 #[tokio::main]
 async fn main() {
@@ -67,6 +67,7 @@ async fn main() {
             StaticFilesEndpointHTMLTrimmed::new("plexo-platform/out").index_file("index.html"),
         )
         // Non authenticated routes
+        .at("/auth/login", get(email_basic_login_handler))
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))
         //
@@ -75,7 +76,6 @@ async fn main() {
         .at("/auth/refresh", get(refresh_token_handler))
         .at("/graphql", post(index_handler))
         .at("/graphql/ws", get(ws_switch_handler))
-        // .at("/", todo!()) // TODO: Serve static files
         .with(Cors::new())
         .data(schema)
         .data(plexo_engine);
