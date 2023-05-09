@@ -84,17 +84,18 @@ pub async fn github_callback_handler(
 
     let user_name = github_user_data
         .get("name")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
+        .map(|v| {
+            v.as_str()
+                .map(|s| s.to_string())
+                .unwrap_or(format!("{}", github_id))
+        })
+        .unwrap();
 
     let member: crate::sdk::member::Member = match plexo_engine
-        .get_members(MembersFilter::new().set_github_id(github_id.to_string()))
+        .get_member_by_github_id(github_id.to_string())
         .await
-        .first()
     {
-        Some(member) => member.to_owned(),
+        Some(member) => member,
         None => {
             plexo_engine
                 .create_member(&NewMemberPayload::new(
