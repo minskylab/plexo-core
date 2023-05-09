@@ -66,7 +66,7 @@ pub async fn github_callback_handler(
 
     println!("github_user_data: {:#?}", github_user_data);
 
-    let github_id = github_user_data
+    let github_id: String = github_user_data
         .get("id")
         .unwrap()
         .as_i64()
@@ -89,7 +89,7 @@ pub async fn github_callback_handler(
         .unwrap()
         .to_string();
 
-    let member = match plexo_engine
+    let member: crate::sdk::member::Member = match plexo_engine
         .get_members(MembersFilter::new().set_github_id(github_id.to_string()))
         .await
         .first()
@@ -106,6 +106,8 @@ pub async fn github_callback_handler(
                 .await
         }
     };
+
+    println!("member: {:?}", member);
 
     let Ok((access_token, refresh_token)) = plexo_engine
         .auth
