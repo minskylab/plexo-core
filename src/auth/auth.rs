@@ -28,8 +28,6 @@ pub struct PlexoAuthToken(pub String);
 
 const GITHUB_USER_API: &str = "https://api.github.com/user";
 
-// pub async fn example_auth() {}
-
 #[handler]
 pub async fn github_sign_in_handler(plexo_engine: Data<&Engine>) -> impl IntoResponse {
     let (url, _) = plexo_engine.0.auth.new_github_authorize_url();
@@ -53,8 +51,6 @@ pub async fn github_callback_handler(
             .body(Body::from_json(&gh_response).unwrap());
     };
 
-    // println!("token: {}", access_token);
-
     let client = reqwest::Client::new();
 
     let github_user_data = client
@@ -68,7 +64,7 @@ pub async fn github_callback_handler(
         .await
         .unwrap();
 
-    // println!("github_user_data: {:#?}", github_user_data);
+    println!("github_user_data: {:#?}", github_user_data);
 
     let github_id = github_user_data
         .get("id")
