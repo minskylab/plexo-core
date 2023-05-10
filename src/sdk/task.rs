@@ -69,14 +69,14 @@ impl Task {
 
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        let ids : Vec<Uuid>= sqlx::query!(
+        let ids: Vec<Uuid> = sqlx::query!(
             r#"
             SELECT assignee_id FROM tasks_by_assignees
             WHERE task_id = $1
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()
@@ -107,7 +107,7 @@ impl Task {
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()

@@ -14,7 +14,7 @@ use crate::system::members::{MembersFilter, NewMemberPayload, NewMemberPayloadAu
 #[derive(Debug, Deserialize)]
 pub struct GithubCallbackParams {
     code: String,
-    _state: String,
+    state: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -79,10 +79,12 @@ pub async fn github_callback_handler(
 
     let user_email = github_user_data
         .get("email")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
+        .map(|v| {
+            v.as_str()
+                .map(|s| s.to_string())
+                .unwrap_or(format!("{}@no-email.github.com", github_id))
+        })
+        .unwrap();
 
     let user_name = github_user_data
         .get("name")
@@ -128,7 +130,7 @@ pub async fn github_callback_handler(
         .with_header("Set-Cookie", cookie.to_string())
         .with_header("Content-Type", "application/json")
         .with_body(
-            Body::from_json(&AuthenticationResponse {
+            Body::from_json(AuthenticationResponse {
                 access_token,
                 token_type: None,
                 scope: None,
@@ -143,25 +145,21 @@ pub async fn refresh_token_handler(
     plexo_engine: Data<&Engine>,
     req: &Request,
 ) -> impl IntoResponse {
+    let unauthorized_response = Response::builder()
+        .status(StatusCode::UNAUTHORIZED)
+        .header("Content-Type", "application/json")
+        .body(Body::from_json(&Error::new("Unauthorized")).unwrap());
+
     let Some(token) = req.header("Authorization") else {
-        return Response::builder()
-            .status(StatusCode::UNAUTHORIZED)
-            .header("Content-Type", "application/json")
-            .body(Body::from_json(&Error::new("Unauthorized")).unwrap());
+        return unauthorized_response;
     };
 
     let Some(access_token) = token.strip_prefix("Bearer ") else {
-        return Response::builder()
-            .status(StatusCode::UNAUTHORIZED)
-            .header("Content-Type", "application/json")
-            .body(Body::from_json(&Error::new("Unauthorized")).unwrap());
+        return unauthorized_response;
     };
 
     let Ok(cookie) = Cookie::parse(req.header("Cookie").unwrap()) else {
-        return Response::builder()
-            .status(StatusCode::UNAUTHORIZED)
-            .header("Content-Type", "application/json")
-            .body(Body::from_json(&Error::new("Unauthorized")).unwrap());
+        return unauthorized_response;
     };
 
     let refresh_token = cookie.value_str();
@@ -182,11 +180,16 @@ pub async fn refresh_token_handler(
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(
-            Body::from_json(&AuthenticationResponse {
+            Body::from_json(AuthenticationResponse {
                 access_token,
                 token_type: None,
                 scope: None,
             })
             .unwrap(),
         )
+}
+
+#[handler]
+pub fn email_basic_login_handler() -> impl IntoResponse {
+    "Hello World"
 }

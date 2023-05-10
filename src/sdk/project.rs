@@ -58,7 +58,7 @@ impl Project {
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()
@@ -87,7 +87,7 @@ impl Project {
         WHERE project_id = $1"#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -124,7 +124,7 @@ impl Project {
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()

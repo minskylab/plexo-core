@@ -58,7 +58,7 @@ impl MutationRoot {
             due_date.map(|d| DateTimeBridge::from_date_time(d)),
             project_id,
             lead_id
-        ).fetch_one(&plexo_engine.pool)
+        ).fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -71,7 +71,7 @@ impl MutationRoot {
                     "#,
                     task_final_info.id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -84,7 +84,7 @@ impl MutationRoot {
                         task_final_info.id,
                         assignee,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -101,7 +101,7 @@ impl MutationRoot {
                     "#,
                     task_final_info.id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -114,7 +114,7 @@ impl MutationRoot {
                         task_final_info.id,
                         label,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -179,7 +179,7 @@ impl MutationRoot {
             project_id,
             lead_id,
             id,
-        ).fetch_one(&plexo_engine.pool)
+        ).fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -192,7 +192,7 @@ impl MutationRoot {
                     "#,
                     task_final_info.id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -205,7 +205,7 @@ impl MutationRoot {
                         task_final_info.id,
                         assignee,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -222,7 +222,7 @@ impl MutationRoot {
                     "#,
                     task_final_info.id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -235,7 +235,7 @@ impl MutationRoot {
                         task_final_info.id,
                         label,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -276,7 +276,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .fetch_one(&plexo_engine.pool).await.unwrap();
+        .fetch_one(&*plexo_engine.pool).await.unwrap();
 
         let _deleted_assignees = sqlx::query!(
             r#"
@@ -285,7 +285,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -296,7 +296,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -356,7 +356,7 @@ impl MutationRoot {
             role,
             id,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -369,7 +369,7 @@ impl MutationRoot {
                     "#,
                     id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -382,7 +382,7 @@ impl MutationRoot {
                         id,
                         project,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -399,7 +399,7 @@ impl MutationRoot {
                     "#,
                     id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -412,7 +412,7 @@ impl MutationRoot {
                         id,
                         team,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -446,7 +446,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .fetch_one(&plexo_engine.pool).await.unwrap();
+        .fetch_one(&*plexo_engine.pool).await.unwrap();
 
         let _deleted_projects = sqlx::query!(
             r#"
@@ -455,7 +455,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -466,7 +466,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -477,7 +477,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -525,7 +525,7 @@ impl MutationRoot {
             start_date.map(|d| DateTimeBridge::from_date_time(d)),
             due_date.map(|d| DateTimeBridge::from_date_time(d)),
         )
-        .fetch_one(&plexo_engine.pool).await.unwrap();
+        .fetch_one(&*plexo_engine.pool).await.unwrap();
 
         let _a = match members {
             Some(members) => {
@@ -538,7 +538,7 @@ impl MutationRoot {
                         member,
                         project.id,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -557,7 +557,7 @@ impl MutationRoot {
                         team,
                         project.id,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -617,7 +617,7 @@ impl MutationRoot {
             due_date.map(|d| DateTimeBridge::from_date_time(d)),
             id,
         )
-        .fetch_one(&plexo_engine.pool).await.unwrap();
+        .fetch_one(&*plexo_engine.pool).await.unwrap();
 
         let _a = match members {
             Some(members) => {
@@ -628,7 +628,7 @@ impl MutationRoot {
                     "#,
                     id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -641,7 +641,7 @@ impl MutationRoot {
                         member,
                         project.id,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -658,7 +658,7 @@ impl MutationRoot {
                     "#,
                     id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -671,7 +671,7 @@ impl MutationRoot {
                         team,
                         project.id,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -710,7 +710,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -721,7 +721,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -732,7 +732,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -744,7 +744,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -791,7 +791,7 @@ impl MutationRoot {
             visibility,
             prefix,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -806,7 +806,7 @@ impl MutationRoot {
                         member,
                         team.id,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -825,7 +825,7 @@ impl MutationRoot {
                         team.id,
                         project,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -872,7 +872,7 @@ impl MutationRoot {
             prefix,
             id,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -885,7 +885,7 @@ impl MutationRoot {
                     "#,
                     id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -898,7 +898,7 @@ impl MutationRoot {
                         member,
                         team.id,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -915,7 +915,7 @@ impl MutationRoot {
                     "#,
                     id,
                 )
-                .execute(&plexo_engine.pool)
+                .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
 
@@ -928,7 +928,7 @@ impl MutationRoot {
                         team.id,
                         project,
                     )
-                    .execute(&plexo_engine.pool)
+                    .execute(&*plexo_engine.pool)
                     .await
                     .unwrap();
                 }
@@ -960,7 +960,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -971,7 +971,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -982,7 +982,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -1018,7 +1018,7 @@ impl MutationRoot {
             description,
             color,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -1056,7 +1056,7 @@ impl MutationRoot {
             color,
             id,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -1083,7 +1083,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -1094,7 +1094,7 @@ impl MutationRoot {
             "#,
             id,
         )
-        .execute(&plexo_engine.pool)
+        .execute(&*plexo_engine.pool)
         .await
         .unwrap();
 

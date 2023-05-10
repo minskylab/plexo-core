@@ -43,7 +43,7 @@ impl Member {
         println!("token: {}", auth_token);
 
         let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE owner_id = $1"#, &self.id)
-            .fetch_all(&plexo_engine.pool)
+            .fetch_all(&*plexo_engine.pool)
             .await
             .unwrap();
         tasks
@@ -71,7 +71,7 @@ impl Member {
         println!("token: {}", auth_token);
 
         let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE lead_id = $1"#, &self.id)
-            .fetch_all(&plexo_engine.pool)
+            .fetch_all(&*plexo_engine.pool)
             .await
             .unwrap();
         tasks
@@ -107,7 +107,7 @@ impl Member {
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()
@@ -130,7 +130,7 @@ impl Member {
         println!("token: {}", auth_token);
 
         let projects = sqlx::query!(r#"SELECT * FROM projects WHERE owner_id = $1"#, &self.id)
-            .fetch_all(&plexo_engine.pool)
+            .fetch_all(&*plexo_engine.pool)
             .await
             .unwrap();
         projects
@@ -164,7 +164,7 @@ impl Member {
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()
@@ -195,7 +195,7 @@ impl Member {
             "#,
             &self.id
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()
