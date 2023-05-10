@@ -403,11 +403,6 @@ impl QueryRoot {
         let priority = parts[3].replace("Task Priority:", "").trim().to_string();
         let due_date = parts[4].replace("Task Due Date:", "").trim().to_string();
 
-        // TODO: parse raw_suggestion to TaskSuggestion
-
-        // Example of response:
-        // "Task Title: Boostrap github project\nTask Description: Bootstrap a new Github project with necessary codebase and documentation.\nTask Status: InProgress\nTask Priority: High\nTask Due Date: 2023-04-28T05:00:00+00:00"
-
         let status = TaskStatus::from_str(&status).unwrap();
         let priority = TaskPriority::from_str(&priority).unwrap();
         let due_date = DateTime::<Utc>::from_str(&due_date).unwrap();
@@ -418,6 +413,40 @@ impl QueryRoot {
             status,
             priority,
             due_date,
+        }
+    }
+
+    async fn me(&self, ctx: &Context<'_>) -> Member {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        let member_id = plexo_engine
+            .auth
+            .extract_claims_from_access_token(auth_token)
+            .await
+            .member_id();
+
+        let r = sqlx::query!(
+            r#"
+            SELECT * FROM members
+            WHERE id = $1
+            "#,
+            member_id
+        )
+        .fetch_one(&*plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Member {
+            id: r.id,
+            created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+            name: r.name.clone(),
+            email: r.email.clone(),
+            github_id: r.github_id.clone(),
+            google_id: r.google_id.clone(),
+            photo_url: r.photo_url.clone(),
+            role: MemberRole::from_optional_str(&r.role),
         }
     }
 }
