@@ -1430,78 +1430,6 @@
     },
     "query": "\n            SELECT team_id FROM members_by_teams\n            WHERE member_id = $1\n            "
   },
-  "85dc037797c7f230fc15c6a296d7b661459f34fb8681a8f8ff24af76460a759d": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "email",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "name",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 3,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 4,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "github_id",
-          "ordinal": 5,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "google_id",
-          "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "photo_url",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "role",
-          "ordinal": 8,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar"
-        ]
-      }
-    },
-    "query": "\n            SELECT\n                id,\n                email,\n                name,\n                created_at,\n                updated_at,\n                github_id,\n                google_id,\n                photo_url,\n                role\n            FROM members\n            WHERE\n                name = COALESCE($1, name) OR\n                email = COALESCE($2, email) OR\n                role = COALESCE($3, role) OR\n                github_id = COALESCE($4, github_id) OR\n                google_id = COALESCE($5, google_id)\n            "
-  },
   "862fa9df0791f77332e6c97aaece6fce427ea8a37aac3ae5cb2cbb31c076b7a7": {
     "describe": {
       "columns": [
@@ -1947,6 +1875,74 @@
       }
     },
     "query": "\n            DELETE FROM tasks_by_assignees\n            WHERE assignee_id = $1\n            "
+  },
+  "a4c56d4c154aaac2aa9ecccd5b0a7731b935d2867459fd76aaea5357ce38344a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "email",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "github_id",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "google_id",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "photo_url",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "role",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT\n                id,\n                email,\n                name,\n                created_at,\n                updated_at,\n                github_id,\n                google_id,\n                photo_url,\n                role\n            FROM members\n            WHERE\n                github_id = $1\n            "
   },
   "a6eeba2f8af75049c7c2951980db8c733b201aa03bddd0dfd1a4df06115c2bd7": {
     "describe": {
