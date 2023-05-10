@@ -48,8 +48,8 @@ impl Engine {
         todo!()
     }
 
-    pub async fn get_members(&self, filter: &MembersFilter) -> Vec<Member> {
-        let m = sqlx::query!(
+    pub async fn get_member_by_github_id(&self, github_id: String) -> Option<Member> {
+        sqlx::query!(
             "
             SELECT
                 id,
@@ -63,35 +63,24 @@ impl Engine {
                 role
             FROM members
             WHERE
-                name = COALESCE($1, name) OR
-                email = COALESCE($2, email) OR
-                role = COALESCE($3, role) OR
-                github_id = COALESCE($4, github_id) OR
-                google_id = COALESCE($5, google_id)
+                github_id = $1
             ",
-            filter.name,
-            filter.email,
-            filter.role.map(|r| r.to_str()),
-            filter.github_id,
-            filter.google_id,
+            github_id,
         )
-        .fetch_all(&*self.pool)
+        .fetch_one(&*self.pool)
         .await
-        .unwrap();
-
-        m.iter()
-            .map(|m| Member {
-                id: m.id,
-                email: m.email.clone(),
-                name: m.name.clone(),
-                created_at: DateTimeBridge::from_offset_date_time(m.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(m.updated_at),
-                github_id: m.github_id.as_ref().map(|id| id.to_string()),
-                google_id: m.google_id.as_ref().map(|id| id.to_string()),
-                photo_url: m.photo_url.clone(),
-                role: MemberRole::from_optional_str(&m.role),
-            })
-            .collect::<Vec<Member>>()
+        .ok()
+        .map(|m| Member {
+            id: m.id,
+            email: m.email.clone(),
+            name: m.name.clone(),
+            created_at: DateTimeBridge::from_offset_date_time(m.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(m.updated_at),
+            github_id: m.github_id.as_ref().map(|id| id.to_string()),
+            google_id: m.google_id.as_ref().map(|id| id.to_string()),
+            photo_url: m.photo_url.clone(),
+            role: MemberRole::from_optional_str(&m.role),
+        })
     }
 
     pub async fn create_member(&self, payload: &NewMemberPayload) -> Member {

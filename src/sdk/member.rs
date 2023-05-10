@@ -17,7 +17,7 @@ use crate::{
 
 use super::loaders::{ProjectLoader, TaskLoader, TeamLoader};
 
-#[derive(SimpleObject, Clone)]
+#[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Member {
     pub id: Uuid,
@@ -212,7 +212,7 @@ impl Member {
         Some(teams.clone())
     }
 }
-#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum MemberRole {
     Admin,
     Member,
