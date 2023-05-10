@@ -78,7 +78,7 @@ pub async fn github_callback_handler(
         .map(|v| {
             v.as_str()
                 .map(|s| s.to_string())
-                .unwrap_or(format!("{}@no-email.github.com", github_id))
+                .unwrap_or(format!("{}@no-email.github.com", github_id.clone()))
         })
         .unwrap();
 
@@ -87,12 +87,12 @@ pub async fn github_callback_handler(
         .map(|v| {
             v.as_str()
                 .map(|s| s.to_string())
-                .unwrap_or(format!("{}", github_id))
+                .unwrap_or(github_id.clone())
         })
         .unwrap();
 
     let member: crate::sdk::member::Member = match plexo_engine
-        .get_member_by_github_id(github_id.to_string())
+        .get_member_by_github_id(github_id.clone())
         .await
     {
         Some(member) => member,
