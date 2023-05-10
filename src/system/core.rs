@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::{
-    members::{MembersFilter, NewMemberPayload},
+    members::{NewMemberPayload},
     subscriptions::SubscriptionManager,
 };
 

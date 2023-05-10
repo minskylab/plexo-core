@@ -53,10 +53,13 @@ pub struct ProjectFilter {
 #[Object]
 impl QueryRoot {
     async fn tasks(&self, ctx: &Context<'_>, _filter: Option<TaskFilter>) -> Vec<Task> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        println!("token: {}", auth_token);
+        plexo_engine
+            .auth
+            .extract_claims_from_access_token(auth_token)
+            .await;
 
         let tasks = sqlx::query!(
             r#"
@@ -77,7 +80,7 @@ impl QueryRoot {
                 description: r.description.clone(),
                 status: TaskStatus::from_optional_str(&r.status),
                 priority: TaskPriority::from_optional_str(&r.priority),
-                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+                due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
                 owner_id: r.owner_id,
@@ -111,9 +114,7 @@ impl QueryRoot {
             description: task.description.clone(),
             status: TaskStatus::from_optional_str(&task.status),
             priority: TaskPriority::from_optional_str(&task.priority),
-            due_date: task
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+            due_date: task.due_date.map(DateTimeBridge::from_offset_date_time),
             project_id: task.project_id,
             lead_id: task.lead_id,
             owner_id: task.owner_id,
@@ -252,9 +253,9 @@ impl QueryRoot {
                 prefix: r.prefix.clone(),
                 owner_id: r.owner_id,
                 description: r.description.clone(),
-                lead_id: r.lead_id.clone(),
-                start_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
-                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+                lead_id: r.lead_id,
+                start_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
+                due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
             })
             .collect()
     }
@@ -285,12 +286,8 @@ impl QueryRoot {
             prefix: project.prefix.clone(),
             owner_id: project.owner_id,
             lead_id: project.lead_id,
-            start_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
-            due_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+            start_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
+            due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         }
     }
 
@@ -396,7 +393,7 @@ impl QueryRoot {
             .await;
 
         let parts = raw_suggestion
-            .split("\n")
+            .split('\n')
             .map(|s| s.to_string())
             .collect::<Vec<String>>();
 

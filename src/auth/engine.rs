@@ -6,11 +6,14 @@ use oauth2::{
 };
 use reqwest::Url;
 
-use super::jwt::JWT;
+use super::{
+    auth::PlexoAuthToken,
+    jwt::{JWTEngine, PlexoAuthTokenClaims},
+};
 
 #[derive(Clone)]
 pub struct AuthEngine {
-    pub jwt_engine: JWT,
+    pub jwt_engine: JWTEngine,
 
     github_client: BasicClient,
     _google_client: Option<BasicClient>,
@@ -46,7 +49,7 @@ impl AuthEngine {
         let jwt_refresh_token_secret = env::var("JWT_REFRESH_TOKEN_SECRET")
             .expect("Missing the JWT_REFRESH_TOKEN_SECRET environment variable.");
 
-        let jwt_engine = JWT::new(jwt_access_token_secret, jwt_refresh_token_secret);
+        let jwt_engine = JWTEngine::new(jwt_access_token_secret, jwt_refresh_token_secret);
 
         Self {
             jwt_engine,
@@ -78,6 +81,15 @@ impl AuthEngine {
             Ok(token) => Ok(token.access_token().secret().to_string()),
             Err(e) => Err(e.to_string()),
         }
+    }
+
+    pub async fn extract_claims_from_access_token(
+        &self,
+        access_token: &PlexoAuthToken,
+    ) -> PlexoAuthTokenClaims {
+        self.jwt_engine
+            .decode_access_token(access_token.0.as_str())
+            .unwrap()
     }
 
     pub async fn refresh_token(

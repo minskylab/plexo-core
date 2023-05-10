@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::system::core::Engine;
-use crate::system::members::{MembersFilter, NewMemberPayload, NewMemberPayloadAuthKind};
+use crate::system::members::{NewMemberPayload, NewMemberPayloadAuthKind};
 
 #[derive(Debug, Deserialize)]
 pub struct GithubCallbackParams {
@@ -64,7 +64,7 @@ pub async fn github_callback_handler(
         .await
         .unwrap();
 
-    println!("github_user_data: {:#?}", github_user_data);
+    // println!("github_user_data: {:#?}", github_user_data);
 
     let github_id: String = github_user_data
         .get("id")

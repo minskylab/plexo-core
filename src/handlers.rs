@@ -36,6 +36,7 @@ pub async fn index_handler(
     req: GraphQLRequest,
 ) -> GraphQLResponse {
     let mut req = req.0;
+
     if let Some(token) = get_token_from_headers(headers) {
         req = req.data(token);
     }

@@ -31,7 +31,7 @@ impl MutationRoot {
         ctx: &Context<'_>,
         title: String,
         description: Option<String>,
-        owner_id: Uuid,
+        // owner_id: Uuid,
         status: Option<String>,
         priority: Option<String>,
         due_date: Option<DateTime<Utc>>,
@@ -40,9 +40,14 @@ impl MutationRoot {
         labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
     ) -> Task {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
         let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+
+        let owner_id = plexo_engine
+            .auth
+            .extract_claims_from_access_token(auth_token)
+            .await
+            .member_id();
 
         let task_final_info = sqlx::query!(
             r#"
@@ -122,7 +127,11 @@ impl MutationRoot {
             None => (),
         };
 
-        let task = Task {
+        // plexo_engine
+        //     .subscription_manager
+        //     .broadcast_task_created(auth_token, task)
+        //     .await;
+        Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -132,18 +141,12 @@ impl MutationRoot {
             priority: TaskPriority::from_optional_str(&task_final_info.priority),
             due_date: task_final_info
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                .map(DateTimeBridge::from_offset_date_time),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
-        };
-
-        // plexo_engine
-        //     .subscription_manager
-        //     .broadcast_task_created(auth_token, task)
-        //     .await;
-        task
+        }
     }
 
     async fn update_task(
@@ -183,7 +186,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        let _a = match assignees {
+        match assignees {
             Some(assignees) => {
                 let _delete_assignees = sqlx::query!(
                     r#"
@@ -213,7 +216,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let _l = match labels {
+        match labels {
             Some(labels) => {
                 let _delete_labels = sqlx::query!(
                     r#"
@@ -243,7 +246,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let task = Task {
+        Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -253,14 +256,12 @@ impl MutationRoot {
             priority: TaskPriority::from_optional_str(&task_final_info.priority),
             due_date: task_final_info
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                .map(DateTimeBridge::from_offset_date_time),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
-        };
-
-        task
+        }
     }
 
     async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Task {
@@ -300,7 +301,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        let task = Task {
+        Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -310,14 +311,12 @@ impl MutationRoot {
             priority: TaskPriority::from_optional_str(&task_final_info.priority),
             due_date: task_final_info
                 .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                .map(DateTimeBridge::from_offset_date_time),
             project_id: task_final_info.project_id,
             lead_id: task_final_info.lead_id,
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
-        };
-
-        task
+        }
     }
 
     // async fn create_member(
@@ -360,7 +359,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        let _a = match projects {
+        match projects {
             Some(projects) => {
                 let _deleted_projects = sqlx::query!(
                     r#"
@@ -390,7 +389,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let _b = match teams {
+        match teams {
             Some(teams) => {
                 let _deleted_teams = sqlx::query!(
                     r#"
@@ -527,7 +526,7 @@ impl MutationRoot {
         )
         .fetch_one(&*plexo_engine.pool).await.unwrap();
 
-        let _a = match members {
+        match members {
             Some(members) => {
                 for member in members {
                     let _inserted_members = sqlx::query!(
@@ -546,7 +545,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let _b = match teams {
+        match teams {
             Some(teams) => {
                 for team in teams {
                     let _inserted_teams = sqlx::query!(
@@ -576,10 +575,8 @@ impl MutationRoot {
             lead_id: project.lead_id,
             start_date: project
                 .start_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
-            due_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                .map(DateTimeBridge::from_offset_date_time),
+            due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         }
     }
 
@@ -619,7 +616,7 @@ impl MutationRoot {
         )
         .fetch_one(&*plexo_engine.pool).await.unwrap();
 
-        let _a = match members {
+        match members {
             Some(members) => {
                 let _deleted_members = sqlx::query!(
                     r#"
@@ -649,7 +646,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let _b = match teams {
+        match teams {
             Some(teams) => {
                 let _deleted_teams = sqlx::query!(
                     r#"
@@ -690,10 +687,8 @@ impl MutationRoot {
             lead_id: project.lead_id,
             start_date: project
                 .start_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
-            due_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                .map(DateTimeBridge::from_offset_date_time),
+            due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         }
     }
 
@@ -759,10 +754,8 @@ impl MutationRoot {
             lead_id: project.lead_id,
             start_date: project
                 .start_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
-            due_date: project
-                .due_date
-                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+                .map(DateTimeBridge::from_offset_date_time),
+            due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         }
     }
 
@@ -795,7 +788,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        let _a = match members {
+        match members {
             Some(members) => {
                 for member in members {
                     let _inserted_members = sqlx::query!(
@@ -814,7 +807,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let _b = match projects {
+        match projects {
             Some(projects) => {
                 for project in projects {
                     let _inserted_projects = sqlx::query!(
@@ -876,7 +869,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        let _a = match members {
+        match members {
             Some(members) => {
                 let _deleted_members = sqlx::query!(
                     r#"
@@ -906,7 +899,7 @@ impl MutationRoot {
             None => (),
         };
 
-        let _b = match projects {
+        match projects {
             Some(projects) => {
                 let _deleted_projects = sqlx::query!(
                     r#"
@@ -1028,7 +1021,7 @@ impl MutationRoot {
             updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
             name: label.name.clone(),
             description: label.description.clone(),
-            color: label.color.clone(),
+            color: label.color,
         }
     }
 
@@ -1066,7 +1059,7 @@ impl MutationRoot {
             updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
             name: label.name.clone(),
             description: label.description.clone(),
-            color: label.color.clone(),
+            color: label.color,
         }
     }
 
