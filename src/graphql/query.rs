@@ -1,11 +1,14 @@
+use std::str::FromStr;
+
 use async_graphql::{Context, InputObject, Object};
 use chrono::{DateTime, Utc};
-use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
     auth::auth::PlexoAuthToken,
+    llm::suggestions::{TaskSuggestion, TaskSuggestionResult},
     sdk::{
+        labels::Label,
         member::{Member, MemberRole},
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
@@ -49,7 +52,7 @@ pub struct ProjectFilter {
 
 #[Object]
 impl QueryRoot {
-    async fn tasks(&self, ctx: &Context<'_>, filter: Option<TaskFilter>) -> Vec<Task> {
+    async fn tasks(&self, ctx: &Context<'_>, _filter: Option<TaskFilter>) -> Vec<Task> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -57,10 +60,12 @@ impl QueryRoot {
 
         let tasks = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
-            FROM tasks
+            SELECT * FROM tasks
             "#
-        ).fetch_all(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_all(&*plexo_engine.pool)
+        .await
+        .unwrap();
 
         tasks
             .iter()
@@ -75,18 +80,8 @@ impl QueryRoot {
                 due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
                 project_id: r.project_id,
                 lead_id: r.lead_id,
-                labels: r
-                    .labels
-                    .as_ref()
-                    .map(|l| {
-                        l.as_array()
-                            .unwrap()
-                            .iter()
-                            .map(|s| s.as_str().unwrap().to_string())
-                            .collect()
-                    })
-                    .unwrap_or(vec![]),
                 owner_id: r.owner_id,
+                count: r.count,
             })
             .collect()
     }
@@ -99,12 +94,14 @@ impl QueryRoot {
 
         let task = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, title, description, status, priority, due_date, project_id, lead_id, labels, owner_id
-            FROM tasks
+            SELECT * FROM tasks
             WHERE id = $1
             "#,
             id
-        ).fetch_one(&plexo_engine.pool).await.unwrap();
+        )
+        .fetch_one(&*plexo_engine.pool)
+        .await
+        .unwrap();
 
         Task {
             id: task.id,
@@ -119,22 +116,12 @@ impl QueryRoot {
                 .map(|d| DateTimeBridge::from_offset_date_time(d)),
             project_id: task.project_id,
             lead_id: task.lead_id,
-            labels: task
-                .labels
-                .as_ref()
-                .map(|l| {
-                    l.as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|s| s.as_str().unwrap().to_string())
-                        .collect()
-                })
-                .unwrap_or(vec![]),
             owner_id: task.owner_id,
+            count: task.count,
         }
     }
 
-    async fn members(&self, ctx: &Context<'_>, filter: Option<MemberFilter>) -> Vec<Member> {
+    async fn members(&self, ctx: &Context<'_>, _filter: Option<MemberFilter>) -> Vec<Member> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -142,11 +129,10 @@ impl QueryRoot {
 
         let members = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, email, github_id, google_id, photo_url, role
-            FROM members
+            SELECT * FROM members
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -189,13 +175,12 @@ impl QueryRoot {
 
         let member = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
-            FROM members
+            SELECT * FROM members
             WHERE id = $1
             "#,
             id
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -220,13 +205,12 @@ impl QueryRoot {
 
         let member = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
-            FROM members
+            SELECT * FROM members
             WHERE email = $1
             "#,
             email
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -243,7 +227,7 @@ impl QueryRoot {
         }
     }
 
-    async fn projects(&self, ctx: &Context<'_>, filter: Option<ProjectFilter>) -> Vec<Project> {
+    async fn projects(&self, ctx: &Context<'_>, _filter: Option<ProjectFilter>) -> Vec<Project> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -251,11 +235,10 @@ impl QueryRoot {
 
         let projects = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, prefix, owner_id
-            FROM projects
+            SELECT * FROM projects
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -266,9 +249,12 @@ impl QueryRoot {
                 created_at: DateTimeBridge::from_offset_date_time(r.created_at),
                 updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
                 name: r.name.clone(),
-                description: None,
                 prefix: r.prefix.clone(),
                 owner_id: r.owner_id,
+                description: r.description.clone(),
+                lead_id: r.lead_id.clone(),
+                start_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
+                due_date: r.due_date.map(|d| DateTimeBridge::from_offset_date_time(d)),
             })
             .collect()
     }
@@ -281,13 +267,12 @@ impl QueryRoot {
 
         let project = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, prefix, owner_id
-            FROM projects
+            SELECT * FROM projects
             WHERE id = $1
             "#,
             id
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -296,13 +281,20 @@ impl QueryRoot {
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
             name: project.name.clone(),
-            description: None,
+            description: project.description.clone(),
             prefix: project.prefix.clone(),
             owner_id: project.owner_id,
+            lead_id: project.lead_id,
+            start_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
+            due_date: project
+                .due_date
+                .map(|d| DateTimeBridge::from_offset_date_time(d)),
         }
     }
 
-    async fn teams(&self, ctx: &Context<'_>, filter: Option<TeamFilter>) -> Vec<Team> {
+    async fn teams(&self, ctx: &Context<'_>, _filter: Option<TeamFilter>) -> Vec<Team> {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
@@ -310,11 +302,11 @@ impl QueryRoot {
 
         let teams = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, owner_id, visibility
+            SELECT *
             FROM teams
             "#
         )
-        .fetch_all(&plexo_engine.pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -327,6 +319,7 @@ impl QueryRoot {
                 name: r.name.clone(),
                 owner_id: r.owner_id,
                 visibility: TeamVisibility::from_optional_str(&r.visibility),
+                prefix: r.prefix.clone(),
             })
             .collect()
     }
@@ -339,13 +332,12 @@ impl QueryRoot {
 
         let team = sqlx::query!(
             r#"
-            SELECT id, created_at, updated_at, name, owner_id, visibility
-            FROM teams
+            SELECT * FROM teams
             WHERE id = $1
             "#,
             id
         )
-        .fetch_one(&plexo_engine.pool)
+        .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
 
@@ -356,6 +348,79 @@ impl QueryRoot {
             name: team.name,
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
+            prefix: team.prefix,
+        }
+    }
+
+    async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let labels = sqlx::query!(
+            r#"
+            SELECT * FROM labels
+            "#
+        )
+        .fetch_all(&*plexo_engine.pool)
+        .await
+        .unwrap();
+
+        labels
+            .iter()
+            .map(|r| Label {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                name: r.name.clone(),
+                color: r.color.clone(),
+                description: r.description.clone(),
+            })
+            .collect()
+    }
+
+    async fn suggest_new_task(
+        &self,
+        ctx: &Context<'_>,
+        task: TaskSuggestion,
+    ) -> TaskSuggestionResult {
+        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
+        let plexo_engine = ctx.data::<Engine>().unwrap();
+
+        println!("token: {}", auth_token);
+
+        let raw_suggestion = plexo_engine
+            .auto_suggestions_engine
+            .get_suggestions(task)
+            .await;
+
+        let parts = raw_suggestion
+            .split("\n")
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>();
+
+        let title = parts[0].replace("Task Title:", "").trim().to_string();
+        let description = parts[1].replace("Task Description:", "").trim().to_string();
+        let status = parts[2].replace("Task Status:", "").trim().to_string();
+        let priority = parts[3].replace("Task Priority:", "").trim().to_string();
+        let due_date = parts[4].replace("Task Due Date:", "").trim().to_string();
+
+        // TODO: parse raw_suggestion to TaskSuggestion
+
+        // Example of response:
+        // "Task Title: Boostrap github project\nTask Description: Bootstrap a new Github project with necessary codebase and documentation.\nTask Status: InProgress\nTask Priority: High\nTask Due Date: 2023-04-28T05:00:00+00:00"
+
+        let status = TaskStatus::from_str(&status).unwrap();
+        let priority = TaskPriority::from_str(&priority).unwrap();
+        let due_date = DateTime::<Utc>::from_str(&due_date).unwrap();
+
+        TaskSuggestionResult {
+            title,
+            description,
+            status,
+            priority,
+            due_date,
         }
     }
 }

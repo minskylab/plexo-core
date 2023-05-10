@@ -1,4 +1,4 @@
-use crate::sdk::member::{Member, MemberRole};
+use crate::sdk::member::MemberRole;
 
 pub enum NewMemberPayloadAuthKind {
     Github,
@@ -42,6 +42,7 @@ impl NewMemberPayload {
     }
 }
 
+#[derive(Default)]
 pub struct MembersFilter {
     pub name: Option<String>,
     pub email: Option<String>,
@@ -52,13 +53,7 @@ pub struct MembersFilter {
 
 impl MembersFilter {
     pub fn new() -> Self {
-        Self {
-            name: None,
-            email: None,
-            role: None,
-            github_id: None,
-            google_id: None,
-        }
+        Self::default()
     }
 
     pub fn set_name(&mut self, name: String) -> &mut Self {

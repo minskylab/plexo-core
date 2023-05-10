@@ -109,12 +109,12 @@ impl SubscriptionRoot {
 
                 owner_id: Uuid::new_v4(),
 
-                labels: vec![],
-
+                // labels: vec![],
                 lead_id: None,
                 project_id: None,
 
                 due_date: None,
+                count: 0,
             })
     }
 
@@ -132,12 +132,12 @@ impl SubscriptionRoot {
 
                 owner_id: Uuid::new_v4(),
 
-                labels: vec![],
-
+                // labels: vec![],
                 lead_id: None,
                 project_id: None,
 
                 due_date: None,
+                count: 0,
             })
     }
 
@@ -154,6 +154,9 @@ impl SubscriptionRoot {
                 description: None,
                 owner_id: Uuid::new_v4(),
                 prefix: None,
+                lead_id: None,
+                start_date: None,
+                due_date: None,
             })
     }
 
@@ -169,6 +172,7 @@ impl SubscriptionRoot {
                 updated_at: Utc::now(),
                 owner_id: Uuid::new_v4(),
                 visibility: TeamVisibility::Public,
+                prefix: None,
             })
     }
 }
