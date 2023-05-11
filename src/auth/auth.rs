@@ -1,7 +1,7 @@
 use async_graphql::Error;
 use chrono::{Duration, Utc};
 use oauth2::AuthorizationCode;
-use poem::web::cookie::Cookie;
+use poem::web::cookie::{Cookie, SameSite};
 use poem::web::{Data, Query, Redirect};
 use poem::{handler, Body, IntoResponse, Request, Response};
 use reqwest::StatusCode;
@@ -124,6 +124,8 @@ pub async fn github_callback_handler(
 
     cookie.set_value_str(refresh_token);
     cookie.set_expires(Utc::now() + Duration::days(7));
+    cookie.set_path("/");
+    // cookie.set_same_site(SameSite::Strict);
 
     Redirect::moved_permanent("/")
         .with_header("Set-Cookie", cookie.to_string())
