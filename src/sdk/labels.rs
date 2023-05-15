@@ -1,4 +1,4 @@
-use crate::{auth::auth::PlexoAuthToken, system::core::Engine};
+use crate::{auth::core::PlexoAuthToken, system::core::Engine};
 use async_graphql::{dataloader::DataLoader, ComplexObject, Context, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;

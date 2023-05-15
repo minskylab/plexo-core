@@ -6,7 +6,7 @@ use async_graphql::dataloader::DataLoader;
 
 use super::loaders::{MemberLoader, TeamLoader};
 use crate::{
-    auth::auth::PlexoAuthToken,
+    auth::core::PlexoAuthToken,
     sdk::{
         member::Member,
         task::{Task, TaskPriority, TaskStatus},

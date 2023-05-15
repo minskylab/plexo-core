@@ -2,7 +2,7 @@ use async_graphql::{dataloader::DataLoader, Schema};
 use dotenvy::dotenv;
 use plexo::{
     auth::{
-        auth::{email_basic_login_handler, github_callback_handler, github_sign_in_handler},
+        core::{email_basic_login_handler, github_callback_handler, github_sign_in_handler},
         engine::AuthEngine,
     },
     config::{

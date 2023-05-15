@@ -1,9 +1,9 @@
 use async_graphql::Error;
 use chrono::{Duration, Utc};
-use oauth2::AuthorizationCode;
+use oauth2::{AuthorizationCode, CsrfToken};
 use poem::web::cookie::{Cookie, SameSite};
 use poem::web::{Data, Query, Redirect};
-use poem::{handler, Body, IntoResponse, Request, Response};
+use poem::{handler, Body, IntoResponse, Response};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -41,8 +41,9 @@ pub async fn github_callback_handler(
     params: Query<GithubCallbackParams>,
 ) -> impl IntoResponse {
     let code = AuthorizationCode::new(params.code.clone());
+    let state = CsrfToken::new(params.state.clone());
 
-    let gh_response = plexo_engine.auth.exchange_github_code(code).await;
+    let gh_response = plexo_engine.auth.exchange_github_code(code, state).await;
 
     let Ok(access_token) = gh_response else {
         return Response::builder()

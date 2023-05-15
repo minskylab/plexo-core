@@ -6,3 +6,4 @@ devenv.local.nix
 data
 .blob
 Secrets.toml
+.vscode

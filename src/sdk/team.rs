@@ -4,7 +4,7 @@ use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
 use chrono::{DateTime, Utc};
 
 use crate::{
-    auth::auth::PlexoAuthToken,
+    auth::core::PlexoAuthToken,
     sdk::{member::Member, project::Project},
     system::core::Engine,
 };

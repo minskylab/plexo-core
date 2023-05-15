@@ -4,7 +4,7 @@ use sqlx;
 use uuid::Uuid;
 
 use crate::{
-    auth::auth::PlexoAuthToken,
+    auth::core::PlexoAuthToken,
     sdk::{
         labels::Label,
         member::{Member, MemberRole},

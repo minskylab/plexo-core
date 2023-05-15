@@ -6,7 +6,7 @@ use async_graphql_poem::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, Graph
 use serde_json::Value;
 
 use crate::{
-    auth::auth::PlexoAuthToken,
+    auth::core::PlexoAuthToken,
     config::DOMAIN,
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
 };

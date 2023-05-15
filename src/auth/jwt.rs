@@ -8,7 +8,7 @@ use crate::sdk::member::Member;
 #[derive(Clone)]
 pub struct JWTEngine {
     access_token_secret: String,
-    refresh_token_secret: String,
+    // refresh_token_secret: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -26,10 +26,10 @@ impl PlexoAuthTokenClaims {
 }
 
 impl JWTEngine {
-    pub fn new(access_token_secret: String, refresh_token_secret: String) -> Self {
+    pub fn new(access_token_secret: String, _refresh_token_secret: String) -> Self {
         Self {
             access_token_secret,
-            refresh_token_secret,
+            // refresh_token_secret,
         }
     }
 

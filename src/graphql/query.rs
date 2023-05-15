@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
-    auth::auth::PlexoAuthToken,
+    auth::core::PlexoAuthToken,
     llm::suggestions::{TaskSuggestion, TaskSuggestionResult},
     sdk::{
         labels::Label,

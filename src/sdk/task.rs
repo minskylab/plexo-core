@@ -9,7 +9,7 @@ use uuid::Uuid;
 use super::{labels::Label, member::Member, project::Project};
 
 use super::loaders::{LabelLoader, MemberLoader, ProjectLoader};
-use crate::{auth::auth::PlexoAuthToken, system::core::Engine};
+use crate::{auth::core::PlexoAuthToken, system::core::Engine};
 #[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Task {

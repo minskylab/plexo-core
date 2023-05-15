@@ -8,7 +8,7 @@ use oauth2::{
 use reqwest::Url;
 
 use super::{
-    auth::PlexoAuthToken,
+    core::PlexoAuthToken,
     jwt::{JWTEngine, PlexoAuthTokenClaims},
 };
 
@@ -69,7 +69,7 @@ impl AuthEngine {
     pub async fn exchange_github_code(
         &self,
         code: AuthorizationCode,
-        // state: CsrfToken,
+        _state: CsrfToken,
     ) -> Result<String, String> {
         let token_result = self
             .github_client
