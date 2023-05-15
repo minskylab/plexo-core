@@ -15,7 +15,7 @@ use poem::{
     handler,
     http::HeaderMap,
     web::Html,
-    web::{websocket::WebSocket, Data as PoemData},
+    web::{cookie::Cookie, websocket::WebSocket, Data as PoemData},
     IntoResponse,
 };
 
@@ -38,6 +38,10 @@ pub async fn index_handler(
     let mut req = req.0;
 
     if let Some(token) = get_token_from_headers(headers) {
+        req = req.data(token);
+    }
+
+    if let Some(token) = get_token_from_cookie(headers) {
         req = req.data(token);
     }
 
@@ -64,6 +68,14 @@ fn get_token_from_headers(headers: &HeaderMap) -> Option<PlexoAuthToken> {
     headers
         .get("Authorization")
         .and_then(|value| value.to_str().map(|s| PlexoAuthToken(s.to_string())).ok())
+}
+
+fn get_token_from_cookie(headers: &HeaderMap) -> Option<PlexoAuthToken> {
+    let raw_cookie = headers.get("Set-Cookie").unwrap().to_str().unwrap();
+
+    let token = Cookie::parse(raw_cookie).unwrap().value().unwrap();
+
+    Some(PlexoAuthToken(token))
 }
 
 pub async fn on_connection_init(value: Value) -> async_graphql::Result<Data> {
