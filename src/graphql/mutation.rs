@@ -45,7 +45,7 @@ impl MutationRoot {
 
         let owner_id = plexo_engine
             .auth
-            .extract_claims_from_access_token(auth_token)
+            .extract_claims_from_session_token(auth_token)
             .await
             .member_id();
 

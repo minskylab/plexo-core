@@ -4,6 +4,7 @@ use oauth2::{
     basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
     ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
 };
+
 use reqwest::Url;
 
 use super::{
@@ -63,7 +64,6 @@ impl AuthEngine {
             .authorize_url(CsrfToken::new_random)
             .add_scope(Scope::new("user:email".to_string()))
             .url()
-        // authorize_url.to_string()
     }
 
     pub async fn exchange_github_code(
@@ -83,21 +83,30 @@ impl AuthEngine {
         }
     }
 
-    pub async fn extract_claims_from_access_token(
+    pub async fn extract_claims_from_session_token(
         &self,
-        access_token: &PlexoAuthToken,
+        session_token: &PlexoAuthToken,
     ) -> PlexoAuthTokenClaims {
         self.jwt_engine
-            .decode_access_token(access_token.0.as_str())
+            .decode_session_token(session_token.0.as_str())
             .unwrap()
     }
 
-    pub async fn refresh_token(
-        &self,
-        access_token: &str,
-        refresh_token: &str,
-    ) -> Result<String, jsonwebtoken::errors::Error> {
-        self.jwt_engine
-            .refresh_access_token(access_token, refresh_token)
-    }
+    // pub async fn extract_claims_from_access_token(
+    //     &self,
+    //     access_token: &PlexoAuthToken,
+    // ) -> PlexoAuthTokenClaims {
+    //     self.jwt_engine
+    //         .decode_access_token(access_token.0.as_str())
+    //         .unwrap()
+    // }
+
+    // pub async fn refresh_token(
+    //     &self,
+    //     access_token: &str,
+    //     refresh_token: &str,
+    // ) -> Result<String, jsonwebtoken::errors::Error> {
+    //     self.jwt_engine
+    //         .refresh_access_token(access_token, refresh_token)
+    // }
 }

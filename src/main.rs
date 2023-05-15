@@ -2,10 +2,7 @@ use async_graphql::{dataloader::DataLoader, Schema};
 use dotenvy::dotenv;
 use plexo::{
     auth::{
-        auth::{
-            email_basic_login_handler, github_callback_handler, github_sign_in_handler,
-            refresh_token_handler,
-        },
+        auth::{email_basic_login_handler, github_callback_handler, github_sign_in_handler},
         engine::AuthEngine,
     },
     config::{
@@ -67,13 +64,13 @@ async fn main() {
             StaticFilesEndpointHTMLTrimmed::new("plexo-platform/out").index_file("index.html"),
         )
         // Non authenticated routes
-        .at("/auth/login", get(email_basic_login_handler))
+        .at("/auth/email", get(email_basic_login_handler))
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))
         //
         .at("/playground", get(graphiq_handler))
         // Authenticated routes
-        .at("/auth/refresh", get(refresh_token_handler))
+        // .at("/auth/refresh", get(refresh_token_handler))
         .at("/graphql", post(index_handler))
         .at("/graphql/ws", get(ws_switch_handler))
         .with(Cors::new())

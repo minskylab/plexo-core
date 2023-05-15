@@ -58,7 +58,7 @@ impl QueryRoot {
 
         plexo_engine
             .auth
-            .extract_claims_from_access_token(auth_token)
+            .extract_claims_from_session_token(auth_token)
             .await;
 
         let tasks = sqlx::query!(
@@ -405,7 +405,7 @@ impl QueryRoot {
 
         let status = TaskStatus::from_str(&status).unwrap();
         let priority = TaskPriority::from_str(&priority).unwrap();
-        let due_date = DateTime::<Utc>::from_str(&due_date).unwrap();
+        let due_date = DateTime::<Utc>::from_str(&due_date).unwrap_or(Utc::now());
 
         TaskSuggestionResult {
             title,
@@ -422,7 +422,7 @@ impl QueryRoot {
 
         let member_id = plexo_engine
             .auth
-            .extract_claims_from_access_token(auth_token)
+            .extract_claims_from_session_token(auth_token)
             .await
             .member_id();
 
