@@ -56,10 +56,7 @@ impl QueryRoot {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
         let plexo_engine = ctx.data::<Engine>().unwrap();
 
-        plexo_engine
-            .auth
-            .extract_claims_from_session_token(auth_token)
-            .await;
+        plexo_engine.auth.extract_claims(auth_token).await;
 
         let tasks = sqlx::query!(
             r#"
@@ -422,8 +419,9 @@ impl QueryRoot {
 
         let member_id = plexo_engine
             .auth
-            .extract_claims_from_session_token(auth_token)
+            .extract_claims(auth_token)
             .await
+            .unwrap()
             .member_id();
 
         let r = sqlx::query!(

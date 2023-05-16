@@ -83,13 +83,13 @@ impl AuthEngine {
         }
     }
 
-    pub async fn extract_claims_from_session_token(
+    pub async fn extract_claims(
         &self,
-        session_token: &PlexoAuthToken,
-    ) -> PlexoAuthTokenClaims {
+        plexo_auth_token: &PlexoAuthToken,
+    ) -> Option<PlexoAuthTokenClaims> {
         self.jwt_engine
-            .decode_session_token(session_token.0.as_str())
-            .unwrap()
+            .decode_session_token(plexo_auth_token.0.as_str())
+            .ok()
     }
 
     // pub async fn extract_claims_from_access_token(

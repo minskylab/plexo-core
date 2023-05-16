@@ -599,6 +599,18 @@
     },
     "query": "\n            SELECT task_id FROM tasks_by_assignees\n            WHERE assignee_id = $1\n            "
   },
+  "2c2d1d0dc1627ce343023bb2b735e84d6ec5289f3ac0262ec959c9bd45ae3935": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                DELETE FROM tasks_by_assignees\n                WHERE task_id = $1\n                "
+  },
   "34b8f09a9d1d23d4e9d46be4bfe3deb494844cbe0e2899d4d4850df70b0fc9c4": {
     "describe": {
       "columns": [],
@@ -1120,6 +1132,19 @@
     },
     "query": "\n            UPDATE members\n            SET email = $1, name = $2, role = $3\n            WHERE id = $4\n            RETURNING id, created_at, updated_at, email, name, github_id, google_id, photo_url, role\n            "
   },
+  "573f633c9b549ec4c38415ae90f5b10242dbd0f9e8e8687e99335a3285ddef7a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                    INSERT INTO labels_by_tasks (task_id, label_id)\n                    VALUES ($1, $2)\n                    "
+  },
   "578d26cecd34b6cb97661372a60ff9a41324d3cc975a22da9a87055b09816d9a": {
     "describe": {
       "columns": [
@@ -1489,6 +1514,19 @@
       }
     },
     "query": "\n            UPDATE teams\n            SET name = $1, owner_id = $2, visibility = $3, prefix = $4\n            WHERE id = $5\n            RETURNING *\n            "
+  },
+  "88da1b0aea4f074f275bcbe1ea45a0a78d410548828fef64fe21e4bc479dd8af": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                    INSERT INTO tasks_by_assignees (task_id, assignee_id)\n                    VALUES ($1, $2)\n                    "
   },
   "8c2147026856ddf7db4254b2074fae601b63917030ef4532601181f355eae22f": {
     "describe": {
@@ -2080,18 +2118,6 @@
     },
     "query": "\n            SELECT * FROM teams\n            WHERE id = $1\n            "
   },
-  "aaacbcb8a0af78b003e943becad4c4653e89672bb60ca3eb1e20db549ed9fe92": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n                    DELETE FROM labels_by_tasks\n                    WHERE task_id = $1\n                    "
-  },
   "b59e21945a7912e1bcc6fea8bd3f0ed6adf0dd77f5069c38462aee6a92834657": {
     "describe": {
       "columns": [
@@ -2198,6 +2224,18 @@
       }
     },
     "query": "\n            SELECT * FROM members\n            WHERE id = $1\n            "
+  },
+  "d33b7c49405926b387de43bbc6a0e5a03e28a09634925eca963b5f619dc3ed8a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                DELETE FROM labels_by_tasks\n                WHERE task_id = $1\n                "
   },
   "d6f02e598878b6297e4cfe564c095afa2ce10738ffd16747befa8f78b7fe25bb": {
     "describe": {
@@ -2614,19 +2652,6 @@
       }
     },
     "query": "\n            SELECT * FROM labels\n            "
-  },
-  "e0a3b78c6e92f2bda75220e91bf8e414c4ea1343193bfc41dd84bfc8012c57d9": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n                        INSERT INTO labels_by_tasks (task_id, label_id)\n                        VALUES ($1, $2)\n                        "
   },
   "ea21c94ce5d144136cd379d09e03570327c5ac104584db147e7fb0a716d277a3": {
     "describe": {

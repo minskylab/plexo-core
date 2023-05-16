@@ -75,11 +75,14 @@ fn get_token_from_headers(headers: &HeaderMap) -> Option<PlexoAuthToken> {
 fn get_token_from_cookie(headers: &HeaderMap) -> Option<PlexoAuthToken> {
     let raw_cookie = headers.get("Cookie").and_then(|c| c.to_str().ok())?;
 
-    println!("raw_cookie: {:?}", raw_cookie);
-
     raw_cookie
         .split(';')
         .find(|c| c.starts_with(COOKIE_SESSION_TOKEN_NAME))
+        .map(|c| c.trim())
+        .map(|c| {
+            println!("cookie: {}", c);
+            c
+        })
         .map(Cookie::parse)
         .and_then(|c| c.ok())
         .map(|c| PlexoAuthToken(c.value().unwrap()))

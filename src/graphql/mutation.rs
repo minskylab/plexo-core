@@ -45,8 +45,9 @@ impl MutationRoot {
 
         let owner_id = plexo_engine
             .auth
-            .extract_claims_from_session_token(auth_token)
+            .extract_claims(auth_token)
             .await
+            .unwrap()
             .member_id();
 
         let task_final_info = sqlx::query!(
@@ -67,70 +68,60 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        match assignees {
-            Some(assignees) => {
-                let _delete_assignees = sqlx::query!(
+        if let Some(assignees) = assignees {
+            let _delete_assignees = sqlx::query!(
+                r#"
+                DELETE FROM tasks_by_assignees
+                WHERE task_id = $1
+                "#,
+                task_final_info.id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
+
+            for assignee in assignees {
+                let _add_assignee = sqlx::query!(
                     r#"
-                    DELETE FROM tasks_by_assignees
-                    WHERE task_id = $1
+                    INSERT INTO tasks_by_assignees (task_id, assignee_id)
+                    VALUES ($1, $2)
                     "#,
                     task_final_info.id,
+                    assignee,
                 )
                 .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
-
-                for assignee in assignees {
-                    let _add_assignee = sqlx::query!(
-                        r#"
-                        INSERT INTO tasks_by_assignees (task_id, assignee_id)
-                        VALUES ($1, $2)
-                        "#,
-                        task_final_info.id,
-                        assignee,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
             }
-            None => (),
-        };
+        }
 
-        match labels {
-            Some(labels) => {
-                let _delete_labels = sqlx::query!(
+        if let Some(labels) = labels {
+            let _delete_labels = sqlx::query!(
+                r#"
+                DELETE FROM labels_by_tasks
+                WHERE task_id = $1
+                "#,
+                task_final_info.id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
+
+            for label in labels {
+                let _add_label = sqlx::query!(
                     r#"
-                    DELETE FROM labels_by_tasks
-                    WHERE task_id = $1
+                    INSERT INTO labels_by_tasks (task_id, label_id)
+                    VALUES ($1, $2)
                     "#,
                     task_final_info.id,
+                    label,
                 )
                 .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
-
-                for label in labels {
-                    let _add_label = sqlx::query!(
-                        r#"
-                        INSERT INTO labels_by_tasks (task_id, label_id)
-                        VALUES ($1, $2)
-                        "#,
-                        task_final_info.id,
-                        label,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
             }
-            None => (),
-        };
+        }
 
-        // plexo_engine
-        //     .subscription_manager
-        //     .broadcast_task_created(auth_token, task)
-        //     .await;
         Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
@@ -186,65 +177,59 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        match assignees {
-            Some(assignees) => {
-                let _delete_assignees = sqlx::query!(
-                    r#"
+        if let Some(assignees) = assignees {
+            let _delete_assignees = sqlx::query!(
+                r#"
                     DELETE FROM tasks_by_assignees
                     WHERE task_id = $1
                     "#,
-                    task_final_info.id,
-                )
-                .execute(&*plexo_engine.pool)
-                .await
-                .unwrap();
+                task_final_info.id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
 
-                for assignee in assignees {
-                    let _add_assignee = sqlx::query!(
-                        r#"
+            for assignee in assignees {
+                let _add_assignee = sqlx::query!(
+                    r#"
                         INSERT INTO tasks_by_assignees (task_id, assignee_id)
                         VALUES ($1, $2)
                         "#,
-                        task_final_info.id,
-                        assignee,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
-            }
-            None => (),
-        };
-
-        match labels {
-            Some(labels) => {
-                let _delete_labels = sqlx::query!(
-                    r#"
-                    DELETE FROM labels_by_tasks
-                    WHERE task_id = $1
-                    "#,
                     task_final_info.id,
+                    assignee,
                 )
                 .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
-
-                for label in labels {
-                    let _add_label = sqlx::query!(
-                        r#"
-                        INSERT INTO labels_by_tasks (task_id, label_id)
-                        VALUES ($1, $2)
-                        "#,
-                        task_final_info.id,
-                        label,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
             }
-            None => (),
-        };
+        }
+
+        if let Some(labels) = labels {
+            let _delete_labels = sqlx::query!(
+                r#"
+                DELETE FROM labels_by_tasks
+                WHERE task_id = $1
+                "#,
+                task_final_info.id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
+
+            for label in labels {
+                let _add_label = sqlx::query!(
+                    r#"
+                    INSERT INTO labels_by_tasks (task_id, label_id)
+                    VALUES ($1, $2)
+                    "#,
+                    task_final_info.id,
+                    label,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
+            }
+        }
 
         Task {
             id: task_final_info.id,
@@ -359,65 +344,59 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        match projects {
-            Some(projects) => {
-                let _deleted_projects = sqlx::query!(
-                    r#"
+        if let Some(projects) = projects {
+            let _deleted_projects = sqlx::query!(
+                r#"
                     DELETE FROM members_by_projects
                     WHERE member_id = $1
                     "#,
-                    id,
-                )
-                .execute(&*plexo_engine.pool)
-                .await
-                .unwrap();
+                id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
 
-                for project in projects {
-                    let _inserted_projects = sqlx::query!(
-                        r#"
+            for project in projects {
+                let _inserted_projects = sqlx::query!(
+                    r#"
                         INSERT INTO members_by_projects (member_id, project_id)
                         VALUES ($1, $2)
                         "#,
-                        id,
-                        project,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
-            }
-            None => (),
-        };
-
-        match teams {
-            Some(teams) => {
-                let _deleted_teams = sqlx::query!(
-                    r#"
-                    DELETE FROM members_by_teams
-                    WHERE member_id = $1
-                    "#,
                     id,
+                    project,
                 )
                 .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
+            }
+        }
 
-                for team in teams {
-                    let _inserted_teams = sqlx::query!(
-                        r#"
+        if let Some(teams) = teams {
+            let _deleted_teams = sqlx::query!(
+                r#"
+                    DELETE FROM members_by_teams
+                    WHERE member_id = $1
+                    "#,
+                id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
+
+            for team in teams {
+                let _inserted_teams = sqlx::query!(
+                    r#"
                         INSERT INTO members_by_teams (member_id, team_id)
                         VALUES ($1, $2)
                         "#,
-                        id,
-                        team,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
+                    id,
+                    team,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
             }
-            None => (),
-        };
+        }
 
         Member {
             id: member.id,
@@ -526,43 +505,37 @@ impl MutationRoot {
         )
         .fetch_one(&*plexo_engine.pool).await.unwrap();
 
-        match members {
-            Some(members) => {
-                for member in members {
-                    let _inserted_members = sqlx::query!(
-                        r#"
+        if let Some(members) = members {
+            for member in members {
+                let _inserted_members = sqlx::query!(
+                    r#"
                         INSERT INTO members_by_projects (member_id, project_id)
                         VALUES ($1, $2)
                         "#,
-                        member,
-                        project.id,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
+                    member,
+                    project.id,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
             }
-            None => (),
-        };
+        }
 
-        match teams {
-            Some(teams) => {
-                for team in teams {
-                    let _inserted_teams = sqlx::query!(
-                        r#"
+        if let Some(teams) = teams {
+            for team in teams {
+                let _inserted_teams = sqlx::query!(
+                    r#"
                         INSERT INTO teams_by_projects (team_id, project_id)
                         VALUES ($1, $2)
                         "#,
-                        team,
-                        project.id,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
+                    team,
+                    project.id,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
             }
-            None => (),
-        };
+        }
 
         Project {
             id: project.id,
@@ -616,65 +589,59 @@ impl MutationRoot {
         )
         .fetch_one(&*plexo_engine.pool).await.unwrap();
 
-        match members {
-            Some(members) => {
-                let _deleted_members = sqlx::query!(
-                    r#"
+        if let Some(members) = members {
+            let _deleted_members = sqlx::query!(
+                r#"
                     DELETE FROM members_by_projects
                     WHERE project_id = $1
                     "#,
-                    id,
-                )
-                .execute(&*plexo_engine.pool)
-                .await
-                .unwrap();
+                id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
 
-                for member in members {
-                    let _inserted_members = sqlx::query!(
-                        r#"
+            for member in members {
+                let _inserted_members = sqlx::query!(
+                    r#"
                         INSERT INTO members_by_projects (member_id, project_id)
                         VALUES ($1, $2)
                         "#,
-                        member,
-                        project.id,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
-            }
-            None => (),
-        };
-
-        match teams {
-            Some(teams) => {
-                let _deleted_teams = sqlx::query!(
-                    r#"
-                    DELETE FROM teams_by_projects
-                    WHERE project_id = $1
-                    "#,
-                    id,
+                    member,
+                    project.id,
                 )
                 .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
+            }
+        }
 
-                for team in teams {
-                    let _inserted_teams = sqlx::query!(
-                        r#"
+        if let Some(teams) = teams {
+            let _deleted_teams = sqlx::query!(
+                r#"
+                    DELETE FROM teams_by_projects
+                    WHERE project_id = $1
+                    "#,
+                id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
+
+            for team in teams {
+                let _inserted_teams = sqlx::query!(
+                    r#"
                         INSERT INTO teams_by_projects (team_id, project_id)
                         VALUES ($1, $2)
                         "#,
-                        team,
-                        project.id,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
+                    team,
+                    project.id,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
             }
-            None => (),
-        };
+        }
 
         Project {
             id: project.id,
@@ -788,43 +755,37 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        match members {
-            Some(members) => {
-                for member in members {
-                    let _inserted_members = sqlx::query!(
-                        r#"
+        if let Some(members) = members {
+            for member in members {
+                let _inserted_members = sqlx::query!(
+                    r#"
                         INSERT INTO members_by_teams (member_id, team_id)
                         VALUES ($1, $2)
                         "#,
-                        member,
-                        team.id,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
+                    member,
+                    team.id,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
             }
-            None => (),
-        };
+        }
 
-        match projects {
-            Some(projects) => {
-                for project in projects {
-                    let _inserted_projects = sqlx::query!(
-                        r#"
+        if let Some(projects) = projects {
+            for project in projects {
+                let _inserted_projects = sqlx::query!(
+                    r#"
                         INSERT INTO teams_by_projects (team_id, project_id)
                         VALUES ($1, $2)
                         "#,
-                        team.id,
-                        project,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
+                    team.id,
+                    project,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
             }
-            None => (),
-        };
+        }
 
         Team {
             id: team.id,
@@ -869,65 +830,59 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        match members {
-            Some(members) => {
-                let _deleted_members = sqlx::query!(
-                    r#"
+        if let Some(members) = members {
+            let _deleted_members = sqlx::query!(
+                r#"
                     DELETE FROM members_by_teams
                     WHERE team_id = $1
                     "#,
-                    id,
-                )
-                .execute(&*plexo_engine.pool)
-                .await
-                .unwrap();
+                id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
 
-                for member in members {
-                    let _inserted_members = sqlx::query!(
-                        r#"
+            for member in members {
+                let _inserted_members = sqlx::query!(
+                    r#"
                         INSERT INTO members_by_teams (member_id, team_id)
                         VALUES ($1, $2)
                         "#,
-                        member,
-                        team.id,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
-            }
-            None => (),
-        };
-
-        match projects {
-            Some(projects) => {
-                let _deleted_projects = sqlx::query!(
-                    r#"
-                    DELETE FROM teams_by_projects
-                    WHERE team_id = $1
-                    "#,
-                    id,
+                    member,
+                    team.id,
                 )
                 .execute(&*plexo_engine.pool)
                 .await
                 .unwrap();
+            }
+        }
 
-                for project in projects {
-                    let _inserted_projects = sqlx::query!(
-                        r#"
+        if let Some(projects) = projects {
+            let _deleted_projects = sqlx::query!(
+                r#"
+                    DELETE FROM teams_by_projects
+                    WHERE team_id = $1
+                    "#,
+                id,
+            )
+            .execute(&*plexo_engine.pool)
+            .await
+            .unwrap();
+
+            for project in projects {
+                let _inserted_projects = sqlx::query!(
+                    r#"
                         INSERT INTO teams_by_projects (team_id, project_id)
                         VALUES ($1, $2)
                         "#,
-                        team.id,
-                        project,
-                    )
-                    .execute(&*plexo_engine.pool)
-                    .await
-                    .unwrap();
-                }
+                    team.id,
+                    project,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
             }
-            None => (),
-        };
+        }
 
         Team {
             id: team.id,
