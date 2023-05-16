@@ -27,6 +27,7 @@ pub struct AuthenticationResponse {
 pub struct PlexoAuthToken(pub String);
 
 const GITHUB_USER_API: &str = "https://api.github.com/user";
+pub const COOKIE_SESSION_TOKEN_NAME: &str = "__Host-plexo-session-token";
 
 #[handler]
 pub async fn github_sign_in_handler(plexo_engine: Data<&Engine>) -> impl IntoResponse {
@@ -121,7 +122,7 @@ pub async fn github_callback_handler(
             .body(Body::from_json(&Error::new("Internal Server Error")).unwrap());
         };
 
-    let mut session_token_cookie = Cookie::named("__Host-plexo-session-token");
+    let mut session_token_cookie = Cookie::named(COOKIE_SESSION_TOKEN_NAME);
 
     session_token_cookie.set_value_str(session_token);
     session_token_cookie.set_http_only(true);

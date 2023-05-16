@@ -1,3 +1,5 @@
+use std::println;
+
 use async_graphql::{
     http::{GraphiQLSource, ALL_WEBSOCKET_PROTOCOLS},
     Data, Schema,
@@ -6,7 +8,7 @@ use async_graphql_poem::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, Graph
 use serde_json::Value;
 
 use crate::{
-    auth::core::PlexoAuthToken,
+    auth::core::{PlexoAuthToken, COOKIE_SESSION_TOKEN_NAME},
     config::DOMAIN,
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
 };
@@ -71,11 +73,16 @@ fn get_token_from_headers(headers: &HeaderMap) -> Option<PlexoAuthToken> {
 }
 
 fn get_token_from_cookie(headers: &HeaderMap) -> Option<PlexoAuthToken> {
-    let raw_cookie = headers.get("Set-Cookie").unwrap().to_str().unwrap();
+    let raw_cookie = headers.get("Cookie").and_then(|c| c.to_str().ok())?;
 
-    let token = Cookie::parse(raw_cookie).unwrap().value().unwrap();
+    println!("raw_cookie: {:?}", raw_cookie);
 
-    Some(PlexoAuthToken(token))
+    raw_cookie
+        .split(';')
+        .find(|c| c.starts_with(COOKIE_SESSION_TOKEN_NAME))
+        .map(Cookie::parse)
+        .and_then(|c| c.ok())
+        .map(|c| PlexoAuthToken(c.value().unwrap()))
 }
 
 pub async fn on_connection_init(value: Value) -> async_graphql::Result<Data> {
