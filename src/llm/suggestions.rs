@@ -110,6 +110,7 @@ impl AutoSuggestionsEngine {
                 lead_id: r.lead_id,
                 owner_id: r.owner_id,
                 count: r.count,
+                parent_id: r.parent_id,
             })
             .map(Self::calculate_task_fingerprint)
             .collect::<Vec<String>>()

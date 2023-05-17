@@ -58,6 +58,7 @@ impl SubscriptionRoot {
 
                 due_date: None,
                 count: 0,
+                parent_id: None,
             })
     }
 
@@ -81,6 +82,7 @@ impl SubscriptionRoot {
 
                 due_date: None,
                 count: 0,
+                parent_id: None,
             })
     }
 

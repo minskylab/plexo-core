@@ -82,6 +82,7 @@ impl QueryRoot {
                 lead_id: r.lead_id,
                 owner_id: r.owner_id,
                 count: r.count,
+                parent_id: r.parent_id,
             })
             .collect()
     }
@@ -116,6 +117,7 @@ impl QueryRoot {
             lead_id: task.lead_id,
             owner_id: task.owner_id,
             count: task.count,
+            parent_id: task.parent_id,
         }
     }
 

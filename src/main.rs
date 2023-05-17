@@ -11,7 +11,7 @@ use plexo::{
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
     sdk::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader, TeamLoader},
-    statics::StaticFilesEndpointHTMLTrimmed,
+    statics::StaticServer,
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
@@ -61,8 +61,7 @@ async fn main() {
     let app = Route::new()
         .nest(
             "/",
-            StaticFilesEndpointHTMLTrimmed::new("plexo-platform/out", plexo_engine.clone())
-                .index_file("index.html"),
+            StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
         )
         // Non authenticated routes
         .at("/auth/email", get(email_basic_login_handler))

@@ -260,6 +260,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -275,7 +280,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": []
@@ -542,6 +548,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -557,7 +568,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -610,6 +622,104 @@
       }
     },
     "query": "\n                DELETE FROM tasks_by_assignees\n                WHERE task_id = $1\n                "
+  },
+  "33a432b1a15ba8269bbc5c4064af5467358ae111f0c98d9b8262f6ce686b9fee": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "title",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "status",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "priority",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "project_id",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 10,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "labels",
+          "ordinal": 11,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "count",
+          "ordinal": 12,
+          "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            DELETE FROM tasks\n            WHERE id = $1\n            RETURNING *\n            "
   },
   "34b8f09a9d1d23d4e9d46be4bfe3deb494844cbe0e2899d4d4850df70b0fc9c4": {
     "describe": {
@@ -762,6 +872,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -777,7 +892,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": []
@@ -924,6 +1040,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -939,7 +1060,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -1232,6 +1354,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -1247,7 +1374,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -1701,6 +1829,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -1716,7 +1849,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -2225,19 +2359,7 @@
     },
     "query": "\n            SELECT * FROM members\n            WHERE id = $1\n            "
   },
-  "d33b7c49405926b387de43bbc6a0e5a03e28a09634925eca963b5f619dc3ed8a": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n                DELETE FROM labels_by_tasks\n                WHERE task_id = $1\n                "
-  },
-  "d6f02e598878b6297e4cfe564c095afa2ce10738ffd16747befa8f78b7fe25bb": {
+  "c0ad67ec773a28f51369e3e5d739900398d0e6677dcebbbebec87047453864c7": {
     "describe": {
       "columns": [
         {
@@ -2296,9 +2418,19 @@
           "type_info": "Uuid"
         },
         {
-          "name": "count",
+          "name": "labels",
           "ordinal": 11,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "count",
+          "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -2313,15 +2445,37 @@
         true,
         true,
         true,
-        false
+        true,
+        false,
+        true
       ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Timestamptz",
+          "Uuid",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            RETURNING * \n            "
+  },
+  "d33b7c49405926b387de43bbc6a0e5a03e28a09634925eca963b5f619dc3ed8a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Uuid"
         ]
       }
     },
-    "query": "\n            DELETE FROM tasks\n            WHERE id = $1\n            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, count\n            "
+    "query": "\n                DELETE FROM labels_by_tasks\n                WHERE task_id = $1\n                "
   },
   "da26f8c3e6a1842aae3501c3e6ffba7ac5db5eef10a4c54ab9350b750bacac8e": {
     "describe": {
@@ -2453,6 +2607,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -2468,7 +2627,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -2933,105 +3093,6 @@
     },
     "query": "\n                    DELETE FROM members_by_teams\n                    WHERE member_id = $1\n                    "
   },
-  "f8e7d44a9e2e3f7dc9fc7fabb44b5863b5cb44c7283e34d5d947782f8b20d5b3": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 1,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "title",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "owner_id",
-          "ordinal": 5,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "status",
-          "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "priority",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "due_date",
-          "ordinal": 8,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "project_id",
-          "ordinal": 9,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "lead_id",
-          "ordinal": 10,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "labels",
-          "ordinal": 11,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "count",
-          "ordinal": 12,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Uuid",
-          "Varchar",
-          "Varchar",
-          "Timestamptz",
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            RETURNING * \n            "
-  },
   "fa0154535e96ce7bef5bc5e8720ae7c599c241ca978d33d2bb10ecd759666852": {
     "describe": {
       "columns": [
@@ -3099,6 +3160,11 @@
           "name": "count",
           "ordinal": 12,
           "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
@@ -3114,7 +3180,8 @@
         true,
         true,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [

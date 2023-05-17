@@ -106,6 +106,7 @@ impl Project {
                 lead_id: r.lead_id,
                 owner_id: r.owner_id,
                 count: r.count,
+                parent_id: r.parent_id,
             })
             .collect()
     }

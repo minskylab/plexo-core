@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use super::{labels::Label, member::Member, project::Project};
 
-use super::loaders::{LabelLoader, MemberLoader, ProjectLoader};
+use super::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader};
 use crate::{auth::core::PlexoAuthToken, system::core::Engine};
 #[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
@@ -31,6 +31,8 @@ pub struct Task {
     pub lead_id: Option<Uuid>,
 
     pub count: i32,
+
+    pub parent_id: Option<Uuid>,
 }
 
 #[ComplexObject]
@@ -123,6 +125,18 @@ impl Task {
 
         labels.clone()
     }
+
+    pub async fn parent(&self, ctx: &Context<'_>) -> Option<Task> {
+        let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
+
+        //match to see is project_id is none
+        match self.parent_id {
+            Some(parent_id) => loader.load_one(parent_id).await.unwrap(),
+            None => None,
+        }
+    }
+
+    // pub async fn subtasks()
 }
 
 #[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]

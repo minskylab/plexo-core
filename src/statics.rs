@@ -64,7 +64,7 @@ struct FileRef {
     filename: String,
     is_dir: bool,
 }
-pub struct StaticFilesEndpointHTMLTrimmed {
+pub struct StaticServer {
     path: PathBuf,
     show_files_listing: bool,
     index_file: Option<String>,
@@ -73,7 +73,7 @@ pub struct StaticFilesEndpointHTMLTrimmed {
     plexo_engine: Engine,
 }
 
-impl StaticFilesEndpointHTMLTrimmed {
+impl StaticServer {
     /// Create new static files service for a specified base directory.
     ///
     /// # Example
@@ -147,7 +147,7 @@ impl StaticFilesEndpointHTMLTrimmed {
 }
 
 #[async_trait::async_trait]
-impl Endpoint for StaticFilesEndpointHTMLTrimmed {
+impl Endpoint for StaticServer {
     type Output = Response;
 
     async fn call(&self, req: Request) -> Result<Self::Output> {
@@ -267,6 +267,7 @@ impl Endpoint for StaticFilesEndpointHTMLTrimmed {
                 let html = template.render();
                 Ok(Response::builder()
                     .header(header::CONTENT_TYPE, mime::TEXT_HTML_UTF_8.as_ref())
+                    .header(header::CACHE_CONTROL, "no-cache")
                     .body(Body::from_string(html)))
             } else {
                 Err(StaticFileError::NotFound.into())

@@ -39,6 +39,7 @@ impl MutationRoot {
         lead_id: Option<Uuid>,
         labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
+        parent_id: Option<Uuid>,
     ) -> Task {
         let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
         let plexo_engine = ctx.data::<Engine>().unwrap();
@@ -52,8 +53,8 @@ impl MutationRoot {
 
         let task_final_info = sqlx::query!(
             r#"
-            INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING * 
             "#,
             title,
@@ -63,7 +64,8 @@ impl MutationRoot {
             priority,
             due_date.map(|d| DateTimeBridge::from_date_time(d)),
             project_id,
-            lead_id
+            lead_id,
+            parent_id,
         ).fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
@@ -137,6 +139,7 @@ impl MutationRoot {
             lead_id: task_final_info.lead_id,
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
+            parent_id: task_final_info.parent_id,
         }
     }
 
@@ -246,6 +249,7 @@ impl MutationRoot {
             lead_id: task_final_info.lead_id,
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
+            parent_id: task_final_info.parent_id,
         }
     }
 
@@ -258,11 +262,13 @@ impl MutationRoot {
             r#"
             DELETE FROM tasks
             WHERE id = $1
-            RETURNING id, created_at, updated_at, title, description, owner_id, status, priority, due_date, project_id, lead_id, count
+            RETURNING *
             "#,
             id,
         )
-        .fetch_one(&*plexo_engine.pool).await.unwrap();
+        .fetch_one(&*plexo_engine.pool)
+        .await
+        .unwrap();
 
         let _deleted_assignees = sqlx::query!(
             r#"
@@ -301,6 +307,7 @@ impl MutationRoot {
             lead_id: task_final_info.lead_id,
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
+            parent_id: task_final_info.parent_id,
         }
     }
 

@@ -87,6 +87,7 @@ impl Loader<Uuid> for TaskLoader {
                         project_id: task.project_id,
                         lead_id: task.lead_id,
                         count: task.count,
+                        parent_id: task.parent_id,
                     },
                 )
             })
