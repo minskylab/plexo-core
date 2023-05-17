@@ -161,7 +161,7 @@ impl Endpoint for StaticFilesEndpointHTMLTrimmed {
                 .and_then(get_token_from_raw_cookie)
                  else {
                     return Ok(Response::builder()
-                        .status(StatusCode::PERMANENT_REDIRECT)
+                        .status(StatusCode::MOVED_PERMANENTLY)
                         .header(LOCATION, "/login")
                         .body(Body::empty()));
                 };
@@ -172,7 +172,7 @@ impl Endpoint for StaticFilesEndpointHTMLTrimmed {
                 .extract_claims(&auth_token)
                 .await.map(|token_claims| token_claims.member_id()) else {
                     return Ok(Response::builder()
-                        .status(StatusCode::PERMANENT_REDIRECT)
+                        .status(StatusCode::MOVED_PERMANENTLY)
                         .header(LOCATION, "/login")
                         .body(Body::empty()));
                 };
