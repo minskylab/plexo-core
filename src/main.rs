@@ -61,7 +61,8 @@ async fn main() {
     let app = Route::new()
         .nest(
             "/",
-            StaticFilesEndpointHTMLTrimmed::new("plexo-platform/out").index_file("index.html"),
+            StaticFilesEndpointHTMLTrimmed::new("plexo-platform/out", plexo_engine.clone())
+                .index_file("index.html"),
         )
         // Non authenticated routes
         .at("/auth/email", get(email_basic_login_handler))
@@ -75,7 +76,7 @@ async fn main() {
         .at("/graphql/ws", get(ws_switch_handler))
         .with(Cors::new())
         .data(schema)
-        .data(plexo_engine);
+        .data(plexo_engine.clone());
 
     println!("Visit GraphQL Playground at {}/playground", *DOMAIN);
 

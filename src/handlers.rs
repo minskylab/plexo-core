@@ -4,11 +4,10 @@ use async_graphql::{
 };
 
 use async_graphql_poem::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLWebSocket};
-use cookie::Cookie;
 use serde_json::Value;
 
 use crate::{
-    auth::core::{PlexoAuthToken, COOKIE_SESSION_TOKEN_NAME},
+    commons::authorization::{get_token_from_cookie, get_token_from_headers},
     config::DOMAIN,
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
 };
@@ -38,13 +37,16 @@ pub async fn index_handler(
     req: GraphQLRequest,
 ) -> GraphQLResponse {
     let mut req = req.0;
+    // let mut with_token = false;
 
     if let Some(token) = get_token_from_headers(headers) {
         req = req.data(token);
+        // with_token = true;
     }
 
     if let Some(token) = get_token_from_cookie(headers) {
         req = req.data(token);
+        // with_token = true;
     }
 
     schema.execute(req).await.into()
@@ -64,26 +66,6 @@ pub async fn ws_switch_handler(
                 .on_connection_init(on_connection_init)
                 .serve()
         })
-}
-
-fn get_token_from_headers(headers: &HeaderMap) -> Option<PlexoAuthToken> {
-    headers
-        .get("Authorization")
-        .and_then(|value| value.to_str().map(|s| PlexoAuthToken(s.to_string())).ok())
-}
-
-fn get_token_from_cookie(headers: &HeaderMap) -> Option<PlexoAuthToken> {
-    let raw_cookie = headers.get("Cookie").and_then(|c| c.to_str().ok())?;
-
-    for cookie in Cookie::split_parse(raw_cookie) {
-        let cookie = cookie.unwrap();
-
-        if cookie.name() == COOKIE_SESSION_TOKEN_NAME {
-            return Some(PlexoAuthToken(cookie.value().to_string()));
-        }
-    }
-
-    None
 }
 
 pub async fn on_connection_init(value: Value) -> async_graphql::Result<Data> {

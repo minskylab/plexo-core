@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod commons;
 pub mod config;
 pub mod graphql;
 pub mod handlers;

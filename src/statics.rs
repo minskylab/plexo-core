@@ -12,6 +12,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::{commons::authorization::get_token_from_raw_cookie, system::core::Engine};
+
 struct DirectoryTemplate<'a> {
     path: &'a str,
     files: Vec<FileRef>,
@@ -68,6 +70,7 @@ pub struct StaticFilesEndpointHTMLTrimmed {
     index_file: Option<String>,
     prefer_utf8: bool,
     redirect_to_slash: bool,
+    plexo_engine: Engine,
 }
 
 impl StaticFilesEndpointHTMLTrimmed {
@@ -85,13 +88,14 @@ impl StaticFilesEndpointHTMLTrimmed {
     ///         .index_file("index.html"),
     /// );
     /// ```
-    pub fn new(path: impl Into<PathBuf>) -> Self {
+    pub fn new(path: impl Into<PathBuf>, plexo_engine: Engine) -> Self {
         Self {
             path: path.into(),
             show_files_listing: false,
             index_file: None,
             prefer_utf8: true,
             redirect_to_slash: false,
+            plexo_engine,
         }
     }
 
@@ -149,6 +153,29 @@ impl Endpoint for StaticFilesEndpointHTMLTrimmed {
     async fn call(&self, req: Request) -> Result<Self::Output> {
         if req.method() != Method::GET {
             return Err(StaticFileError::MethodNotAllowed(req.method().clone()).into());
+        }
+
+        if !req.uri().path().ends_with("login") {
+            let Some(auth_token) = req
+                .header("Cookie")
+                .and_then(get_token_from_raw_cookie)
+                 else {
+                    return Ok(Response::builder()
+                        .status(StatusCode::PERMANENT_REDIRECT)
+                        .header(LOCATION, "/login")
+                        .body(Body::empty()));
+                };
+
+            let Some(_member_id) = self
+                .plexo_engine
+                .auth
+                .extract_claims(&auth_token)
+                .await.map(|token_claims| token_claims.member_id()) else {
+                    return Ok(Response::builder()
+                        .status(StatusCode::PERMANENT_REDIRECT)
+                        .header(LOCATION, "/login")
+                        .body(Body::empty()));
+                };
         }
 
         let path = req
