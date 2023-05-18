@@ -163,6 +163,7 @@ impl Endpoint for StaticServer {
                     return Ok(Response::builder()
                         .status(StatusCode::MOVED_PERMANENTLY)
                         .header(LOCATION, "/login")
+                        .header(header::CACHE_CONTROL, "no-cache")
                         .body(Body::empty()));
                 };
 
@@ -174,6 +175,7 @@ impl Endpoint for StaticServer {
                     return Ok(Response::builder()
                         .status(StatusCode::MOVED_PERMANENTLY)
                         .header(LOCATION, "/login")
+                        .header(header::CACHE_CONTROL, "no-cache")
                         .body(Body::empty()));
                 };
         }
@@ -228,6 +230,7 @@ impl Endpoint for StaticServer {
                 return Ok(Response::builder()
                     .status(StatusCode::FOUND)
                     .header(LOCATION, redirect_to)
+                    .header(header::CACHE_CONTROL, "no-cache")
                     .finish());
             }
 
