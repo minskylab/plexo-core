@@ -74,20 +74,6 @@ pub struct StaticServer {
 }
 
 impl StaticServer {
-    /// Create new static files service for a specified base directory.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use poem::{endpoint::StaticFilesEndpoint, Route};
-    ///
-    /// let app = Route::new().nest(
-    ///     "/files",
-    ///     StaticFilesEndpoint::new("/etc/www")
-    ///         .show_files_listing()
-    ///         .index_file("index.html"),
-    /// );
-    /// ```
     pub fn new(path: impl Into<PathBuf>, plexo_engine: Engine) -> Self {
         Self {
             path: path.into(),
@@ -99,9 +85,6 @@ impl StaticServer {
         }
     }
 
-    /// Show files listing for directories.
-    ///
-    /// By default show files listing is disabled.
     #[must_use]
     pub fn show_files_listing(self) -> Self {
         Self {
@@ -110,13 +93,6 @@ impl StaticServer {
         }
     }
 
-    /// Set index file
-    ///
-    /// Shows specific index file for directories instead of showing files
-    /// listing.
-    ///
-    /// If the index file is not found, files listing is shown as a fallback if
-    /// Files::show_files_listing() is set.
     #[must_use]
     pub fn index_file(self, index: impl Into<String>) -> Self {
         Self {
@@ -125,9 +101,6 @@ impl StaticServer {
         }
     }
 
-    /// Specifies whether text responses should signal a UTF-8 encoding.
-    ///
-    /// Default is `true`.
     #[must_use]
     pub fn prefer_utf8(self, value: bool) -> Self {
         Self {
@@ -136,7 +109,6 @@ impl StaticServer {
         }
     }
 
-    /// Redirects to a slash-ended path when browsing a directory.
     #[must_use]
     pub fn redirect_to_slash_directory(self) -> Self {
         Self {

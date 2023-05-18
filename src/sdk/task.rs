@@ -129,14 +129,37 @@ impl Task {
     pub async fn parent(&self, ctx: &Context<'_>) -> Option<Task> {
         let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
 
-        //match to see is project_id is none
         match self.parent_id {
             Some(parent_id) => loader.load_one(parent_id).await.unwrap(),
             None => None,
         }
     }
 
-    // pub async fn subtasks()
+    pub async fn subtasks(&self, ctx: &Context<'_>) -> Vec<Task> {
+        let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
+
+        let ids: Vec<Uuid> = sqlx::query!(
+            r#"
+            SELECT id FROM tasks
+            WHERE parent_id = $1
+            "#,
+            &self.id
+        )
+        .fetch_all(&*ctx.data::<Engine>().unwrap().pool)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|t| t.id)
+        .collect();
+
+        loader
+            .load_many(ids)
+            .await
+            .unwrap()
+            .values()
+            .map(|x| x.to_owned())
+            .collect()
+    }
 }
 
 #[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]

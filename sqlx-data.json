@@ -623,6 +623,26 @@
     },
     "query": "\n                DELETE FROM tasks_by_assignees\n                WHERE task_id = $1\n                "
   },
+  "2d59e80c5e99cc5e2be7cc0bd59ef5c10dacf50b3f52e5262b515dc076ff4929": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT id FROM tasks\n            WHERE parent_id = $1\n            "
+  },
   "33a432b1a15ba8269bbc5c4064af5467358ae111f0c98d9b8262f6ce686b9fee": {
     "describe": {
       "columns": [
