@@ -4,7 +4,7 @@ use oauth2::{AuthorizationCode, CsrfToken};
 use poem::web::cookie::{Cookie, SameSite};
 use poem::web::{Data, Query, Redirect};
 use poem::{handler, Body, IntoResponse, Response};
-use reqwest::StatusCode;
+use reqwest::{header, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -186,6 +186,23 @@ pub async fn github_callback_handler(
 // }
 
 #[handler]
+pub fn logout() -> impl IntoResponse {
+    let mut session_token_cookie = Cookie::named(COOKIE_SESSION_TOKEN_NAME);
+
+    session_token_cookie.set_value_str("");
+    session_token_cookie.set_http_only(true);
+    session_token_cookie.set_secure(true);
+    session_token_cookie.set_same_site(SameSite::Strict);
+    session_token_cookie.set_expires(Utc::now() - Duration::days(1));
+    session_token_cookie.set_path("/");
+
+    Redirect::moved_permanent("/")
+        .with_header("Set-Cookie", session_token_cookie.to_string())
+        .with_header(header::CACHE_CONTROL, "no-cache")
+        .into_response()
+}
+
+#[handler]
 pub fn email_basic_login_handler() -> impl IntoResponse {
-    "Hello World"
+    "Working on it..."
 }

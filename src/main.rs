@@ -67,6 +67,7 @@ async fn main() {
         .at("/auth/email", get(email_basic_login_handler))
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))
+        .at("auth/logout", get(github_callback_handler))
         //
         .at("/playground", get(graphiq_handler))
         // Authenticated routes
