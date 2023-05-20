@@ -1,11 +1,10 @@
 use std::str::FromStr;
 
-use async_graphql::{Context, InputObject, Object};
+use async_graphql::{Context, InputObject, Object, Result};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
-    auth::core::PlexoAuthToken,
     llm::suggestions::{TaskSuggestion, TaskSuggestionResult},
     sdk::{
         labels::Label,
@@ -15,8 +14,9 @@ use crate::{
         team::{Team, TeamVisibility},
         utilities::DateTimeBridge,
     },
-    system::core::Engine,
 };
+
+use super::auth::extract_context;
 
 pub struct QueryRoot;
 
@@ -52,11 +52,8 @@ pub struct ProjectFilter {
 
 #[Object]
 impl QueryRoot {
-    async fn tasks(&self, ctx: &Context<'_>, _filter: Option<TaskFilter>) -> Vec<Task> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        plexo_engine.auth.extract_claims(auth_token).await.unwrap();
+    async fn tasks(&self, ctx: &Context<'_>, _filter: Option<TaskFilter>) -> Result<Vec<Task>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let tasks = sqlx::query!(
             r#"
@@ -67,7 +64,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        tasks
+        Ok(tasks
             .iter()
             .map(|r| Task {
                 id: r.id,
@@ -84,14 +81,11 @@ impl QueryRoot {
                 count: r.count,
                 parent_id: r.parent_id,
             })
-            .collect()
+            .collect())
     }
 
-    async fn task_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Task {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn task_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Result<Task> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let task = sqlx::query!(
             r#"
@@ -104,7 +98,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        Task {
+        Ok(Task {
             id: task.id,
             created_at: DateTimeBridge::from_offset_date_time(task.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task.updated_at),
@@ -118,14 +112,15 @@ impl QueryRoot {
             owner_id: task.owner_id,
             count: task.count,
             parent_id: task.parent_id,
-        }
+        })
     }
 
-    async fn members(&self, ctx: &Context<'_>, _filter: Option<MemberFilter>) -> Vec<Member> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn members(
+        &self,
+        ctx: &Context<'_>,
+        _filter: Option<MemberFilter>,
+    ) -> Result<Vec<Member>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let members = sqlx::query!(
             r#"
@@ -136,22 +131,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        // let mut results = vec![];
-        // for r in members.iter() {
-        //     let mut member = Member {
-        //         id: r.id,
-        //         created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-        //         updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-        //         ...
-        //         tasks: None,
-        //     };
-        //     let tasks = member.owned_tasks(ctx).await.unwrap();
-        //     member.tasks = Some(tasks);
-        //     results.push(member);
-        // }
-        // results
-
-        members
+        Ok(members
             .iter()
             .map(|r| Member {
                 id: r.id,
@@ -164,14 +144,11 @@ impl QueryRoot {
                 photo_url: r.photo_url.clone(),
                 role: MemberRole::from_optional_str(&r.role),
             })
-            .collect()
+            .collect())
     }
 
-    async fn member_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn member_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Result<Member> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let member = sqlx::query!(
             r#"
@@ -184,7 +161,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        Member {
+        Ok(Member {
             id: member.id,
             created_at: DateTimeBridge::from_offset_date_time(member.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
@@ -194,14 +171,11 @@ impl QueryRoot {
             google_id: member.google_id.clone(),
             photo_url: member.photo_url.clone(),
             role: MemberRole::from_optional_str(&member.role),
-        }
+        })
     }
 
-    async fn member_by_email(&self, ctx: &Context<'_>, email: String) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn member_by_email(&self, ctx: &Context<'_>, email: String) -> Result<Member> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let member = sqlx::query!(
             r#"
@@ -214,7 +188,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        Member {
+        Ok(Member {
             id: member.id,
             created_at: DateTimeBridge::from_offset_date_time(member.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
@@ -224,14 +198,15 @@ impl QueryRoot {
             google_id: member.google_id.clone(),
             photo_url: member.photo_url.clone(),
             role: MemberRole::from_optional_str(&member.role),
-        }
+        })
     }
 
-    async fn projects(&self, ctx: &Context<'_>, _filter: Option<ProjectFilter>) -> Vec<Project> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn projects(
+        &self,
+        ctx: &Context<'_>,
+        _filter: Option<ProjectFilter>,
+    ) -> Result<Vec<Project>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let projects = sqlx::query!(
             r#"
@@ -242,7 +217,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        projects
+        Ok(projects
             .iter()
             .map(|r| Project {
                 id: r.id,
@@ -256,14 +231,11 @@ impl QueryRoot {
                 start_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
                 due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
             })
-            .collect()
+            .collect())
     }
 
-    async fn project_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Project {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn project_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Result<Project> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let project = sqlx::query!(
             r#"
@@ -276,7 +248,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        Project {
+        Ok(Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
@@ -287,14 +259,11 @@ impl QueryRoot {
             lead_id: project.lead_id,
             start_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
-        }
+        })
     }
 
-    async fn teams(&self, ctx: &Context<'_>, _filter: Option<TeamFilter>) -> Vec<Team> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn teams(&self, ctx: &Context<'_>, _filter: Option<TeamFilter>) -> Result<Vec<Team>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let teams = sqlx::query!(
             r#"
@@ -306,7 +275,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        teams
+        Ok(teams
             .iter()
             .map(|r| Team {
                 id: r.id,
@@ -317,14 +286,11 @@ impl QueryRoot {
                 visibility: TeamVisibility::from_optional_str(&r.visibility),
                 prefix: r.prefix.clone(),
             })
-            .collect()
+            .collect())
     }
 
-    async fn team_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Team {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn team_by_id(&self, ctx: &Context<'_>, id: Uuid) -> Result<Team> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let team = sqlx::query!(
             r#"
@@ -337,7 +303,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        Team {
+        Ok(Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
@@ -345,14 +311,11 @@ impl QueryRoot {
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix,
-        }
+        })
     }
 
-    async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    async fn labels(&self, ctx: &Context<'_>) -> Result<Vec<Label>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let labels = sqlx::query!(
             r#"
@@ -363,7 +326,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        labels
+        Ok(labels
             .iter()
             .map(|r| Label {
                 id: r.id,
@@ -373,18 +336,15 @@ impl QueryRoot {
                 color: r.color.clone(),
                 description: r.description.clone(),
             })
-            .collect()
+            .collect())
     }
 
     async fn suggest_new_task(
         &self,
         ctx: &Context<'_>,
         task: TaskSuggestion,
-    ) -> TaskSuggestionResult {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        println!("token: {}", auth_token);
+    ) -> Result<TaskSuggestionResult> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let raw_suggestion = plexo_engine
             .auto_suggestions_engine
@@ -402,29 +362,21 @@ impl QueryRoot {
         let priority = parts[3].replace("Task Priority:", "").trim().to_string();
         let due_date = parts[4].replace("Task Due Date:", "").trim().to_string();
 
-        let status = TaskStatus::from_str(&status).unwrap();
-        let priority = TaskPriority::from_str(&priority).unwrap();
+        let status = TaskStatus::from_str(&status).unwrap_or_default();
+        let priority = TaskPriority::from_str(&priority).unwrap_or_default();
         let due_date = DateTime::<Utc>::from_str(&due_date).unwrap_or(Utc::now());
 
-        TaskSuggestionResult {
+        Ok(TaskSuggestionResult {
             title,
             description,
             status,
             priority,
             due_date,
-        }
+        })
     }
 
-    async fn me(&self, ctx: &Context<'_>) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        let member_id = plexo_engine
-            .auth
-            .extract_claims(auth_token)
-            .await
-            .unwrap()
-            .member_id();
+    async fn me(&self, ctx: &Context<'_>) -> Result<Member> {
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let r = sqlx::query!(
             r#"
@@ -437,7 +389,7 @@ impl QueryRoot {
         .await
         .unwrap();
 
-        Member {
+        Ok(Member {
             id: r.id,
             created_at: DateTimeBridge::from_offset_date_time(r.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
@@ -447,6 +399,6 @@ impl QueryRoot {
             google_id: r.google_id.clone(),
             photo_url: r.photo_url.clone(),
             role: MemberRole::from_optional_str(&r.role),
-        }
+        })
     }
 }

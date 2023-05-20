@@ -139,11 +139,11 @@ impl Endpoint for StaticServer {
                         .body(Body::empty()));
                 };
 
-            let Some(_member_id) = self
+            let Ok(_member_id) = self
                 .plexo_engine
                 .auth
                 .extract_claims(&auth_token)
-                .await.map(|token_claims| token_claims.member_id()) else {
+                .map(|token_claims| token_claims.member_id()) else {
                     return Ok(Response::builder()
                         .status(StatusCode::MOVED_PERMANENTLY)
                         .header(LOCATION, "/login")

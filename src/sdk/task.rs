@@ -162,8 +162,9 @@ impl Task {
     }
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Default)]
 pub enum TaskStatus {
+    #[default]
     None,
     Backlog,
     ToDo,
@@ -172,8 +173,9 @@ pub enum TaskStatus {
     Canceled,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Default)]
 pub enum TaskPriority {
+    #[default]
     None,
     Low,
     Medium,

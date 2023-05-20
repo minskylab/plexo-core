@@ -8,14 +8,10 @@ lazy_static! {
     pub static ref URL: String = var("URL").unwrap_or(format!("{}:{}", *HOST, *PORT));
     pub static ref DOMAIN: String = var("DOMAIN").unwrap_or(format!("http://{}", *URL));
     //
-    pub static ref DATABASE_URL: String =
-        var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
-    pub static ref GITHUB_CLIENT_ID: String =
-        var("GITHUB_CLIENT_ID").expect("Missing the GITHUB_CLIENT_ID environment variable.");
-    pub static ref GITHUB_CLIENT_SECRET: String = var("GITHUB_CLIENT_SECRET")
-        .expect("Missing the GITHUB_CLIENT_SECRET environment variable.");
-    pub static ref GITHUB_REDIRECT_URL: String =
-        var("GITHUB_REDIRECT_URL").unwrap_or(format!("{}/auth/github/callback", *DOMAIN));
+    pub static ref DATABASE_URL: String = var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
+    pub static ref GITHUB_CLIENT_ID: String = var("GITHUB_CLIENT_ID").expect("Missing the GITHUB_CLIENT_ID environment variable.");
+    pub static ref GITHUB_CLIENT_SECRET: String = var("GITHUB_CLIENT_SECRET").expect("Missing the GITHUB_CLIENT_SECRET environment variable.");
+    pub static ref GITHUB_REDIRECT_URL: String = var("GITHUB_REDIRECT_URL").unwrap_or(format!("{}/auth/github/callback", *DOMAIN));
 
     pub static ref LLM_MODEL_NAME: String = var("LLM_MODEL_NAME").unwrap_or("gpt-3.5-turbo".into());
 }

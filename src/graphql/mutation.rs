@@ -1,20 +1,18 @@
-use async_graphql::{Context, InputObject, Object};
+use async_graphql::{Context, InputObject, Object, Result};
 use chrono::{DateTime, Utc};
 use sqlx;
 use uuid::Uuid;
 
-use crate::{
-    auth::core::PlexoAuthToken,
-    sdk::{
-        labels::Label,
-        member::{Member, MemberRole},
-        project::Project,
-        task::{Task, TaskPriority, TaskStatus},
-        team::{Team, TeamVisibility},
-        utilities::DateTimeBridge,
-    },
-    system::core::Engine,
+use crate::sdk::{
+    labels::Label,
+    member::{Member, MemberRole},
+    project::Project,
+    task::{Task, TaskPriority, TaskStatus},
+    team::{Team, TeamVisibility},
+    utilities::DateTimeBridge,
 };
+
+use super::auth::extract_context;
 
 #[derive(InputObject)]
 struct AssigneesOperation {
@@ -31,7 +29,6 @@ impl MutationRoot {
         ctx: &Context<'_>,
         title: String,
         description: Option<String>,
-        // owner_id: Uuid,
         status: Option<String>,
         priority: Option<String>,
         due_date: Option<DateTime<Utc>>,
@@ -40,16 +37,8 @@ impl MutationRoot {
         labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
         parent_id: Option<Uuid>,
-    ) -> Task {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap();
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-
-        let owner_id = plexo_engine
-            .auth
-            .extract_claims(auth_token)
-            .await
-            .unwrap()
-            .member_id();
+    ) -> Result<Task> {
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let task_final_info = sqlx::query!(
             r#"
@@ -59,7 +48,7 @@ impl MutationRoot {
             "#,
             title,
             description,
-            owner_id,
+            member_id,
             status,
             priority,
             due_date.map(|d| DateTimeBridge::from_date_time(d)),
@@ -124,7 +113,7 @@ impl MutationRoot {
             }
         }
 
-        Task {
+        Ok(Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -140,7 +129,7 @@ impl MutationRoot {
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
             parent_id: task_final_info.parent_id,
-        }
+        })
     }
 
     async fn update_task(
@@ -156,10 +145,8 @@ impl MutationRoot {
         lead_id: Option<Uuid>,
         labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
-    ) -> Task {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Task> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let task_final_info = sqlx::query!(
             r#"
@@ -234,7 +221,7 @@ impl MutationRoot {
             }
         }
 
-        Task {
+        Ok(Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -250,13 +237,11 @@ impl MutationRoot {
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
             parent_id: task_final_info.parent_id,
-        }
+        })
     }
 
-    async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Task {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Result<Task> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let task_final_info = sqlx::query!(
             r#"
@@ -292,7 +277,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Task {
+        Ok(Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -308,18 +293,8 @@ impl MutationRoot {
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
             parent_id: task_final_info.parent_id,
-        }
+        })
     }
-
-    // async fn create_member(
-    //     &self,
-    //     email: String,
-    //     password: String,
-    //     first_name: String,
-    //     last_name: String,
-    // ) -> Member {
-    //     todo!()
-    // }
 
     async fn update_member(
         &self,
@@ -330,10 +305,8 @@ impl MutationRoot {
         role: Option<String>,
         projects: Option<Vec<Uuid>>,
         teams: Option<Vec<Uuid>>,
-    ) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Member> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let member = sqlx::query!(
             r#"
@@ -405,7 +378,7 @@ impl MutationRoot {
             }
         }
 
-        Member {
+        Ok(Member {
             id: member.id,
             created_at: DateTimeBridge::from_offset_date_time(member.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
@@ -415,13 +388,11 @@ impl MutationRoot {
             google_id: member.google_id,
             photo_url: member.photo_url,
             role: MemberRole::from_optional_str(&member.role),
-        }
+        })
     }
 
-    async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Member {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Result<Member> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let member = sqlx::query!(
             r#"
@@ -466,7 +437,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Member {
+        Ok(Member {
             id: member.id,
             created_at: DateTimeBridge::from_offset_date_time(member.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
@@ -476,7 +447,7 @@ impl MutationRoot {
             google_id: member.google_id,
             photo_url: member.photo_url,
             role: MemberRole::from_optional_str(&member.role),
-        }
+        })
     }
 
     async fn create_project(
@@ -484,17 +455,14 @@ impl MutationRoot {
         ctx: &Context<'_>,
         name: String,
         prefix: Option<String>,
-        owner_id: Uuid,
         description: Option<String>,
         lead_id: Option<Uuid>,
         start_date: Option<DateTime<Utc>>,
         due_date: Option<DateTime<Utc>>,
         members: Option<Vec<Uuid>>,
         teams: Option<Vec<Uuid>>,
-    ) -> Project {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Project> {
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let project = sqlx::query!(
             r#"
@@ -504,7 +472,7 @@ impl MutationRoot {
             "#,
             name,
             prefix,
-            owner_id,
+            member_id,
             description,
             lead_id,
             start_date.map(|d| DateTimeBridge::from_date_time(d)),
@@ -544,7 +512,7 @@ impl MutationRoot {
             }
         }
 
-        Project {
+        Ok(Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
@@ -557,7 +525,7 @@ impl MutationRoot {
                 .start_date
                 .map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
-        }
+        })
     }
 
     async fn update_project(
@@ -573,10 +541,8 @@ impl MutationRoot {
         due_date: Option<DateTime<Utc>>,
         members: Option<Vec<Uuid>>,
         teams: Option<Vec<Uuid>>,
-    ) -> Project {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Project> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let project = sqlx::query!(
             r#"
@@ -650,7 +616,7 @@ impl MutationRoot {
             }
         }
 
-        Project {
+        Ok(Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
@@ -663,13 +629,11 @@ impl MutationRoot {
                 .start_date
                 .map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
-        }
+        })
     }
 
-    async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Project {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Project> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let project = sqlx::query!(
             r#"
@@ -717,7 +681,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Project {
+        Ok(Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
@@ -730,22 +694,19 @@ impl MutationRoot {
                 .start_date
                 .map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
-        }
+        })
     }
 
     async fn create_team(
         &self,
         ctx: &Context<'_>,
         name: String,
-        owner_id: Uuid,
         visibility: Option<String>,
         prefix: Option<String>,
         members: Option<Vec<Uuid>>,
         projects: Option<Vec<Uuid>>,
-    ) -> Team {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Team> {
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let team = sqlx::query!(
             r#"
@@ -754,7 +715,7 @@ impl MutationRoot {
             RETURNING *
             "#,
             name,
-            owner_id,
+            member_id,
             visibility,
             prefix,
         )
@@ -794,7 +755,7 @@ impl MutationRoot {
             }
         }
 
-        Team {
+        Ok(Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
@@ -802,7 +763,7 @@ impl MutationRoot {
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
-        }
+        })
     }
 
     async fn update_team(
@@ -815,10 +776,8 @@ impl MutationRoot {
         prefix: Option<String>,
         members: Option<Vec<Uuid>>,
         projects: Option<Vec<Uuid>>,
-    ) -> Team {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Team> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let team = sqlx::query!(
             r#"
@@ -891,7 +850,7 @@ impl MutationRoot {
             }
         }
 
-        Team {
+        Ok(Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
@@ -899,13 +858,11 @@ impl MutationRoot {
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
-        }
+        })
     }
 
-    async fn delete_team(&self, ctx: &Context<'_>, id: Uuid) -> Team {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    async fn delete_team(&self, ctx: &Context<'_>, id: Uuid) -> Result<Team> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let team = sqlx::query!(
             r#"
@@ -941,7 +898,7 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Team {
+        Ok(Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
@@ -949,7 +906,7 @@ impl MutationRoot {
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
-        }
+        })
     }
 
     async fn create_label(
@@ -958,10 +915,8 @@ impl MutationRoot {
         name: String,
         description: Option<String>,
         color: Option<String>,
-    ) -> Label {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Label> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let label = sqlx::query!(
             r#"
@@ -977,14 +932,14 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Label {
+        Ok(Label {
             id: label.id,
             created_at: DateTimeBridge::from_offset_date_time(label.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
             name: label.name.clone(),
             description: label.description.clone(),
             color: label.color,
-        }
+        })
     }
 
     async fn update_label(
@@ -994,10 +949,8 @@ impl MutationRoot {
         name: Option<String>,
         description: Option<String>,
         color: Option<String>,
-    ) -> Label {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    ) -> Result<Label> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let label = sqlx::query!(
             r#"
@@ -1015,20 +968,18 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Label {
+        Ok(Label {
             id: label.id,
             created_at: DateTimeBridge::from_offset_date_time(label.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
             name: label.name.clone(),
             description: label.description.clone(),
             color: label.color,
-        }
+        })
     }
 
-    async fn delete_label(&self, ctx: &Context<'_>, id: Uuid) -> Label {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    async fn delete_label(&self, ctx: &Context<'_>, id: Uuid) -> Result<Label> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let label = sqlx::query!(
             r#"
@@ -1053,13 +1004,13 @@ impl MutationRoot {
         .await
         .unwrap();
 
-        Label {
+        Ok(Label {
             id: label.id,
             created_at: DateTimeBridge::from_offset_date_time(label.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(label.updated_at),
             name: label.name.clone(),
             description: label.description.clone(),
             color: label.color.clone(),
-        }
+        })
     }
 }

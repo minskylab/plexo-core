@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, error::Error};
 
 use oauth2::{
     basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
@@ -83,13 +83,13 @@ impl AuthEngine {
         }
     }
 
-    pub async fn extract_claims(
+    pub fn extract_claims(
         &self,
         plexo_auth_token: &PlexoAuthToken,
-    ) -> Option<PlexoAuthTokenClaims> {
-        self.jwt_engine
-            .decode_session_token(plexo_auth_token.0.as_str())
-            .ok()
+    ) -> Result<PlexoAuthTokenClaims, Box<dyn Error>> {
+        Ok(self
+            .jwt_engine
+            .decode_session_token(plexo_auth_token.0.as_str())?)
     }
 
     // pub async fn extract_claims_from_access_token(
