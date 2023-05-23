@@ -4,7 +4,9 @@
   <img alt="Plexo logoype" src="/public/plexo_logo_black_text.svg">
 </picture> -->
 
-<img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="420" align="center">
+<p align="center">
+<img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="360" >
+</p>
 
 # Plexo
 
@@ -13,6 +15,20 @@ Plexo is an open-source solution reshaping project management with AI. It simpli
 More than a tool, Plexo is a benchmark for project execution and description, fostering interoperability amongst diverse teams and organizations. Drawing on the principle that system designs reflect their organization's communication structure, Plexo stands as evidence of this theory, exemplifying organizational efficiency.
 
 Adopt Plexo to enhance your software project planning and elevate team synergy.
+
+## Quick Start
+
+You can try our demo [here](https://demo.plexo.app/). And if you want to deploy your own instance of Plexo-core, actually you need a Postgresql database, a OpenAI API Key and a Github OAuth app. Then you can run the following command:
+
+```bash
+docker run \
+    -p 8080:8080 \
+    -e DATABASE_URL=postgres://postgres:postgres@localhost:5432/plexo \
+    -e OPENAI_API_KEY=<your-openai-api-key> \
+    -e GITHUB_CLIENT_ID=<your-github-client-id> \
+    -e GITHUB_CLIENT_SECRET=<your-github-client-secret> \
+    minskylab/plexo-core
+```
 
 ## Main Features and Functionalities of Plexo-Core
 
