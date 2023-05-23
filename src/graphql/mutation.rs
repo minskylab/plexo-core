@@ -391,64 +391,64 @@ impl MutationRoot {
         })
     }
 
-    async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Result<Member> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+    // async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Result<Member> {
+    //     let (plexo_engine, _member_id) = extract_context(ctx)?;
 
-        let member = sqlx::query!(
-            r#"
-            DELETE FROM members
-            WHERE id = $1
-            RETURNING id, created_at, updated_at, name, email, github_id, google_id, photo_url, role;
-            "#,
-            id,
-        )
-        .fetch_one(&*plexo_engine.pool).await.unwrap();
+    //     let member = sqlx::query!(
+    //         r#"
+    //         DELETE FROM members
+    //         WHERE id = $1
+    //         RETURNING id, created_at, updated_at, name, email, github_id, google_id, photo_url, role;
+    //         "#,
+    //         id,
+    //     )
+    //     .fetch_one(&*plexo_engine.pool).await.unwrap();
 
-        let _deleted_projects = sqlx::query!(
-            r#"
-            DELETE FROM members_by_projects
-            WHERE member_id = $1
-            "#,
-            id,
-        )
-        .execute(&*plexo_engine.pool)
-        .await
-        .unwrap();
+    //     let _deleted_projects = sqlx::query!(
+    //         r#"
+    //         DELETE FROM members_by_projects
+    //         WHERE member_id = $1
+    //         "#,
+    //         id,
+    //     )
+    //     .execute(&*plexo_engine.pool)
+    //     .await
+    //     .unwrap();
 
-        let _deleted_teams = sqlx::query!(
-            r#"
-            DELETE FROM members_by_teams
-            WHERE member_id = $1
-            "#,
-            id,
-        )
-        .execute(&*plexo_engine.pool)
-        .await
-        .unwrap();
+    //     let _deleted_teams = sqlx::query!(
+    //         r#"
+    //         DELETE FROM members_by_teams
+    //         WHERE member_id = $1
+    //         "#,
+    //         id,
+    //     )
+    //     .execute(&*plexo_engine.pool)
+    //     .await
+    //     .unwrap();
 
-        let _deleted_tasks = sqlx::query!(
-            r#"
-            DELETE FROM tasks_by_assignees
-            WHERE assignee_id = $1
-            "#,
-            id,
-        )
-        .execute(&*plexo_engine.pool)
-        .await
-        .unwrap();
+    //     let _deleted_tasks = sqlx::query!(
+    //         r#"
+    //         DELETE FROM tasks_by_assignees
+    //         WHERE assignee_id = $1
+    //         "#,
+    //         id,
+    //     )
+    //     .execute(&*plexo_engine.pool)
+    //     .await
+    //     .unwrap();
 
-        Ok(Member {
-            id: member.id,
-            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-            name: member.name.clone(),
-            email: member.email.clone(),
-            github_id: member.github_id,
-            google_id: member.google_id,
-            photo_url: member.photo_url,
-            role: MemberRole::from_optional_str(&member.role),
-        })
-    }
+    //     Ok(Member {
+    //         id: member.id,
+    //         created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+    //         updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+    //         name: member.name.clone(),
+    //         email: member.email.clone(),
+    //         github_id: member.github_id,
+    //         google_id: member.google_id,
+    //         photo_url: member.photo_url,
+    //         role: MemberRole::from_optional_str(&member.role),
+    //     })
+    // }
 
     async fn create_project(
         &self,

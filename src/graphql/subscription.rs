@@ -5,39 +5,19 @@ use chrono::Utc;
 use tokio_stream::Stream;
 use uuid::Uuid;
 
-use crate::{
-    sdk::{
-        project::Project,
-        task::{Task, TaskPriority, TaskStatus},
-        team::{Team, TeamVisibility},
-    },
-    system::subscriptions::{DataDiffEvent, DataDiffEventKind},
+use crate::sdk::{
+    project::Project,
+    task::{Task, TaskPriority, TaskStatus},
+    team::{Team, TeamVisibility},
 };
 
 pub struct SubscriptionRoot;
 
 #[Subscription]
 impl SubscriptionRoot {
-    async fn integers(&self, #[graphql(default = 1)] step: i32) -> impl Stream<Item = i32> {
-        let mut value = 0;
-        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
-            .map(move |_| {
-                value += step;
-                value
-            })
-    }
-
-    async fn example(&self, _ctx: &Context<'_>) -> impl Stream<Item = DataDiffEvent> {
-        tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
-            .map(move |_| DataDiffEvent {
-                kind: DataDiffEventKind::Created,
-                data: Uuid::new_v4().to_string(),
-            })
-    }
-
     async fn tasks(&self, ctx: &Context<'_>) -> impl Stream<Item = Task> {
-        let auth_token = ctx.data::<String>().unwrap();
-        println!("token: {}", auth_token);
+        let _auth_token = ctx.data::<String>().unwrap();
+        // println!("token: {}", auth_token);
 
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Task {
@@ -87,8 +67,8 @@ impl SubscriptionRoot {
     }
 
     async fn projects(&self, ctx: &Context<'_>) -> impl Stream<Item = Project> {
-        let auth_token = ctx.data::<String>().unwrap();
-        println!("token: {}", auth_token);
+        let _auth_token = ctx.data::<String>().unwrap();
+        // println!("token: {}", auth_token);
 
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Project {
@@ -106,8 +86,8 @@ impl SubscriptionRoot {
     }
 
     async fn teams(&self, ctx: &Context<'_>) -> impl Stream<Item = Team> {
-        let auth_token = ctx.data::<String>().unwrap();
-        println!("token: {}", auth_token);
+        let _auth_token = ctx.data::<String>().unwrap();
+        // println!("token: {}", auth_token);
 
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Team {

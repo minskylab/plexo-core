@@ -7,3 +7,4 @@ data
 .blob
 Secrets.toml
 .vscode
+.DS_Store

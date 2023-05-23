@@ -1,12 +1,18 @@
-# Plexo
-
-<picture>
+<!-- <picture>
   <source media="(prefers-color-scheme: dark)" srcset="/public/plexo_logo_white_text.svg">
   <source media="(prefers-color-scheme: light)" srcset="/public/plexo_logo_black_text.svg">
   <img alt="Plexo logoype" src="/public/plexo_logo_black_text.svg">
-</picture>
+</picture> -->
 
-Plexo is a next generation planning tool for project management. It also includes cutting edge AI functionalities such as suggestions and autonomous creation of project tasks to achieve completion.
+<img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="320">
+
+# Plexo
+
+Plexo is an open-source solution reshaping project management with AI. It simplifies task tracking within projects and teams, replacing traditional complexities. Its AI functionalities autonomously create project tasks and provide valuable suggestions, helping teams to prioritize their core work.
+
+More than a tool, Plexo is a benchmark for project execution and description, fostering interoperability amongst diverse teams and organizations. Drawing on the principle that system designs reflect their organization's communication structure, Plexo stands as evidence of this theory, exemplifying organizational efficiency.
+
+Adopt Plexo to enhance your software project planning and elevate team synergy.
 
 ## Main Features and Functionalities of Plexo-Core
 
