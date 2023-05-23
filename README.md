@@ -4,7 +4,7 @@
   <img alt="Plexo logoype" src="/public/plexo_logo_black_text.svg">
 </picture> -->
 
-<img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="320">
+<img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="420" align="center">
 
 # Plexo
 
