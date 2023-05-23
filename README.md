@@ -5,7 +5,7 @@
 </picture> -->
 
 <p align="center">
-<img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="360" >
+  <img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="360" >
 </p>
 
 # Plexo
@@ -15,6 +15,10 @@ Plexo is an open-source solution reshaping project management with AI. It simpli
 More than a tool, Plexo is a benchmark for project execution and description, fostering interoperability amongst diverse teams and organizations. Drawing on the principle that system designs reflect their organization's communication structure, Plexo stands as evidence of this theory, exemplifying organizational efficiency.
 
 Adopt Plexo to enhance your software project planning and elevate team synergy.
+
+<p align="center">
+  <img alt="Plexo Platform Screenshot" src="/public/plexo_platform_demo_2.png" height="512" >
+</p>
 
 ## Quick Start
 
