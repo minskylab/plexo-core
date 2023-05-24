@@ -1,5 +1,9 @@
 <p align="center">
-  <img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="360" >
+  <img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" style="width:auto; height:320px">
+</p>
+
+<p align="center">
+ ➡️ <a href="https://demo.plexo.app/">Live Demo</a> ⬅️
 </p>
 
 <p align="center">
@@ -17,7 +21,7 @@
 Plexo is an open-source solution reshaping project management with AI. It simplifies task tracking within projects and teams, replacing traditional complexities. Its AI functionalities autonomously create project tasks and provide valuable suggestions, helping teams to prioritize their core work.
 
 <p align="center">
-  <img alt="Plexo Platform Screenshot" src="/public/plexo_platform_demo_2.png" height="512" >
+  <img alt="Plexo Platform Screenshot" src="/public/plexo_platform_demo_2.png" height="512" width="auto" >
 </p>
 
 More than a tool, Plexo is a benchmark for project execution and description, fostering interoperability amongst diverse teams and organizations. Drawing on the principle that system designs reflect their organization's communication structure, Plexo stands as evidence of this theory, exemplifying organizational efficiency.
@@ -40,7 +44,7 @@ Adopt Plexo to enhance your software project planning and elevate team synergy.
 
 - 🍃 **Lightweight and Self-Hosted**: Plexo is designed to be lightweight and self-hostable, reducing dependencies and providing flexibility.
 
-- 🔄 **Conway's Law Inspired**: Plexo is modeled on the principle that organizations design systems analogous to their communication structure, thus mirroring team communication in its project management system.
+- 🔄 **Conway's Law Inspired**: Plexo is modeled on the principle that organizations design systems are analogous to their communication structure, thus mirroring team communication in its project management system.
 
 ## Quick Start
 
