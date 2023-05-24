@@ -1,24 +1,46 @@
-<!-- <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="/public/plexo_logo_white_text.svg">
-  <source media="(prefers-color-scheme: light)" srcset="/public/plexo_logo_black_text.svg">
-  <img alt="Plexo logoype" src="/public/plexo_logo_black_text.svg">
-</picture> -->
-
 <p align="center">
   <img alt="Plexo | Open-Source and AI-Powered Project Management System for modern innovators" src="/public/plexo_gh_banner.png" height="360" >
+</p>
+
+<p align="center">
+  <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/minskylab/plexo-core/registry-docker.yml">
+  <img alt="Docker Image Size (latest by date)" src="https://img.shields.io/docker/image-size/minskylab/plexo">
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/minskylab/plexo-core">
+  <img alt="GitHub issues" src="https://img.shields.io/github/issues/minskylab/plexo-core">
+  <img alt="GitHub" src="https://img.shields.io/github/license/minskylab/plexo-core">
+  <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/plexoapp?style=social">
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/minskylab/plexo-core?style=social"> 
 </p>
 
 # Plexo
 
 Plexo is an open-source solution reshaping project management with AI. It simplifies task tracking within projects and teams, replacing traditional complexities. Its AI functionalities autonomously create project tasks and provide valuable suggestions, helping teams to prioritize their core work.
 
+<p align="center">
+  <img alt="Plexo Platform Screenshot" src="/public/plexo_platform_demo_2.png" height="512" >
+</p>
+
 More than a tool, Plexo is a benchmark for project execution and description, fostering interoperability amongst diverse teams and organizations. Drawing on the principle that system designs reflect their organization's communication structure, Plexo stands as evidence of this theory, exemplifying organizational efficiency.
 
 Adopt Plexo to enhance your software project planning and elevate team synergy.
 
-<p align="center">
-  <img alt="Plexo Platform Screenshot" src="/public/plexo_platform_demo_2.png" height="512" >
-</p>
+## Features
+
+- 🧠 **AI-Powered Suggestions**: Plexo provides intelligent suggestions to aid in project planning and task management.
+
+- 📈 **Active Task Tracking**: Follow the progress of tasks/issues in real-time within a project, team, or individual context.
+
+- 🤖 **Autonomous Task Creation**: Plexo can autonomously generate tasks necessary for project completion, optimizing the planning process.
+
+- 🤝 **Seamless Collaboration**: Plexo facilitates collaboration between team members, streamlining communication and increasing efficiency.
+
+- 🔀 **Interoperability**: Designed to become a standard in project description and execution, Plexo aims to enhance interoperability between different organizations and teams.
+
+- 🔓 **Open-Source and Free Forever**: Plexo is committed to remaining an open-source project, fostering a community of contributors and users.
+
+- 🍃 **Lightweight and Self-Hosted**: Plexo is designed to be lightweight and self-hostable, reducing dependencies and providing flexibility.
+
+- 🔄 **Conway's Law Inspired**: Plexo is modeled on the principle that organizations design systems analogous to their communication structure, thus mirroring team communication in its project management system.
 
 ## Quick Start
 
@@ -34,23 +56,9 @@ docker run \
     minskylab/plexo-core
 ```
 
-## Main Features and Functionalities of Plexo-Core
+⚠️ We're working on a way to deploy Plexo-core without the need of a Github OAuth app. If you want to contribute, please check [this issue](https://github.com/minskylab/plexo-core/issues/9).
 
-Plexo-Core specifically is the backend part of the Plexo-platform project. Its purpose is to serve as a connection between the frontend and the Hashura database. Plexo-core has built 7 core "objects" around which the platform works. They are "tasks", "members", "teams", "projects", "labels", and "organizations". Around all of them, the features are distributed as an interconnection between the basic conceptual relationships every core object has. For example, tasks have a due date, a leader, members as assignees, labels, etc. Projects have also due date, teams associated, an owner, a leader, etc.
-
-## Live Demo
-
-<img align="right" height="255" src="/public/plexo-live-1.svg" alt="Image of tasks on board view" title="Board view Plexo">
-
-<img align="right" height="255" src="/public/plexo-live-2.svg" alt="Image of task creation with tasks list view on the back" title="Task creation Plexo">
-
-<img align="right" height="255" src="/public/plexo-live-3.svg" alt="View of one of the projects" title="In project view Plexo">
-
-**Try our live demo!** [Live demo](https://demo.plexo.app/)
-
-If you find any bug or are eager to ask for a feature, create a github issue [here] (https://github.com/minskylab/plexo-core/issues)
-
-## Technologies and Programming Languages
+<!-- ## Technologies and Programming Languages
 
 The project uses Rust as its language and the other main functional technologies are async GraphQL and Hashura with a Postgresql database. On the other hand, Docker is used to deploy other instances.
 
@@ -99,7 +107,11 @@ The objects are:
 
 General queries, mutations and subscriptions can be found on those files. On the other hand specific, sub-quieries for each object can be found inside each respective object file.
 
-Aditionally the loaders folder includes an implementation of a data loader to soften the amount of requests made to the database.
+Aditionally the loaders folder includes an implementation of a data loader to soften the amount of requests made to the database. -->
+
+## Contribution
+
+We welcome all contributions to the Plexo project! Whether you're interested in fixing bugs, adding new features, or improving documentation, your input is greatly valued.
 
 ## License
 
