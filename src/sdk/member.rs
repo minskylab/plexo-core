@@ -1,18 +1,17 @@
 use std::str::FromStr;
 
-use async_graphql::{dataloader::DataLoader, ComplexObject, Context, Enum, SimpleObject};
+use async_graphql::{dataloader::DataLoader, ComplexObject, Context, Enum, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
-    auth::core::PlexoAuthToken,
+    graphql::auth::extract_context,
     sdk::{
         project::Project,
         task::{Task, TaskPriority, TaskStatus},
         team::Team,
         utilities::DateTimeBridge,
     },
-    system::core::Engine,
 };
 
 use super::loaders::{ProjectLoader, TaskLoader, TeamLoader};
@@ -37,16 +36,15 @@ pub struct Member {
 
 #[ComplexObject]
 impl Member {
-    pub async fn owned_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn owned_tasks(&self, ctx: &Context<'_>) -> Result<Vec<Task>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE owner_id = $1"#, &self.id)
             .fetch_all(&*plexo_engine.pool)
             .await
             .unwrap();
-        tasks
+
+        Ok(tasks
             .iter()
             .map(|r| Task {
                 id: r.id,
@@ -63,19 +61,18 @@ impl Member {
                 count: r.count,
                 parent_id: r.parent_id,
             })
-            .collect()
+            .collect())
     }
 
-    pub async fn leading_tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn leading_tasks(&self, ctx: &Context<'_>) -> Result<Vec<Task>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let tasks = sqlx::query!(r#"SELECT * FROM tasks WHERE lead_id = $1"#, &self.id)
             .fetch_all(&*plexo_engine.pool)
             .await
             .unwrap();
-        tasks
+
+        Ok(tasks
             .iter()
             .map(|r| Task {
                 id: r.id,
@@ -92,13 +89,11 @@ impl Member {
                 count: r.count,
                 parent_id: r.parent_id,
             })
-            .collect()
+            .collect())
     }
 
-    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn tasks(&self, ctx: &Context<'_>) -> Result<Vec<Task>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
 
@@ -123,19 +118,18 @@ impl Member {
             .map(|id| tasks_map.get(&id).unwrap().clone())
             .collect();
 
-        tasks.clone()
+        Ok(tasks.clone())
     }
 
-    pub async fn owned_projects(&self, ctx: &Context<'_>) -> Vec<Project> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn owned_projects(&self, ctx: &Context<'_>) -> Result<Vec<Project>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let projects = sqlx::query!(r#"SELECT * FROM projects WHERE owner_id = $1"#, &self.id)
             .fetch_all(&*plexo_engine.pool)
             .await
             .unwrap();
-        projects
+
+        Ok(projects
             .iter()
             .map(|r| Project {
                 id: r.id,
@@ -149,13 +143,11 @@ impl Member {
                 start_date: r.start_date.map(DateTimeBridge::from_offset_date_time),
                 due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
             })
-            .collect()
+            .collect())
     }
 
-    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<Project>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
 
@@ -173,22 +165,20 @@ impl Member {
         .map(|id| id.project_id)
         .collect();
 
-        let projects_map = loader.load_many(ids.clone()).await.unwrap();
+        let projects_map = loader.load_many(ids.clone()).await?;
 
         let projects: &Vec<Project> = &ids
             .into_iter()
             .map(|id| projects_map.get(&id).unwrap().clone())
             .collect();
 
-        projects.clone()
+        Ok(projects.clone())
     }
 
-    pub async fn teams(&self, ctx: &Context<'_>) -> Option<Vec<Team>> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn teams(&self, ctx: &Context<'_>) -> Result<Vec<Team>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
-        let loader = ctx.data::<DataLoader<TeamLoader>>().unwrap();
+        let loader = ctx.data::<DataLoader<TeamLoader>>()?;
 
         let ids: Vec<Uuid> = sqlx::query!(
             r#"
@@ -198,20 +188,19 @@ impl Member {
             &self.id
         )
         .fetch_all(&*plexo_engine.pool)
-        .await
-        .unwrap()
+        .await?
         .into_iter()
         .map(|id| id.team_id)
         .collect();
 
-        let teams_map = loader.load_many(ids.clone()).await.unwrap();
+        let teams_map = loader.load_many(ids.clone()).await?;
 
         let teams: &Vec<Team> = &ids
             .into_iter()
             .map(|id| teams_map.get(&id).unwrap().clone())
             .collect();
 
-        Some(teams.clone())
+        Ok(teams.clone())
     }
 }
 #[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]

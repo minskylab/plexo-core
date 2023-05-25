@@ -129,14 +129,6 @@ impl Endpoint for StaticServer {
 
         let path = req.uri().path();
 
-        if path.is_empty() || path == "/" {
-            return Ok(Response::builder()
-                .status(StatusCode::MOVED_PERMANENTLY)
-                .header(LOCATION, "/tasks")
-                .header(CACHE_CONTROL, "no-cache")
-                .body(Body::empty()));
-        }
-
         if !path.ends_with("login") {
             let unauthorized_response = Ok(Response::builder()
                 .status(StatusCode::MOVED_PERMANENTLY)
@@ -158,6 +150,14 @@ impl Endpoint for StaticServer {
                 };
         }
 
+        if path.is_empty() || path == "/" {
+            return Ok(Response::builder()
+                .status(StatusCode::MOVED_PERMANENTLY)
+                .header(LOCATION, "/tasks")
+                .header(CACHE_CONTROL, "no-cache")
+                .body(Body::empty()));
+        }
+
         let path = req
             .uri()
             .path()
@@ -169,6 +169,7 @@ impl Endpoint for StaticServer {
             .map_err(|_| StaticFileError::InvalidPath)?;
 
         let mut file_path = self.path.clone();
+
         for p in Path::new(&*path) {
             if p == OsStr::new(".") {
                 continue;
@@ -246,6 +247,7 @@ impl Endpoint for StaticServer {
                 }
 
                 let html = template.render();
+
                 Ok(Response::builder()
                     .header(CONTENT_TYPE, mime::TEXT_HTML_UTF_8.as_ref())
                     .header(CACHE_CONTROL, "no-cache")

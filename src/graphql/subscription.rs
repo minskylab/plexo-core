@@ -17,7 +17,6 @@ pub struct SubscriptionRoot;
 impl SubscriptionRoot {
     async fn tasks(&self, ctx: &Context<'_>) -> impl Stream<Item = Task> {
         let _auth_token = ctx.data::<String>().unwrap();
-        // println!("token: {}", auth_token);
 
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Task {
@@ -68,7 +67,6 @@ impl SubscriptionRoot {
 
     async fn projects(&self, ctx: &Context<'_>) -> impl Stream<Item = Project> {
         let _auth_token = ctx.data::<String>().unwrap();
-        // println!("token: {}", auth_token);
 
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Project {
@@ -87,7 +85,6 @@ impl SubscriptionRoot {
 
     async fn teams(&self, ctx: &Context<'_>) -> impl Stream<Item = Team> {
         let _auth_token = ctx.data::<String>().unwrap();
-        // println!("token: {}", auth_token);
 
         tokio_stream::wrappers::IntervalStream::new(tokio::time::interval(Duration::from_secs(1)))
             .map(|_| Team {
