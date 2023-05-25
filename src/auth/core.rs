@@ -5,7 +5,7 @@ use poem::web::cookie::{Cookie, SameSite};
 use poem::web::{Data, Query, Redirect};
 use poem::{handler, Body, IntoResponse, Response};
 use reqwest::header::{CACHE_CONTROL, EXPIRES, LOCATION, PRAGMA, SET_COOKIE};
-use reqwest::{header, StatusCode};
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
