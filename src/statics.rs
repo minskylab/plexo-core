@@ -131,12 +131,14 @@ impl Endpoint for StaticServer {
 
         if !path.ends_with("login") {
             let unauthorized_response = Ok(Response::builder()
-                .status(StatusCode::MOVED_PERMANENTLY)
+                .status(StatusCode::TEMPORARY_REDIRECT)
                 .header(LOCATION, "/login")
                 .header(CACHE_CONTROL, "no-cache")
                 .body(Body::empty()));
 
-            let Some(auth_token) =  req.header("Cookie").or(req.header("Set-Cookie"))
+            let Some(auth_token) =  req
+                .header("Cookie")
+                .or(req.header("Set-Cookie"))
                 .and_then(get_token_from_raw_cookie) else {
                     return unauthorized_response;
                 };
@@ -150,9 +152,24 @@ impl Endpoint for StaticServer {
                 };
         }
 
+        if path.ends_with("/login") {
+            let auth_token = req
+                .header("Cookie")
+                .or(req.header("Set-Cookie"))
+                .and_then(get_token_from_raw_cookie);
+
+            if auth_token.is_some() {
+                return Ok(Response::builder()
+                    .status(StatusCode::TEMPORARY_REDIRECT)
+                    .header(LOCATION, "/tasks")
+                    .header(CACHE_CONTROL, "no-cache")
+                    .body(Body::empty()));
+            }
+        }
+
         if path.is_empty() || path == "/" {
             return Ok(Response::builder()
-                .status(StatusCode::MOVED_PERMANENTLY)
+                .status(StatusCode::PERMANENT_REDIRECT)
                 .header(LOCATION, "/tasks")
                 .header(CACHE_CONTROL, "no-cache")
                 .body(Body::empty()));
