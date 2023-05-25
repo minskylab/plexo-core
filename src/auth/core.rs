@@ -4,7 +4,7 @@ use oauth2::{AuthorizationCode, CsrfToken};
 use poem::web::cookie::{Cookie, SameSite};
 use poem::web::{Data, Query, Redirect};
 use poem::{handler, Body, IntoResponse, Response};
-use reqwest::header::{CACHE_CONTROL, LOCATION, SET_COOKIE};
+use reqwest::header::{CACHE_CONTROL, EXPIRES, LOCATION, PRAGMA, SET_COOKIE};
 use reqwest::{header, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -135,7 +135,9 @@ pub async fn github_callback_handler(
     Response::builder()
         .status(StatusCode::FOUND)
         .header(LOCATION, "/")
-        .header(CACHE_CONTROL, "public, max-age=0, must-revalidate")
+        .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+        .header(PRAGMA, "no-cache")
+        .header(EXPIRES, "0")
         .header(SET_COOKIE, session_token_cookie.to_string())
         .body(Body::empty())
 }
@@ -202,7 +204,9 @@ pub fn logout() -> impl IntoResponse {
 
     Redirect::moved_permanent("/")
         .with_header("Set-Cookie", session_token_cookie.to_string())
-        .with_header(header::CACHE_CONTROL, "no-cache")
+        .with_header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+        .with_header(PRAGMA, "no-cache")
+        .with_header(EXPIRES, "0")
         .into_response()
 }
 

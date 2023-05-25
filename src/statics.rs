@@ -3,7 +3,7 @@ use poem::{
     Request, Response, Result,
 };
 use reqwest::{
-    header::{CACHE_CONTROL, CONTENT_TYPE, LOCATION},
+    header::{CACHE_CONTROL, CONTENT_TYPE, EXPIRES, LOCATION, PRAGMA},
     Method, StatusCode,
 };
 use std::{
@@ -133,7 +133,9 @@ impl Endpoint for StaticServer {
             let unauthorized_response = Ok(Response::builder()
                 .status(StatusCode::PERMANENT_REDIRECT)
                 .header(LOCATION, "/login")
-                .header(CACHE_CONTROL, "no-cache")
+                .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                .header(PRAGMA, "no-cache")
+                .header(EXPIRES, "0")
                 .body(Body::empty()));
 
             let Some(auth_token) =  req
@@ -162,16 +164,20 @@ impl Endpoint for StaticServer {
                 return Ok(Response::builder()
                     .status(StatusCode::FOUND)
                     .header(LOCATION, "/tasks")
-                    .header(CACHE_CONTROL, "no-cache")
+                    .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                    .header(PRAGMA, "no-cache")
+                    .header(EXPIRES, "0")
                     .body(Body::empty()));
             }
         }
 
         if path.is_empty() || path == "/" {
             return Ok(Response::builder()
-                .status(StatusCode::PERMANENT_REDIRECT)
+                .status(StatusCode::FOUND)
                 .header(LOCATION, "/tasks")
-                .header(CACHE_CONTROL, "no-cache")
+                .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                .header(PRAGMA, "no-cache")
+                .header(EXPIRES, "0")
                 .body(Body::empty()));
         }
 
@@ -226,7 +232,9 @@ impl Endpoint for StaticServer {
                 return Ok(Response::builder()
                     .status(StatusCode::FOUND)
                     .header(LOCATION, redirect_to)
-                    .header(CACHE_CONTROL, "no-cache")
+                    .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                    .header(PRAGMA, "no-cache")
+                    .header(EXPIRES, "0")
                     .finish());
             }
 
@@ -267,7 +275,9 @@ impl Endpoint for StaticServer {
 
                 Ok(Response::builder()
                     .header(CONTENT_TYPE, mime::TEXT_HTML_UTF_8.as_ref())
-                    .header(CACHE_CONTROL, "no-cache")
+                    .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                    .header(PRAGMA, "no-cache")
+                    .header(EXPIRES, "0")
                     .body(Body::from_string(html)))
             } else {
                 Err(StaticFileError::NotFound.into())
