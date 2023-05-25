@@ -131,7 +131,7 @@ impl Endpoint for StaticServer {
 
         if !path.ends_with("login") {
             let unauthorized_response = Ok(Response::builder()
-                .status(StatusCode::PERMANENT_REDIRECT)
+                .status(StatusCode::FOUND)
                 .header(LOCATION, "/login")
                 .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
                 .header(PRAGMA, "no-cache")
