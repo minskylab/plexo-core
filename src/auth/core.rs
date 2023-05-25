@@ -4,7 +4,7 @@ use oauth2::{AuthorizationCode, CsrfToken};
 use poem::web::cookie::{Cookie, SameSite};
 use poem::web::{Data, Query, Redirect};
 use poem::{handler, Body, IntoResponse, Response};
-use reqwest::header::CACHE_CONTROL;
+use reqwest::header::{CACHE_CONTROL, LOCATION, SET_COOKIE};
 use reqwest::{header, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -132,10 +132,12 @@ pub async fn github_callback_handler(
     session_token_cookie.set_expires(Utc::now() + Duration::days(7));
     session_token_cookie.set_path("/");
 
-    Redirect::moved_permanent("/")
-        .with_header("Set-Cookie", session_token_cookie.to_string())
-        .with_header(CACHE_CONTROL, "public, max-age=0, must-revalidate")
-        .into_response()
+    Response::builder()
+        .status(StatusCode::FOUND)
+        .header(LOCATION, "/")
+        .header(CACHE_CONTROL, "public, max-age=0, must-revalidate")
+        .header(SET_COOKIE, session_token_cookie.to_string())
+        .body(Body::empty())
 }
 
 // #[handler]
