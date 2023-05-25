@@ -89,6 +89,7 @@ impl AutoSuggestionsEngine {
             r#"
             SELECT *
             FROM tasks
+            LIMIT 100
             "#,
         )
         .fetch_all(&*self.pool)

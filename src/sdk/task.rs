@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
+use async_graphql::{ComplexObject, Context, Enum, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 
 use async_graphql::dataloader::DataLoader;
@@ -9,7 +9,8 @@ use uuid::Uuid;
 use super::{labels::Label, member::Member, project::Project};
 
 use super::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader};
-use crate::{auth::core::PlexoAuthToken, system::core::Engine};
+use crate::graphql::auth::extract_context;
+
 #[derive(SimpleObject, Clone, Debug)]
 #[graphql(complex)]
 pub struct Task {
@@ -37,37 +38,41 @@ pub struct Task {
 
 #[ComplexObject]
 impl Task {
-    pub async fn owner(&self, ctx: &Context<'_>) -> Option<Member> {
+    pub async fn owner(&self, ctx: &Context<'_>) -> Result<Option<Member>> {
+        let (_plexo_engine, _member_id) = extract_context(ctx)?;
+
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
         //match to see is project_id is none
-        loader.load_one(self.owner_id).await.unwrap()
+        Ok(loader.load_one(self.owner_id).await.unwrap())
     }
 
-    pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
+    pub async fn leader(&self, ctx: &Context<'_>) -> Result<Option<Member>> {
+        let (_plexo_engine, _member_id) = extract_context(ctx)?;
+
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
         //match to see is project_id is none
-        match self.lead_id {
+        Ok(match self.lead_id {
             Some(lead_id) => loader.load_one(lead_id).await.unwrap(),
             None => None,
-        }
+        })
     }
 
-    pub async fn project(&self, ctx: &Context<'_>) -> Option<Project> {
+    pub async fn project(&self, ctx: &Context<'_>) -> Result<Option<Project>> {
+        let (_plexo_engine, _member_id) = extract_context(ctx)?;
+
         let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
 
         //match to see is project_id is none
-        match self.project_id {
+        Ok(match self.project_id {
             Some(project_id) => loader.load_one(project_id).await.unwrap(),
             None => None,
-        }
+        })
     }
 
-    pub async fn assignees(&self, ctx: &Context<'_>) -> Vec<Member> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn assignees(&self, ctx: &Context<'_>) -> Result<Vec<Member>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
@@ -92,13 +97,11 @@ impl Task {
             .map(|id| members_map.get(&id).unwrap().clone())
             .collect();
 
-        members.clone()
+        Ok(members.clone())
     }
 
-    pub async fn labels(&self, ctx: &Context<'_>) -> Vec<Label> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn labels(&self, ctx: &Context<'_>) -> Result<Vec<Label>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<LabelLoader>>().unwrap();
 
@@ -123,19 +126,23 @@ impl Task {
             .map(|id| labels_map.get(&id).unwrap().clone())
             .collect();
 
-        labels.clone()
+        Ok(labels.clone())
     }
 
-    pub async fn parent(&self, ctx: &Context<'_>) -> Option<Task> {
+    pub async fn parent(&self, ctx: &Context<'_>) -> Result<Option<Task>> {
+        let (_plexo_engine, _member_id) = extract_context(ctx)?;
+
         let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
 
-        match self.parent_id {
+        Ok(match self.parent_id {
             Some(parent_id) => loader.load_one(parent_id).await.unwrap(),
             None => None,
-        }
+        })
     }
 
-    pub async fn subtasks(&self, ctx: &Context<'_>) -> Vec<Task> {
+    pub async fn subtasks(&self, ctx: &Context<'_>) -> Result<Vec<Task>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
+
         let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
 
         let ids: Vec<Uuid> = sqlx::query!(
@@ -145,20 +152,20 @@ impl Task {
             "#,
             &self.id
         )
-        .fetch_all(&*ctx.data::<Engine>().unwrap().pool)
+        .fetch_all(&*plexo_engine.pool)
         .await
         .unwrap()
         .into_iter()
         .map(|t| t.id)
         .collect();
 
-        loader
+        Ok(loader
             .load_many(ids)
             .await
             .unwrap()
             .values()
             .map(|x| x.to_owned())
-            .collect()
+            .collect())
     }
 }
 

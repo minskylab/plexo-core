@@ -1,4 +1,4 @@
-use async_graphql::{ComplexObject, Context, SimpleObject};
+use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
@@ -6,14 +6,13 @@ use async_graphql::dataloader::DataLoader;
 
 use super::loaders::{MemberLoader, TeamLoader};
 use crate::{
-    auth::core::PlexoAuthToken,
+    graphql::auth::extract_context,
     sdk::{
         member::Member,
         task::{Task, TaskPriority, TaskStatus},
         team::Team,
         utilities::DateTimeBridge,
     },
-    system::core::Engine,
 };
 
 #[derive(SimpleObject, Clone)]
@@ -36,18 +35,16 @@ pub struct Project {
 
 #[ComplexObject]
 impl Project {
-    pub async fn owner(&self, ctx: &Context<'_>) -> Option<Member> {
+    pub async fn owner(&self, ctx: &Context<'_>) -> Result<Option<Member>> {
+        let (_plexo_engine, _member_id) = extract_context(ctx)?;
+
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
-        //match to see is project_id is none
-
-        loader.load_one(self.owner_id).await.unwrap()
+        Ok(loader.load_one(self.owner_id).await.unwrap())
     }
 
-    pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn members(&self, ctx: &Context<'_>) -> Result<Vec<Member>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
@@ -72,14 +69,12 @@ impl Project {
             .map(|id| members_map.get(&id).unwrap().clone())
             .collect();
 
-        members.clone()
+        Ok(members.clone())
     }
 
-    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
+    pub async fn tasks(&self, ctx: &Context<'_>) -> Result<Vec<Task>> {
         //este caso específico necesita revisión
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let tasks = sqlx::query!(
             r#"
@@ -91,7 +86,7 @@ impl Project {
         .await
         .unwrap();
 
-        tasks
+        Ok(tasks
             .iter()
             .map(|r| Task {
                 id: r.id,
@@ -108,13 +103,11 @@ impl Project {
                 count: r.count,
                 parent_id: r.parent_id,
             })
-            .collect()
+            .collect())
     }
 
-    pub async fn teams(&self, ctx: &Context<'_>) -> Vec<Team> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn teams(&self, ctx: &Context<'_>) -> Result<Vec<Team>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<TeamLoader>>().unwrap();
 
@@ -139,7 +132,7 @@ impl Project {
             .map(|id| teams_map.get(&id).unwrap().clone())
             .collect();
 
-        teams.clone()
+        Ok(teams.clone())
     }
 
     pub async fn leader(&self, ctx: &Context<'_>) -> Option<Member> {
