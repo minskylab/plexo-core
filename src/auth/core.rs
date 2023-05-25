@@ -128,7 +128,7 @@ pub async fn github_callback_handler(
     session_token_cookie.set_value_str(session_token);
     session_token_cookie.set_http_only(true);
     session_token_cookie.set_secure(true);
-    session_token_cookie.set_same_site(SameSite::Strict);
+    session_token_cookie.set_same_site(SameSite::Lax);
     session_token_cookie.set_expires(Utc::now() + Duration::days(7));
     session_token_cookie.set_path("/");
 
