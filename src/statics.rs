@@ -131,7 +131,7 @@ impl Endpoint for StaticServer {
 
         if !path.ends_with("login") {
             let unauthorized_response = Ok(Response::builder()
-                .status(StatusCode::TEMPORARY_REDIRECT)
+                .status(StatusCode::PERMANENT_REDIRECT)
                 .header(LOCATION, "/login")
                 .header(CACHE_CONTROL, "no-cache")
                 .body(Body::empty()));
@@ -160,7 +160,7 @@ impl Endpoint for StaticServer {
 
             if auth_token.is_some() {
                 return Ok(Response::builder()
-                    .status(StatusCode::TEMPORARY_REDIRECT)
+                    .status(StatusCode::FOUND)
                     .header(LOCATION, "/tasks")
                     .header(CACHE_CONTROL, "no-cache")
                     .body(Body::empty()));
