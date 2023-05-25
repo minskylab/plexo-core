@@ -1,7 +1,7 @@
 [package]
 edition = '2021'
 name = 'plexo'
-version = '0.2.6'
+version = '0.2.7'
 
 [dependencies]
 async-graphql = { version = "5.0.8", features = ["decimal", "chrono", "dataloader", "uuid"] }
@@ -26,14 +26,8 @@ mime = "0.3.17"
 async-openai = "0.10.3"
 cookie = "0.17.0"
 thiserror = "1.0.40"
+uuid = { version = "1.3.3", features = ["v4", "fast-rng", "macro-diagnostics"] }
 
-[dependencies.uuid]
-version = "1.3.3"
-features = [
-    "v4",                # Lets you generate random UUIDs
-    "fast-rng",          # Use a faster (but still sufficiently random) RNG
-    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
-]
 
 [workspace]
 members = []
