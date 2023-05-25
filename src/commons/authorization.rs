@@ -19,7 +19,7 @@ pub fn get_token_from_raw_cookie(raw_cookie: &str) -> Option<PlexoAuthToken> {
     for cookie in Cookie::split_parse(raw_cookie) {
         let Ok(cookie) = cookie else  {
             println!("Error parsing cookie");
-            return None;
+            continue;
         };
 
         if cookie.name() == COOKIE_SESSION_TOKEN_NAME {
