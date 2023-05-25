@@ -3,7 +3,7 @@ use poem::{
     Request, Response, Result,
 };
 use reqwest::{
-    header::{self, LOCATION},
+    header::{CACHE_CONTROL, CONTENT_TYPE, LOCATION},
     Method, StatusCode,
 };
 use std::{
@@ -127,16 +127,26 @@ impl Endpoint for StaticServer {
             return Err(StaticFileError::MethodNotAllowed(req.method().clone()).into());
         }
 
-        if !req.uri().path().ends_with("login") {
-            let Some(auth_token) = req
-                .header("Cookie")
-                .and_then(get_token_from_raw_cookie)
-                 else {
-                    return Ok(Response::builder()
-                        .status(StatusCode::MOVED_PERMANENTLY)
-                        .header(LOCATION, "/login")
-                        .header(header::CACHE_CONTROL, "no-cache")
-                        .body(Body::empty()));
+        let path = req.uri().path();
+
+        if path.is_empty() || path == "/" {
+            return Ok(Response::builder()
+                .status(StatusCode::MOVED_PERMANENTLY)
+                .header(LOCATION, "/tasks")
+                .header(CACHE_CONTROL, "no-cache")
+                .body(Body::empty()));
+        }
+
+        if !path.ends_with("login") {
+            let unauthorized_response = Ok(Response::builder()
+                .status(StatusCode::MOVED_PERMANENTLY)
+                .header(LOCATION, "/login")
+                .header(CACHE_CONTROL, "no-cache")
+                .body(Body::empty()));
+
+            let Some(auth_token) =  req.header("Cookie").or(req.header("Set-Cookie"))
+                .and_then(get_token_from_raw_cookie) else {
+                    return unauthorized_response;
                 };
 
             let Ok(_member_id) = self
@@ -144,11 +154,7 @@ impl Endpoint for StaticServer {
                 .auth
                 .extract_claims(&auth_token)
                 .map(|token_claims| token_claims.member_id()) else {
-                    return Ok(Response::builder()
-                        .status(StatusCode::MOVED_PERMANENTLY)
-                        .header(LOCATION, "/login")
-                        .header(header::CACHE_CONTROL, "no-cache")
-                        .body(Body::empty()));
+                    return unauthorized_response;
                 };
         }
 
@@ -202,7 +208,7 @@ impl Endpoint for StaticServer {
                 return Ok(Response::builder()
                     .status(StatusCode::FOUND)
                     .header(LOCATION, redirect_to)
-                    .header(header::CACHE_CONTROL, "no-cache")
+                    .header(CACHE_CONTROL, "no-cache")
                     .finish());
             }
 
@@ -241,8 +247,8 @@ impl Endpoint for StaticServer {
 
                 let html = template.render();
                 Ok(Response::builder()
-                    .header(header::CONTENT_TYPE, mime::TEXT_HTML_UTF_8.as_ref())
-                    .header(header::CACHE_CONTROL, "no-cache")
+                    .header(CONTENT_TYPE, mime::TEXT_HTML_UTF_8.as_ref())
+                    .header(CACHE_CONTROL, "no-cache")
                     .body(Body::from_string(html)))
             } else {
                 Err(StaticFileError::NotFound.into())
