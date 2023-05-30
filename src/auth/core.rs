@@ -2,15 +2,14 @@ use async_graphql::Error;
 use chrono::{Duration, Utc};
 use oauth2::{AuthorizationCode, CsrfToken};
 use poem::web::cookie::{Cookie, SameSite};
-use poem::web::{Data, Query, Redirect};
+use poem::web::{Data, Json, Query, Redirect};
 use poem::{handler, Body, IntoResponse, Response};
 use reqwest::header::{CACHE_CONTROL, EXPIRES, LOCATION, PRAGMA, SET_COOKIE};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use crate::system::core::Engine;
-use crate::system::members::{NewMemberPayload, NewMemberPayloadAuthKind};
 
 #[derive(Debug, Deserialize)]
 pub struct GithubCallbackParams {
@@ -67,8 +66,6 @@ pub async fn github_callback_handler(
         .await
         .unwrap();
 
-    // println!("github_user_data: {:#?}", github_user_data);
-
     let github_id: String = github_user_data
         .get("id")
         .unwrap()
@@ -101,17 +98,10 @@ pub async fn github_callback_handler(
         Some(member) => member,
         None => {
             plexo_engine
-                .create_member(&NewMemberPayload::new(
-                    NewMemberPayloadAuthKind::Github,
-                    github_id,
-                    user_email,
-                    user_name,
-                ))
+                .create_member_from_github(user_email, user_name, github_id)
                 .await
         }
     };
-
-    println!("member: {:?}", member);
 
     let Ok(session_token) = plexo_engine
         .auth
@@ -142,55 +132,6 @@ pub async fn github_callback_handler(
         .body(Body::empty())
 }
 
-// #[handler]
-// pub async fn refresh_token_handler(
-//     plexo_engine: Data<&Engine>,
-//     req: &Request,
-// ) -> impl IntoResponse {
-//     let unauthorized_response = Response::builder()
-//         .status(StatusCode::UNAUTHORIZED)
-//         .header("Content-Type", "application/json")
-//         .body(Body::from_json(&Error::new("Unauthorized")).unwrap());
-
-//     let Some(token) = req.header("Authorization") else {
-//         return unauthorized_response;
-//     };
-
-//     let Some(access_token) = token.strip_prefix("Bearer ") else {
-//         return unauthorized_response;
-//     };
-
-//     let Ok(cookie) = Cookie::parse(req.header("Cookie").unwrap()) else {
-//         return unauthorized_response;
-//     };
-
-//     let refresh_token = cookie.value_str();
-
-//     let Ok(access_token) = plexo_engine
-//         .0
-//         .auth
-//         .refresh_token(access_token, refresh_token)
-//         .await
-//          else {
-//             return Response::builder()
-//                 .status(StatusCode::UNAUTHORIZED)
-//                 .header("Content-Type", "application/json")
-//                 .body(Body::from_json(&Error::new("Unauthorized")).unwrap());
-//         };
-
-//     Response::builder()
-//         .status(StatusCode::OK)
-//         .header("Content-Type", "application/json")
-//         .body(
-//             Body::from_json(AuthenticationResponse {
-//                 access_token,
-//                 token_type: None,
-//                 scope: None,
-//             })
-//             .unwrap(),
-//         )
-// }
-
 #[handler]
 pub fn logout() -> impl IntoResponse {
     let mut session_token_cookie = Cookie::named(COOKIE_SESSION_TOKEN_NAME);
@@ -210,7 +151,135 @@ pub fn logout() -> impl IntoResponse {
         .into_response()
 }
 
+#[derive(Debug, Deserialize)]
+pub struct EmailLoginParams {
+    pub email: String,
+    pub password: String,
+}
+
 #[handler]
-pub fn email_basic_login_handler() -> impl IntoResponse {
-    "Working on it..."
+pub async fn email_basic_login_handler(
+    plexo_engine: Data<&Engine>,
+    params: Json<EmailLoginParams>,
+) -> impl IntoResponse {
+    let Some(member) = plexo_engine.get_member_by_email(params.email.clone()).await else {
+        return Response::builder()
+        .status(StatusCode::UNAUTHORIZED)
+        .header("Content-Type", "application/json")
+        .body(Body::from_json(json!({
+            "error": "Member not found"
+        })).unwrap());
+    };
+
+    let Some(password_hash) = member.password_hash.clone() else {
+        return Response::builder()
+            .status(StatusCode::UNAUTHORIZED)
+            .header("Content-Type", "application/json")
+            .body(Body::from_json(json!({
+                "error": "Invalid password"
+            })).unwrap());
+    };
+
+    if !plexo_engine
+        .auth
+        .validate_password(params.password.as_str(), password_hash.as_str())
+    {
+        return Response::builder()
+            .status(StatusCode::UNAUTHORIZED)
+            .header("Content-Type", "application/json")
+            .body(
+                Body::from_json(json!({
+                    "error": "Invalid password"
+                }))
+                .unwrap(),
+            );
+    };
+
+    let Ok(session_token) = plexo_engine
+        .auth
+        .jwt_engine
+        .create_session_token(&member) else {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header("Content-Type", "application/json")
+            .body(Body::from_json(&Error::new("Internal Server Error")).unwrap());
+        };
+
+    let mut session_token_cookie = Cookie::named(COOKIE_SESSION_TOKEN_NAME);
+
+    session_token_cookie.set_value_str(session_token.clone());
+    session_token_cookie.set_http_only(true);
+    session_token_cookie.set_secure(true);
+    session_token_cookie.set_same_site(SameSite::Lax);
+    session_token_cookie.set_expires(Utc::now() + Duration::days(7));
+    session_token_cookie.set_path("/");
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(SET_COOKIE, session_token_cookie.to_string())
+        .header("Content-Type", "application/json")
+        .body(Body::from_json(json!({ "access_token": session_token })).unwrap())
+}
+
+#[derive(Debug, Deserialize)]
+pub struct EmailRegisterParams {
+    pub email: String,
+    pub name: String,
+    pub password: String,
+}
+
+#[handler]
+pub async fn email_basic_register_handler(
+    plexo_engine: Data<&Engine>,
+    params: Json<EmailRegisterParams>,
+) -> impl IntoResponse {
+    if (plexo_engine.get_member_by_email(params.email.clone()).await).is_some() {
+        return Response::builder()
+            .status(StatusCode::UNAUTHORIZED)
+            .header("Content-Type", "application/json")
+            .body(
+                Body::from_json(json!({
+                    "error": "Member already exists"
+                }))
+                .unwrap(),
+            );
+    };
+
+    let password_hash = plexo_engine.auth.hash_password(params.password.as_str());
+
+    let Some(member) = plexo_engine.create_member_from_email(
+        params.email.clone(),
+        params.name.clone(),
+        password_hash,
+    ).await else {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header("Content-Type", "application/json")
+            .body(Body::from_json(&Error::new("Internal Server Error")).unwrap());
+        };
+
+    let Ok(session_token) = plexo_engine
+        .auth
+        .jwt_engine
+        .create_session_token(&member) else {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header("Content-Type", "application/json")
+            .body(Body::from_json(&Error::new("Internal Server Error")).unwrap());
+        };
+
+    let mut session_token_cookie = Cookie::named(COOKIE_SESSION_TOKEN_NAME);
+
+    session_token_cookie.set_value_str(session_token.clone());
+    session_token_cookie.set_http_only(true);
+    session_token_cookie.set_secure(true);
+    session_token_cookie.set_same_site(SameSite::Lax);
+    session_token_cookie.set_expires(Utc::now() + Duration::days(7));
+    session_token_cookie.set_path("/");
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(SET_COOKIE, session_token_cookie.to_string())
+        .header("Content-Type", "application/json")
+        .body(Body::from_json(json!({ "access_token": session_token })).unwrap())
 }

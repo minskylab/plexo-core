@@ -32,6 +32,9 @@ pub struct Member {
     pub photo_url: Option<String>,
 
     pub role: MemberRole,
+
+    #[graphql(skip)]
+    pub password_hash: Option<String>,
 }
 
 #[ComplexObject]

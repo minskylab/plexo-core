@@ -179,6 +179,7 @@ impl Loader<Uuid> for MemberLoader {
                         google_id: member.google_id.clone(),
                         photo_url: member.photo_url.clone(),
                         role: MemberRole::from_optional_str(&member.role),
+                        password_hash: None,
                     },
                 )
             })
