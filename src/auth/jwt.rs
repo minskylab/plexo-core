@@ -33,39 +33,6 @@ impl JWTEngine {
         }
     }
 
-    // pub fn dispatch_jwt_access_refresh_pair(
-    //     &self,
-    //     member: &Member,
-    // ) -> Result<(String, String), Error> {
-    //     let access_claims = PlexoAuthTokenClaims {
-    //         iss: "Plexo".to_string(),
-    //         aud: "access.plexo.app".to_string(),
-    //         sub: member.id.to_string(),
-    //         exp: (Utc::now() + chrono::Duration::minutes(10)).timestamp() as usize,
-    //     };
-
-    //     let refresh_claims = PlexoAuthTokenClaims {
-    //         iss: "Plexo".to_string(),
-    //         aud: "refresh.plexo.app".to_string(),
-    //         sub: member.id.to_string(),
-    //         exp: (Utc::now() + chrono::Duration::days(7)).timestamp() as usize,
-    //     };
-
-    //     let access_token = encode(
-    //         &Header::default(),
-    //         &access_claims,
-    //         &EncodingKey::from_secret(self.access_token_secret.as_ref()),
-    //     )?;
-
-    //     let refresh_token = encode(
-    //         &Header::default(),
-    //         &refresh_claims,
-    //         &EncodingKey::from_secret(self.refresh_token_secret.as_ref()),
-    //     )?;
-
-    //     Ok((access_token, refresh_token))
-    // }
-
     pub fn create_session_token(&self, member: &Member) -> Result<String, Error> {
         let claims = PlexoAuthTokenClaims {
             iss: "Plexo".to_string(),

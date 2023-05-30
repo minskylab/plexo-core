@@ -1,5 +1,9 @@
 use std::{env, error::Error};
 
+use argon2::{
+    password_hash::{rand_core::OsRng, SaltString},
+    Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
+};
 use oauth2::{
     basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
     ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
@@ -92,21 +96,22 @@ impl AuthEngine {
             .decode_session_token(plexo_auth_token.0.as_str())?)
     }
 
-    // pub async fn extract_claims_from_access_token(
-    //     &self,
-    //     access_token: &PlexoAuthToken,
-    // ) -> PlexoAuthTokenClaims {
-    //     self.jwt_engine
-    //         .decode_access_token(access_token.0.as_str())
-    //         .unwrap()
-    // }
+    pub fn validate_password(&self, password: &str, password_hash: &str) -> bool {
+        let Ok(parsed_hash) = PasswordHash::new(password_hash) else {
+            return false;
+        };
 
-    // pub async fn refresh_token(
-    //     &self,
-    //     access_token: &str,
-    //     refresh_token: &str,
-    // ) -> Result<String, jsonwebtoken::errors::Error> {
-    //     self.jwt_engine
-    //         .refresh_access_token(access_token, refresh_token)
-    // }
+        Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok()
+    }
+
+    pub fn hash_password(&self, password: &str) -> String {
+        let salt = SaltString::generate(&mut OsRng);
+
+        Argon2::default()
+            .hash_password(password.as_bytes(), &salt)
+            .unwrap()
+            .to_string()
+    }
 }

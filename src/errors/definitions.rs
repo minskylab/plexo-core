@@ -6,4 +6,8 @@ pub enum PlexoAppError {
     MissingAuthorizationToken,
     #[error("Invalid authorization token")]
     InvalidAuthorizationToken,
+    #[error("Email already in use")]
+    EmailAlreadyInUse,
+    #[error("Password isn't valid")]
+    InvalidPassword,
 }

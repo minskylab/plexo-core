@@ -143,6 +143,7 @@ impl QueryRoot {
                 google_id: r.google_id.clone(),
                 photo_url: r.photo_url.clone(),
                 role: MemberRole::from_optional_str(&r.role),
+                password_hash: None,
             })
             .collect())
     }
@@ -171,6 +172,7 @@ impl QueryRoot {
             google_id: member.google_id.clone(),
             photo_url: member.photo_url.clone(),
             role: MemberRole::from_optional_str(&member.role),
+            password_hash: None,
         })
     }
 
@@ -198,6 +200,7 @@ impl QueryRoot {
             google_id: member.google_id.clone(),
             photo_url: member.photo_url.clone(),
             role: MemberRole::from_optional_str(&member.role),
+            password_hash: None,
         })
     }
 
@@ -399,6 +402,7 @@ impl QueryRoot {
             google_id: r.google_id.clone(),
             photo_url: r.photo_url.clone(),
             role: MemberRole::from_optional_str(&r.role),
+            password_hash: None,
         })
     }
 }
