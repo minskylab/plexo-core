@@ -9,6 +9,12 @@ jobs:
   build-push-registry:
     name: Build image and push to official docker registry
     runs-on: ubuntu-latest
+    # Permissions to use OIDC token authentication
+    permissions:
+      contents: read
+      id-token: write
+      # Allows pushing to the GitHub Container Registry
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
