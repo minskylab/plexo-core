@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 15.1
+-- Dumped from database version 15.3
 -- Dumped by pg_dump version 15.2
 
 SET statement_timeout = 0;
@@ -19,9 +19,8 @@ SET row_security = off;
 --
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
-
+--cambio
 CREATE SCHEMA IF NOT EXISTS public;
-
 
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
@@ -50,6 +49,30 @@ $$;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: labels; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.labels (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    name text NOT NULL,
+    description text,
+    color character varying
+);
+
+
+--
+-- Name: labels_by_tasks; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.labels_by_tasks (
+    label_id uuid NOT NULL,
+    task_id uuid NOT NULL
+);
+
 
 --
 -- Name: members; Type: TABLE; Schema: public; Owner: -
@@ -100,11 +123,11 @@ CREATE TABLE public.projects (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     name text NOT NULL,
     prefix character varying,
-    owner_id uuid,
+    owner_id uuid NOT NULL,
     description text,
     lead_id uuid,
-    start_date timestamp without time zone,
-    due_date timestamp without time zone
+    start_date timestamp with time zone,
+    due_date timestamp with time zone
 );
 
 
@@ -130,14 +153,15 @@ CREATE TABLE public.tasks (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     title text NOT NULL,
     description text,
-    owner_id uuid,
+    owner_id uuid NOT NULL,
     status character varying,
     priority character varying,
     due_date timestamp with time zone,
     project_id uuid,
     lead_id uuid,
     labels jsonb,
-    count integer NOT NULL
+    count integer NOT NULL,
+    parent_id uuid
 );
 
 
@@ -211,6 +235,30 @@ CREATE TABLE public.teams_by_projects (
 --
 
 ALTER TABLE ONLY public.tasks ALTER COLUMN count SET DEFAULT nextval('public.tasks_count_seq'::regclass);
+
+
+--
+-- Name: labels_by_tasks labels_by_tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.labels_by_tasks
+    ADD CONSTRAINT labels_by_tasks_pkey PRIMARY KEY (label_id, task_id);
+
+
+--
+-- Name: labels labels_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.labels
+    ADD CONSTRAINT labels_name_key UNIQUE (name);
+
+
+--
+-- Name: labels labels_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.labels
+    ADD CONSTRAINT labels_pkey PRIMARY KEY (id);
 
 
 --
@@ -315,6 +363,20 @@ ALTER TABLE ONLY public.teams
 
 ALTER TABLE ONLY public.teams
     ADD CONSTRAINT teams_prefix_key UNIQUE (prefix);
+
+
+--
+-- Name: labels set_public_labels_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_public_labels_updated_at BEFORE UPDATE ON public.labels FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+
+
+--
+-- Name: TRIGGER set_public_labels_updated_at ON labels; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TRIGGER set_public_labels_updated_at ON public.labels IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 
 
 --
@@ -438,6 +500,8 @@ ALTER TABLE ONLY public.tasks
 --
 -- Name: SCHEMA public; Type: ACL; Schema: -; Owner: -
 --
+--cambio
+--GRANT CREATE ON SCHEMA public TO web_access;
 
 
 --
