@@ -1,5 +1,5 @@
-use crate::{auth::auth::PlexoAuthToken, system::core::Engine};
-use async_graphql::{dataloader::DataLoader, ComplexObject, Context, SimpleObject};
+use crate::graphql::auth::extract_context;
+use async_graphql::{dataloader::DataLoader, ComplexObject, Context, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
@@ -20,10 +20,8 @@ pub struct Label {
 
 #[ComplexObject]
 impl Label {
-    pub async fn tasks(&self, ctx: &Context<'_>) -> Vec<Task> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn tasks(&self, ctx: &Context<'_>) -> Result<Vec<Task>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<TaskLoader>>().unwrap();
 
@@ -48,6 +46,6 @@ impl Label {
             .map(|id| tasks_map.get(&id).unwrap().clone())
             .collect();
 
-        tasks.clone()
+        Ok(tasks.clone())
     }
 }

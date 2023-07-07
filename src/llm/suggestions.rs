@@ -84,11 +84,12 @@ impl AutoSuggestionsEngine {
         )
     }
 
-    async fn adquire_tasks_fingerprints(&self) -> Vec<String> {
+    async fn acquire_tasks_fingerprints(&self) -> Vec<String> {
         let tasks = query!(
             r#"
             SELECT *
             FROM tasks
+            LIMIT 100
             "#,
         )
         .fetch_all(&*self.pool)
@@ -110,13 +111,14 @@ impl AutoSuggestionsEngine {
                 lead_id: r.lead_id,
                 owner_id: r.owner_id,
                 count: r.count,
+                parent_id: r.parent_id,
             })
             .map(Self::calculate_task_fingerprint)
             .collect::<Vec<String>>()
     }
 
     pub async fn get_suggestions(&self, proto_task: TaskSuggestion) -> String {
-        let tasks_fingerprints = self.adquire_tasks_fingerprints().await;
+        let tasks_fingerprints = self.acquire_tasks_fingerprints().await;
 
         let user_message = format!(
             "Current Tasks Context: 

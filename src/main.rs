@@ -2,9 +2,9 @@ use async_graphql::{dataloader::DataLoader, Schema};
 use dotenvy::dotenv;
 use plexo::{
     auth::{
-        auth::{
-            email_basic_login_handler, github_callback_handler, github_sign_in_handler,
-            refresh_token_handler,
+        core::{
+            email_basic_login_handler, email_basic_register_handler, github_callback_handler,
+            github_sign_in_handler,
         },
         engine::AuthEngine,
     },
@@ -14,7 +14,7 @@ use plexo::{
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
     sdk::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader, TeamLoader},
-    statics::StaticFilesEndpointHTMLTrimmed,
+    statics::StaticServer,
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
@@ -64,21 +64,23 @@ async fn main() {
     let app = Route::new()
         .nest(
             "/",
-            StaticFilesEndpointHTMLTrimmed::new("plexo-platform/out").index_file("index.html"),
+            StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
         )
         // Non authenticated routes
-        .at("/auth/login", get(email_basic_login_handler))
+        .at("/auth/email/login", post(email_basic_login_handler))
+        .at("/auth/email/register", post(email_basic_register_handler))
+        //
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))
         //
+        .at("/auth/logout", get(github_callback_handler))
+        //
         .at("/playground", get(graphiq_handler))
-        // Authenticated routes
-        .at("/auth/refresh", get(refresh_token_handler))
         .at("/graphql", post(index_handler))
         .at("/graphql/ws", get(ws_switch_handler))
         .with(Cors::new())
         .data(schema)
-        .data(plexo_engine);
+        .data(plexo_engine.clone());
 
     println!("Visit GraphQL Playground at {}/playground", *DOMAIN);
 

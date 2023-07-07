@@ -1,16 +1,24 @@
-use std::env;
+use std::{env, error::Error};
 
+use argon2::{
+    password_hash::{rand_core::OsRng, SaltString},
+    Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
+};
 use oauth2::{
     basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
     ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
 };
+
 use reqwest::Url;
 
-use super::jwt::JWT;
+use super::{
+    core::PlexoAuthToken,
+    jwt::{JWTEngine, PlexoAuthTokenClaims},
+};
 
 #[derive(Clone)]
 pub struct AuthEngine {
-    pub jwt_engine: JWT,
+    pub jwt_engine: JWTEngine,
 
     github_client: BasicClient,
     _google_client: Option<BasicClient>,
@@ -46,7 +54,7 @@ impl AuthEngine {
         let jwt_refresh_token_secret = env::var("JWT_REFRESH_TOKEN_SECRET")
             .expect("Missing the JWT_REFRESH_TOKEN_SECRET environment variable.");
 
-        let jwt_engine = JWT::new(jwt_access_token_secret, jwt_refresh_token_secret);
+        let jwt_engine = JWTEngine::new(jwt_access_token_secret, jwt_refresh_token_secret);
 
         Self {
             jwt_engine,
@@ -60,13 +68,12 @@ impl AuthEngine {
             .authorize_url(CsrfToken::new_random)
             .add_scope(Scope::new("user:email".to_string()))
             .url()
-        // authorize_url.to_string()
     }
 
     pub async fn exchange_github_code(
         &self,
         code: AuthorizationCode,
-        // state: CsrfToken,
+        _state: CsrfToken,
     ) -> Result<String, String> {
         let token_result = self
             .github_client
@@ -80,12 +87,31 @@ impl AuthEngine {
         }
     }
 
-    pub async fn refresh_token(
+    pub fn extract_claims(
         &self,
-        access_token: &str,
-        refresh_token: &str,
-    ) -> Result<String, jsonwebtoken::errors::Error> {
-        self.jwt_engine
-            .refresh_access_token(access_token, refresh_token)
+        plexo_auth_token: &PlexoAuthToken,
+    ) -> Result<PlexoAuthTokenClaims, Box<dyn Error>> {
+        Ok(self
+            .jwt_engine
+            .decode_session_token(plexo_auth_token.0.as_str())?)
+    }
+
+    pub fn validate_password(&self, password: &str, password_hash: &str) -> bool {
+        let Ok(parsed_hash) = PasswordHash::new(password_hash) else {
+            return false;
+        };
+
+        Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok()
+    }
+
+    pub fn hash_password(&self, password: &str) -> String {
+        let salt = SaltString::generate(&mut OsRng);
+
+        Argon2::default()
+            .hash_password(password.as_bytes(), &salt)
+            .unwrap()
+            .to_string()
     }
 }

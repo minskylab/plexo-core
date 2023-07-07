@@ -87,6 +87,7 @@ impl Loader<Uuid> for TaskLoader {
                         project_id: task.project_id,
                         lead_id: task.lead_id,
                         count: task.count,
+                        parent_id: task.parent_id,
                     },
                 )
             })
@@ -178,6 +179,7 @@ impl Loader<Uuid> for MemberLoader {
                         google_id: member.google_id.clone(),
                         photo_url: member.photo_url.clone(),
                         role: MemberRole::from_optional_str(&member.role),
+                        password_hash: None,
                     },
                 )
             })

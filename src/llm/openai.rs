@@ -37,13 +37,6 @@ impl LLMEngine {
 
         let response = self.client.chat().create(request).await.unwrap();
 
-        for choice in response.choices.clone() {
-            println!(
-                "{}: Role: {}  Content: {}",
-                choice.index, choice.message.role, choice.message.content
-            );
-        }
-
         response.choices.first().unwrap().message.content.clone()
     }
 }

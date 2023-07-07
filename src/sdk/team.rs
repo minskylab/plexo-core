@@ -1,12 +1,11 @@
 use std::str::FromStr;
 
-use async_graphql::{ComplexObject, Context, Enum, SimpleObject};
+use async_graphql::{ComplexObject, Context, Enum, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 
 use crate::{
-    auth::auth::PlexoAuthToken,
+    graphql::auth::extract_context,
     sdk::{member::Member, project::Project},
-    system::core::Engine,
 };
 use async_graphql::dataloader::DataLoader;
 use uuid::Uuid;
@@ -31,17 +30,15 @@ pub struct Team {
 
 #[ComplexObject]
 impl Team {
-    pub async fn owner(&self, ctx: &Context<'_>) -> Option<Member> {
+    pub async fn owner(&self, ctx: &Context<'_>) -> Result<Option<Member>> {
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
         //match to see is project_id is none
-        loader.load_one(self.owner_id).await.unwrap()
+        Ok(loader.load_one(self.owner_id).await.unwrap())
     }
 
-    pub async fn members(&self, ctx: &Context<'_>) -> Vec<Member> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn members(&self, ctx: &Context<'_>) -> Result<Vec<Member>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<MemberLoader>>().unwrap();
 
@@ -66,13 +63,11 @@ impl Team {
             .map(|id| members_map.get(&id).unwrap().clone())
             .collect();
 
-        members.clone()
+        Ok(members.clone())
     }
 
-    pub async fn projects(&self, ctx: &Context<'_>) -> Vec<Project> {
-        let auth_token = &ctx.data::<PlexoAuthToken>().unwrap().0;
-        let plexo_engine = ctx.data::<Engine>().unwrap();
-        println!("token: {}", auth_token);
+    pub async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<Project>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let loader = ctx.data::<DataLoader<ProjectLoader>>().unwrap();
 
@@ -97,7 +92,7 @@ impl Team {
             .map(|id| projects_map.get(&id).unwrap().clone())
             .collect();
 
-        projects.clone()
+        Ok(projects.clone())
     }
 }
 
