@@ -8,7 +8,7 @@ use serde_json::Value;
 
 use crate::{
     commons::authorization::{get_token_from_cookie, get_token_from_headers},
-    config::DOMAIN,
+    // config::DOMAIN,
     graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
 };
 
@@ -22,12 +22,13 @@ use poem::{
 
 #[handler]
 pub async fn graphiq_handler() -> impl IntoResponse {
-    Html(
-        GraphiQLSource::build()
-            .endpoint(format!("{}/graphql", *DOMAIN).as_str())
-            .subscription_endpoint(format!("{}/graphql/ws", DOMAIN.replace("http", "ws")).as_str())
-            .finish(),
-    )
+    todo!();
+    // Html(
+    //     GraphiQLSource::build()
+    //         .endpoint(format!("{}/graphql", *DOMAIN).as_str())
+    //         .subscription_endpoint(format!("{}/graphql/ws", DOMAIN.replace("http", "ws")).as_str())
+    //         .finish(),
+    // )
 }
 
 #[handler]

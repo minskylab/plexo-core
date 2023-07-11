@@ -3,10 +3,6 @@
 </p>
 
 <p align="center">
- ➡️ <a href="https://demo.plexo.app/">Live Demo</a> ⬅️
-</p>
-
-<p align="center">
   <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/minskylab/plexo-core/registry-docker.yml">
   <img alt="Docker Image Size (latest by date)" src="https://img.shields.io/docker/image-size/minskylab/plexo">
   <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/minskylab/plexo-core">
@@ -14,6 +10,14 @@
   <img alt="GitHub" src="https://img.shields.io/github/license/minskylab/plexo-core">
   <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/plexoapp?style=social">
   <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/minskylab/plexo-core?style=social"> 
+</p>
+
+<p align="center">
+ ➡️ <a href="https://demo.plexo.app/">Live Demo</a> ⬅️
+</p>
+
+<p align="center">
+  <a href="https://www.producthunt.com/posts/plexo?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-plexo" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=396369&theme=light" alt="Plexo - Plexo&#0058;&#0032;AI&#0045;powered&#0032;open&#0045;source&#0032;project&#0032;management&#0032;system&#0046; | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 </p>
 
 # Plexo

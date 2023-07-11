@@ -36,8 +36,6 @@ jobs:
             latest=true
           tags: |
             type=sha,format=long,prefix=sha-
-            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/dev' }}
-            type=raw,value=stable,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=${{ steps.cargo_version.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push

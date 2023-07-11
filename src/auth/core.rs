@@ -31,9 +31,23 @@ pub const COOKIE_SESSION_TOKEN_NAME: &str = "__Host-plexo-session-token";
 
 #[handler]
 pub async fn github_sign_in_handler(plexo_engine: Data<&Engine>) -> impl IntoResponse {
-    let (url, _) = plexo_engine.0.auth.new_github_authorize_url();
+    let Some((url, _)) = plexo_engine.0.auth.new_github_authorize_url() else {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header("Content-Type", "application/json")
+            .body(Body::from_json(&json!({
+                "error": "Github auth is not configured."
+            }))
+            .unwrap());
+    };
 
-    Redirect::temporary(url.to_string())
+    Response::builder()
+        .status(StatusCode::TEMPORARY_REDIRECT)
+        .header(LOCATION, url.to_string())
+        .header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+        .header(PRAGMA, "no-cache")
+        .header(EXPIRES, "0")
+        .body(Body::empty())
 }
 
 #[handler]
@@ -46,11 +60,13 @@ pub async fn github_callback_handler(
 
     let gh_response = plexo_engine.auth.exchange_github_code(code, state).await;
 
-    let Ok(access_token) = gh_response else {
+    let Some(Ok(access_token)) = gh_response else {
         return Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .header("Content-Type", "application/json")
-            .body(Body::from_json(&gh_response).unwrap());
+            .body(Body::from_json(json!({
+                "error": "Failed to exchange code for access token."
+            })).unwrap());
     };
 
     let client = reqwest::Client::new();

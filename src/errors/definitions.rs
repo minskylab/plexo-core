@@ -1,3 +1,4 @@
+use config::ConfigError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -10,4 +11,6 @@ pub enum PlexoAppError {
     EmailAlreadyInUse,
     #[error("Password isn't valid")]
     InvalidPassword,
+    #[error("Configuration error")]
+    ConfigurationError(#[from] ConfigError),
 }
