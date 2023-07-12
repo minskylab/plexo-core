@@ -20,7 +20,7 @@ SET row_security = off;
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA public;
+CREATE SCHEMA IF NOT EXISTS public;
 
 
 --
@@ -502,7 +502,7 @@ ALTER TABLE ONLY public.tasks
 -- Name: SCHEMA public; Type: ACL; Schema: -; Owner: -
 --
 
-GRANT CREATE ON SCHEMA public TO web_access;
+-- GRANT CREATE ON SCHEMA public TO web_access;
 
 
 --
