@@ -14,4 +14,9 @@ lazy_static! {
     pub static ref GITHUB_REDIRECT_URL: String = var("GITHUB_REDIRECT_URL").unwrap_or(format!("{}/auth/github/callback", *DOMAIN));
 
     pub static ref LLM_MODEL_NAME: String = var("LLM_MODEL_NAME").unwrap_or("gpt-3.5-turbo".into());
+
+    pub static ref ADMIN_EMAIL: String = var("ADMIN_EMAIL").unwrap_or("admin@plexo.app".into());
+    pub static ref ADMIN_PASSWORD: String = var("ADMIN_PASSWORD").unwrap_or("admin".into());
+
+    pub static ref ORGANIZATION_NAME: String = var("ORGANIZATION_NAME").unwrap_or("Plexo".into());
 }

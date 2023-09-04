@@ -1,4 +1,4 @@
-use async_graphql::{Context, InputObject, Object, Result};
+use async_graphql::{Context, InputObject, MergedObject, Object, Result};
 use chrono::{DateTime, Utc};
 use sqlx;
 use uuid::Uuid;
@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-use super::auth::extract_context;
+use super::{auth::extract_context, auth_mutation::AuthMutation};
 
 #[derive(InputObject)]
 struct AssigneesOperation {
@@ -23,10 +23,11 @@ struct AssigneesOperation {
     _delete: Option<Vec<Uuid>>,
 }
 
-pub struct MutationRoot;
+#[derive(Default)]
+pub struct ResourcesMutation;
 
 #[Object]
-impl MutationRoot {
+impl ResourcesMutation {
     async fn create_task(
         &self,
         ctx: &Context<'_>,
@@ -1155,3 +1156,6 @@ impl MutationRoot {
         })
     }
 }
+
+#[derive(MergedObject, Default)]
+pub struct MutationRoot(ResourcesMutation, AuthMutation);

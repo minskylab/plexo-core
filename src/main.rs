@@ -4,7 +4,7 @@ use plexo::{
     auth::{
         core::{
             email_basic_login_handler, email_basic_register_handler, github_callback_handler,
-            github_sign_in_handler,
+            github_sign_in_handler, logout_handler,
         },
         engine::AuthEngine,
     },
@@ -43,7 +43,7 @@ async fn main() {
         Err(e) => println!("Database migration failed: {:?}\n", e),
     }
 
-    let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
+    let schema = Schema::build(QueryRoot, MutationRoot::default(), SubscriptionRoot)
         .data(plexo_engine.clone()) // TODO: Optimize this
         .data(DataLoader::new(
             TaskLoader::new(plexo_engine.clone()),
@@ -67,6 +67,8 @@ async fn main() {
         ))
         .finish();
 
+    // plexo_engine.create_member_from_email(email, name, password_hash)
+
     let app = Route::new()
         .nest(
             "/",
@@ -79,7 +81,7 @@ async fn main() {
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))
         //
-        .at("/auth/logout", get(github_callback_handler))
+        .at("/auth/logout", get(logout_handler))
         //
         .at("/playground", get(graphiq_handler))
         .at("/graphql", post(index_handler))

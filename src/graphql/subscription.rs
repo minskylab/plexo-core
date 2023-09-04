@@ -11,6 +11,7 @@ use crate::sdk::{
     team::{Team, TeamVisibility},
 };
 
+#[derive(Default)]
 pub struct SubscriptionRoot;
 
 #[Subscription]

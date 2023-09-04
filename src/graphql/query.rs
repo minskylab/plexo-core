@@ -18,6 +18,7 @@ use crate::{
 
 use super::auth::extract_context;
 
+#[derive(Default)]
 pub struct QueryRoot;
 
 #[derive(InputObject)]
