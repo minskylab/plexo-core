@@ -55,11 +55,13 @@ You can try our demo [here](https://demo.plexo.app/). And if you want to deploy 
 ```bash
 docker run \
     -p 8080:8080 \
-    -e DATABASE_URL=postgres://postgres:postgres@localhost:5432/plexo \
-    -e OPENAI_API_KEY=<your-openai-api-key> \
-    -e GITHUB_CLIENT_ID=<your-github-client-id> \
-    -e GITHUB_CLIENT_SECRET=<your-github-client-secret> \
-    minskylab/plexo-core
+    -e DATABASE_URL="postgres://postgres:postgres@localhost:5432/plexo" \
+    -e OPENAI_API_KEY="<your-openai-api-key>" \
+    -e GITHUB_CLIENT_ID="<your-github-client-id>" \
+    -e GITHUB_CLIENT_SECRET="<your-github-client-secret>" \
+    -e JWT_ACCESS_TOKEN_SECRET="<your-github-client-secret>" \
+    -e JWT_REFRESH_TOKEN_SECRET="<your-github-client-secret>" \
+    minskylab/plexo
 ```
 
 ⚠️ We're working on a way to deploy Plexo-core without the need of a Github OAuth app. If you want to contribute, please check [this issue](https://github.com/minskylab/plexo-core/issues/9).

@@ -18,6 +18,7 @@ use plexo::{
     system::core::Engine,
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
+use sqlx::migrate;
 use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
@@ -36,6 +37,11 @@ async fn main() {
             &GITHUB_REDIRECT_URL,
         ),
     );
+
+    match migrate!().run(plexo_engine.pool.as_ref()).await {
+        Ok(_) => println!("Database migration successful"),
+        Err(e) => println!("Database migration failed: {:?}\n", e),
+    }
 
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
         .data(plexo_engine.clone()) // TODO: Optimize this
