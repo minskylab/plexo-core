@@ -1,4 +1,4 @@
-use async_graphql::{Context, InputObject, MergedObject, Object, Result};
+use async_graphql::{Context, InputObject, MergedObject, Object, Result,futures_util::task::noop_waker_ref};
 use chrono::{DateTime, Utc};
 use sqlx;
 use uuid::Uuid;
@@ -13,6 +13,9 @@ use crate::{
         team::{Team, TeamVisibility},
         utilities::DateTimeBridge,
     },
+    system::{core::Engine},
+
+    
 };
 
 use super::{auth::extract_context, auth_mutation::AuthMutation};
@@ -116,8 +119,9 @@ impl ResourcesMutation {
                 .unwrap();
             }
         }
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
 
-        Ok(Task {
+        let task = Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -133,7 +137,11 @@ impl ResourcesMutation {
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
             parent_id: task_final_info.parent_id,
-        })
+        };
+
+        subscription_manager.send_task_event(task.clone()).await;
+
+        Ok(task)
     }
 
     async fn update_task(
@@ -233,7 +241,9 @@ impl ResourcesMutation {
             }
         }
 
-        Ok(Task {
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+        let task = Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -249,7 +259,12 @@ impl ResourcesMutation {
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
             parent_id: task_final_info.parent_id,
-        })
+        };
+
+        subscription_manager.send_task_event(task.clone()).await;
+
+        Ok(task)
+
     }
 
     async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Result<Task> {
@@ -289,7 +304,9 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
-        Ok(Task {
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+        let task = Task {
             id: task_final_info.id,
             created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
@@ -305,7 +322,11 @@ impl ResourcesMutation {
             owner_id: task_final_info.owner_id,
             count: task_final_info.count,
             parent_id: task_final_info.parent_id,
-        })
+        };
+
+        subscription_manager.send_task_event( task.clone()).await;
+        
+        Ok(task)
     }
 
     // async fn update_member(
@@ -525,7 +546,9 @@ impl ResourcesMutation {
             }
         }
 
-        Ok(Project {
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+        let project = Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
@@ -538,7 +561,12 @@ impl ResourcesMutation {
                 .start_date
                 .map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
-        })
+        };
+
+        subscription_manager.send_project_event(project.clone()).await;
+        
+        Ok(project)
+
     }
 
     async fn update_project(
@@ -638,7 +666,11 @@ impl ResourcesMutation {
             }
         }
 
-        Ok(Project {
+
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+
+        let project = Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
@@ -651,7 +683,11 @@ impl ResourcesMutation {
                 .start_date
                 .map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
-        })
+        };
+
+        subscription_manager.send_project_event( project.clone()).await;
+        Ok(project)
+
     }
 
     async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Project> {
@@ -703,7 +739,9 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
-        Ok(Project {
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+        let project = Project {
             id: project.id,
             created_at: DateTimeBridge::from_offset_date_time(project.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(project.updated_at),
@@ -716,7 +754,11 @@ impl ResourcesMutation {
                 .start_date
                 .map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
-        })
+        };
+
+        subscription_manager.send_project_event( project.clone()).await;
+        Ok(project)
+
     }
 
     async fn create_team(
@@ -777,7 +819,10 @@ impl ResourcesMutation {
             }
         }
 
-        Ok(Team {
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+
+        let team = Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
@@ -785,7 +830,9 @@ impl ResourcesMutation {
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
-        })
+        };
+        subscription_manager.send_team_event( team.clone()).await;
+        Ok(team)
     }
 
     async fn update_team(
@@ -876,7 +923,9 @@ impl ResourcesMutation {
             }
         }
 
-        Ok(Team {
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+        let team = Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
@@ -884,7 +933,11 @@ impl ResourcesMutation {
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
-        })
+        };
+
+        subscription_manager.send_team_event( team.clone()).await;
+        Ok(team)
+
     }
 
     async fn delete_team(&self, ctx: &Context<'_>, id: Uuid) -> Result<Team> {
@@ -924,7 +977,9 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
-        Ok(Team {
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+
+        let team = Team {
             id: team.id,
             created_at: DateTimeBridge::from_offset_date_time(team.created_at),
             updated_at: DateTimeBridge::from_offset_date_time(team.updated_at),
@@ -932,7 +987,11 @@ impl ResourcesMutation {
             owner_id: team.owner_id,
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
-        })
+        };
+
+        subscription_manager.send_team_event(team.clone()).await;
+        Ok(team)
+
     }
 
     async fn create_label(
