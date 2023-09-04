@@ -3,7 +3,7 @@ use dotenvy::dotenv;
 use plexo::{
     auth::{
         core::{
-            email_basic_login_handler, email_basic_register_handler, github_callback_handler,
+            email_basic_login_handler, github_callback_handler,
             github_sign_in_handler, logout_handler,
         },
         engine::AuthEngine,
@@ -80,7 +80,7 @@ async fn main() {
         )
         // Non authenticated routes
         .at("/auth/email/login", post(email_basic_login_handler))
-        .at("/auth/email/register", post(email_basic_register_handler))
+        // .at("/auth/email/register", post(email_basic_register_handler))
         //
         .at("/auth/github", get(github_sign_in_handler))
         .at("/auth/github/callback", get(github_callback_handler))

@@ -5,7 +5,7 @@ use async_graphql::{futures_util::StreamExt, Context, Subscription, async_stream
 use chrono::Utc;
 use tokio_stream::Stream;
 use uuid::Uuid;
-use tokio::sync::mpsc::{channel, Sender, Receiver};
+use tokio::sync::mpsc::{channel};
 
 use crate::system::subscriptions::DataContainer;
 use crate::{
@@ -31,7 +31,7 @@ impl SubscriptionRoot {
         let new_uuid = Uuid::new_v4().to_string();
 
         let suscription_added = subscription_manager.add_subscription(sender,1).await?;
-        if (suscription_added == new_uuid.clone()) {
+        if suscription_added == new_uuid.clone() {
             println!("Subscription_Task added");
         }
 
@@ -44,11 +44,11 @@ impl SubscriptionRoot {
                         last_task = Some(task);
                         yield last_task.clone();
                     },
-                    Some(DataContainer::ProjectContainer(task)) => {
+                    Some(DataContainer::ProjectContainer(_task)) => {
                         yield None;
 
                     },
-                    Some(DataContainer::TeamContainer(task)) => {
+                    Some(DataContainer::TeamContainer(_task)) => {
                         yield None;
                     },
                     None => {
@@ -69,7 +69,7 @@ impl SubscriptionRoot {
         let new_uuid = Uuid::new_v4().to_string();
 
         let suscription_added = subscription_manager.add_subscription(sender,2).await?;
-        if (suscription_added == new_uuid.clone()) {
+        if suscription_added == new_uuid.clone() {
             println!("Subscription_Project added");
         }
 
@@ -77,7 +77,7 @@ impl SubscriptionRoot {
             let mut last_task: Option<Project>= None;
             loop {
                 match receiver.recv().await {
-                    Some(DataContainer::TaskContainer(task)) => {
+                    Some(DataContainer::TaskContainer(_task)) => {
                         yield None;
 
                     },
@@ -86,7 +86,7 @@ impl SubscriptionRoot {
                         last_task = Some(task);
                         yield last_task.clone();
                     },
-                    Some(DataContainer::TeamContainer(task)) => {
+                    Some(DataContainer::TeamContainer(_task)) => {
                         yield None;
                     },
                     None => {
@@ -107,7 +107,7 @@ impl SubscriptionRoot {
         let new_uuid = Uuid::new_v4().to_string();
 
         let suscription_added = subscription_manager.add_subscription(sender,3).await?;
-        if (suscription_added == new_uuid.clone()) {
+        if suscription_added == new_uuid.clone() {
             println!("Subscription_Team added");
         }
 
@@ -115,11 +115,11 @@ impl SubscriptionRoot {
             let mut last_task: Option<Team>= None;
             loop {
                 match receiver.recv().await {
-                    Some(DataContainer::TaskContainer(task)) => {
+                    Some(DataContainer::TaskContainer(_task)) => {
                         yield None;
 
                     },
-                    Some(DataContainer::ProjectContainer(task)) => {
+                    Some(DataContainer::ProjectContainer(_task)) => {
                         yield None;
 
                     },

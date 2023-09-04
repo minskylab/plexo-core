@@ -1,6 +1,8 @@
 use async_graphql::{Context, Object, Result, SimpleObject};
 
-use crate::{errors::definitions::PlexoAppError, system::core::Engine};
+use crate::{
+    errors::definitions::PlexoAppError, graphql::auth::extract_context, system::core::Engine,
+};
 
 #[derive(Default)]
 pub struct AuthMutation;
@@ -53,7 +55,7 @@ impl AuthMutation {
         name: String,
         password: String,
     ) -> Result<LoginResponse> {
-        let plexo_engine = ctx.data::<Engine>()?.to_owned();
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         if (plexo_engine.get_member_by_email(email.clone()).await).is_some() {
             return Err(PlexoAppError::EmailAlreadyExists.into());

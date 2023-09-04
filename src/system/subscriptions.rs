@@ -24,8 +24,8 @@ pub struct Subscription {
 impl Subscription {
     fn new(id: String, sender: Sender<DataContainer>) -> Self {
         Subscription {
-            id: id,
-            sender: sender,
+            id,
+            sender,
         }
     }
 }
@@ -54,7 +54,7 @@ impl SubscriptionManager {
     pub async fn add_subscription(&self, sender: Sender<DataContainer>, option:i32) -> MyResult<String> {
         let mut subscriptions = self.subscriptions.lock().await;
     
-        if (option == 1)
+        if option == 1
         {
                 if subscriptions.contains_key(&self.id_task) {
                     return Err(Box::<dyn Error>::from(format!(
@@ -66,7 +66,7 @@ impl SubscriptionManager {
                 subscriptions.insert(self.id_task.clone(), Subscription::new(self.id_task.clone(), sender));
                 Ok(self.id_task.clone())
             }
-        else if (option == 2) {
+        else if option == 2 {
             if subscriptions.contains_key(&self.id_project) {
                 return Err(Box::<dyn Error>::from(format!(
                     "Subscription with id '{}' already exists",
