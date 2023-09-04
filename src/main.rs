@@ -38,10 +38,10 @@ async fn main() {
         ),
     );
 
-    // match migrate!().run(plexo_engine.pool.as_ref()).await {
-    //     Ok(_) => println!("Database migration successful"),
-    //     Err(e) => println!("Database migration failed: {:?}\n", e),
-    // }
+    match migrate!().run(plexo_engine.pool.as_ref()).await {
+        Ok(_) => println!("Database migration successful"),
+        Err(e) => println!("Database migration failed: {:?}\n", e),
+    }
 
     let schema = Schema::build(
         QueryRoot::default(),

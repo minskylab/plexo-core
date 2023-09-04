@@ -32,22 +32,17 @@ impl AIFunctionsQuery {
         &self,
         ctx: &Context<'_>,
         task_id: String,
-        #[graphql(default = 5)] _subtasks: u32,
+        #[graphql(default = 5)] subtasks: u32,
     ) -> Result<Vec<TaskSuggestionResult>> {
         let (plexo_engine, _member_id) = extract_context(ctx)?;
 
         let task_id = task_id.parse::<uuid::Uuid>()?;
 
-        let _task = sqlx::query!(
-            r#"
-            SELECT * FROM tasks
-            WHERE id = $1
-            "#,
-            task_id
-        )
-        .fetch_one(&*plexo_engine.pool)
-        .await
-        .unwrap();
+        let suggestions = plexo_engine
+            .auto_suggestions_engine
+            .subdivide_task(task_id, subtasks)
+            .await
+            .unwrap();
 
         // let raw_suggestion = plexo_engine
         //     .auto_suggestions_engine
@@ -76,6 +71,6 @@ impl AIFunctionsQuery {
         //     .await?;
 
         // Ok(task_id.to_string())
-        todo!()
+        Ok(suggestions)
     }
 }

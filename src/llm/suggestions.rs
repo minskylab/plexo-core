@@ -50,23 +50,6 @@ impl AutoSuggestionsEngine {
 
     fn calculate_task_fingerprint(task: Task) -> String {
         serde_json::to_string(&task).unwrap()
-
-        // format!(
-        //     "Task Title: {}
-        //     Task Description: {}
-        //     Task Status: {}
-        //     Task Priority: {}
-        //     Task Created At: {}
-        //     Task Due Date: {}",
-        //     task.title,
-        //     task.description.unwrap_or("<No description>".to_string()),
-        //     task.status.to_str(),
-        //     task.priority.to_str(),
-        //     task.created_at,
-        //     task.due_date
-        //         .map(|d| d.to_rfc3339())
-        //         .unwrap_or("<No due date>".to_string()),
-        // )
     }
 
     fn calculate_task_suggestion_fingerprint(task_suggestion: TaskSuggestionInput) -> String {
@@ -164,33 +147,80 @@ impl AutoSuggestionsEngine {
             .chat_completion(system_message, user_message)
             .await;
 
-        // println!("result: {:?}", result);
-        // let parts = result
-        //     .split('\n')
-        //     .map(|s| s.to_string())
-        //     .collect::<Vec<String>>();
-
-        // let title = parts[0].replace("Task Title:", "").trim().to_string();
-        // let description = parts[1].replace("Task Description:", "").trim().to_string();
-        // let status = parts[2].replace("Task Status:", "").trim().to_string();
-        // let priority = parts[3].replace("Task Priority:", "").trim().to_string();
-        // let due_date = parts[4].replace("Task Due Date:", "").trim().to_string();
-
-        // let status = TaskStatus::from_str(&status).unwrap_or_default();
-        // let priority = TaskPriority::from_str(&priority).unwrap_or_default();
-        // let due_date = DateTime::<Utc>::from_str(&due_date).unwrap_or(Utc::now());
-
         let suggestion_result: TaskSuggestionResult = serde_json::from_str(&result)?;
 
-        // TaskSuggestionResult {
-        //     title,
-        //     description,
-        //     status,
-        //     priority,
-        //     due_date,
-        // }
-
         Ok(suggestion_result)
+    }
+
+    pub async fn subdivide_task(
+        &self,
+        task_id: Uuid,
+        subtasks: u32,
+    ) -> Result<Vec<TaskSuggestionResult>> {
+        let task = sqlx::query!(
+            r#"
+            SELECT * FROM tasks
+            WHERE id = $1
+            "#,
+            task_id
+        )
+        .fetch_one(&*self.pool)
+        .await
+        .unwrap();
+
+        let task = Task {
+            id: task.id,
+            created_at: DateTimeBridge::from_offset_date_time(task.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(task.updated_at),
+            title: task.title.clone(),
+            description: task.description.clone(),
+            status: TaskStatus::from_optional_str(&task.status),
+            priority: TaskPriority::from_optional_str(&task.priority),
+            due_date: task.due_date.map(DateTimeBridge::from_offset_date_time),
+            project_id: task.project_id,
+            lead_id: task.lead_id,
+            owner_id: task.owner_id,
+            count: task.count,
+            parent_id: task.parent_id,
+        };
+
+        let system_message =
+            "The user pass to you one task and you should predict a list of subtasks.
+        Please return only a valid json with the following struct [{
+                title: String,
+                description: String,
+                status: TaskStatus,
+                priority: TaskPriority,
+                due_date: DateTime<Utc>
+        }]
+        For TaskStatus and TaskPriority, please use the following values:
+        TaskStatus: None, Backlog, ToDo, InProgress, Done, Canceled
+        TaskPriority: None, Low, Medium, High, Urgent
+        "
+            .to_string();
+
+        let user_message = format!(
+            "
+            Current Time:
+            {}
+
+            Parent Task: 
+            {}
+            
+            With the above context, generate {} subtasks.",
+            Local::now(),
+            Self::calculate_task_fingerprint(task),
+            subtasks,
+        );
+
+        let result = self
+            .llm_engine
+            .chat_completion(system_message, user_message)
+            .await;
+
+        let subtasks: Vec<TaskSuggestionResult> = serde_json::from_str(&result)?;
+
+        Ok(subtasks)
     }
 
     // pub async fn get_
