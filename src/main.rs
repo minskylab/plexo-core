@@ -11,7 +11,7 @@ use plexo::{
     config::{
         DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL, URL,
     },
-    graphql::{mutation::MutationRoot, query::QueryRoot, subscription::SubscriptionRoot},
+    graphql::{mutations::MutationRoot, queries::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
     sdk::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader, TeamLoader},
     statics::StaticServer,
@@ -43,29 +43,33 @@ async fn main() {
         Err(e) => println!("Database migration failed: {:?}\n", e),
     }
 
-    let schema = Schema::build(QueryRoot, MutationRoot::default(), SubscriptionRoot)
-        .data(plexo_engine.clone()) // TODO: Optimize this
-        .data(DataLoader::new(
-            TaskLoader::new(plexo_engine.clone()),
-            tokio::spawn,
-        ))
-        .data(DataLoader::new(
-            ProjectLoader::new(plexo_engine.clone()),
-            tokio::spawn,
-        ))
-        .data(DataLoader::new(
-            LabelLoader::new(plexo_engine.clone()),
-            tokio::spawn,
-        ))
-        .data(DataLoader::new(
-            MemberLoader::new(plexo_engine.clone()),
-            tokio::spawn,
-        ))
-        .data(DataLoader::new(
-            TeamLoader::new(plexo_engine.clone()),
-            tokio::spawn,
-        ))
-        .finish();
+    let schema = Schema::build(
+        QueryRoot::default(),
+        MutationRoot::default(),
+        SubscriptionRoot,
+    )
+    .data(plexo_engine.clone()) // TODO: Optimize this
+    .data(DataLoader::new(
+        TaskLoader::new(plexo_engine.clone()),
+        tokio::spawn,
+    ))
+    .data(DataLoader::new(
+        ProjectLoader::new(plexo_engine.clone()),
+        tokio::spawn,
+    ))
+    .data(DataLoader::new(
+        LabelLoader::new(plexo_engine.clone()),
+        tokio::spawn,
+    ))
+    .data(DataLoader::new(
+        MemberLoader::new(plexo_engine.clone()),
+        tokio::spawn,
+    ))
+    .data(DataLoader::new(
+        TeamLoader::new(plexo_engine.clone()),
+        tokio::spawn,
+    ))
+    .finish();
 
     // plexo_engine.create_member_from_email(email, name, password_hash)
 
