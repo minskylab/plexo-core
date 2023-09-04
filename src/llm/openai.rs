@@ -1,4 +1,5 @@
 use async_openai::{
+    config::OpenAIConfig,
     types::{ChatCompletionRequestMessageArgs, CreateChatCompletionRequestArgs, Role},
     Client,
 };
@@ -7,7 +8,7 @@ use crate::config::LLM_MODEL_NAME;
 
 #[derive(Clone)]
 pub struct LLMEngine {
-    client: Client,
+    client: Client<OpenAIConfig>,
 }
 
 impl LLMEngine {
@@ -37,6 +38,13 @@ impl LLMEngine {
 
         let response = self.client.chat().create(request).await.unwrap();
 
-        response.choices.first().unwrap().message.content.clone()
+        response
+            .choices
+            .first()
+            .unwrap()
+            .message
+            .content
+            .clone()
+            .unwrap()
     }
 }
