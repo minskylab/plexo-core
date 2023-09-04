@@ -10,6 +10,10 @@ pub enum PlexoAppError {
     EmailAlreadyInUse,
     #[error("Password isn't valid")]
     InvalidPassword,
+    #[error("Email not found")]
+    EmailNotFound,
+    #[error("Email already exists")]
+    EmailAlreadyExists,
     #[error("Poem error")]
     PoemError(#[from] poem::error::NotFoundError),
 }
