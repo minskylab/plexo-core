@@ -1,6 +1,9 @@
 use async_graphql::{InputObject, SimpleObject};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
+use serde::Deserialize;
+use serde_json::Result;
 use sqlx::{query, Pool, Postgres};
+use uuid::Uuid;
 
 use crate::sdk::{
     task::{Task, TaskPriority, TaskStatus},
@@ -16,7 +19,7 @@ pub struct AutoSuggestionsEngine {
 }
 
 #[derive(InputObject, Clone)]
-pub struct TaskSuggestion {
+pub struct TaskSuggestionInput {
     pub title: Option<String>,
     pub description: Option<String>,
     pub status: Option<TaskStatus>,
@@ -24,13 +27,19 @@ pub struct TaskSuggestion {
     pub due_date: Option<DateTime<Utc>>,
 }
 
-#[derive(SimpleObject, Clone)]
+#[derive(SimpleObject, Clone, Deserialize)]
 pub struct TaskSuggestionResult {
     pub title: String,
     pub description: String,
     pub status: TaskStatus,
     pub priority: TaskPriority,
     pub due_date: DateTime<Utc>,
+}
+
+#[derive(SimpleObject, Clone, Deserialize)]
+pub struct SuggestionContext {
+    project_id: Option<Uuid>,
+    team_id: Option<Uuid>,
 }
 
 impl AutoSuggestionsEngine {
@@ -40,25 +49,27 @@ impl AutoSuggestionsEngine {
     }
 
     fn calculate_task_fingerprint(task: Task) -> String {
-        format!(
-            "Task Title: {}
-            Task Description: {}
-            Task Status: {}
-            Task Priority: {}
-            Task Created At: {}
-            Task Due Date: {}",
-            task.title,
-            task.description.unwrap_or("<No description>".to_string()),
-            task.status.to_str(),
-            task.priority.to_str(),
-            task.created_at,
-            task.due_date
-                .map(|d| d.to_rfc3339())
-                .unwrap_or("<No due date>".to_string()),
-        )
+        serde_json::to_string(&task).unwrap()
+
+        // format!(
+        //     "Task Title: {}
+        //     Task Description: {}
+        //     Task Status: {}
+        //     Task Priority: {}
+        //     Task Created At: {}
+        //     Task Due Date: {}",
+        //     task.title,
+        //     task.description.unwrap_or("<No description>".to_string()),
+        //     task.status.to_str(),
+        //     task.priority.to_str(),
+        //     task.created_at,
+        //     task.due_date
+        //         .map(|d| d.to_rfc3339())
+        //         .unwrap_or("<No due date>".to_string()),
+        // )
     }
 
-    fn calculate_task_suggestion_fingerprint(task_suggestion: TaskSuggestion) -> String {
+    fn calculate_task_suggestion_fingerprint(task_suggestion: TaskSuggestionInput) -> String {
         format!(
             "Task Title: {}
             Task Description: {}
@@ -89,7 +100,7 @@ impl AutoSuggestionsEngine {
             r#"
             SELECT *
             FROM tasks
-            LIMIT 100
+            LIMIT 10
             "#,
         )
         .fetch_all(&*self.pool)
@@ -117,23 +128,70 @@ impl AutoSuggestionsEngine {
             .collect::<Vec<String>>()
     }
 
-    pub async fn get_suggestions(&self, proto_task: TaskSuggestion) -> String {
+    pub async fn get_suggestions(
+        &self,
+        proto_task: TaskSuggestionInput,
+        _context: Option<SuggestionContext>,
+    ) -> Result<TaskSuggestionResult> {
         let tasks_fingerprints = self.acquire_tasks_fingerprints().await;
 
+        let system_message = "The user pass to you a list of tasks and you should predict the following based on the input of the user.
+        Please return only a valid json with the following struct {
+                title: String,
+                description: String,
+                status: TaskStatus,
+                priority: TaskPriority,
+                due_date: DateTime<Utc>
+        }".to_string();
+
         let user_message = format!(
-            "Current Tasks Context: 
-{}
-With the above context, Complete the following task, only fill the <suggest> fields:
-{}
-",
+            "
+            Current Time:
+            {}
+
+            Current Tasks Context: 
+            {}
+            
+            With the above context, complete the following task, only fill the <suggest> fields:
+            {}",
+            Local::now(),
             tasks_fingerprints.join("\n\n"),
             Self::calculate_task_suggestion_fingerprint(proto_task),
         );
 
-        let system_message = "System: ".to_string();
-
-        self.llm_engine
+        let result = self
+            .llm_engine
             .chat_completion(system_message, user_message)
-            .await
+            .await;
+
+        // println!("result: {:?}", result);
+        // let parts = result
+        //     .split('\n')
+        //     .map(|s| s.to_string())
+        //     .collect::<Vec<String>>();
+
+        // let title = parts[0].replace("Task Title:", "").trim().to_string();
+        // let description = parts[1].replace("Task Description:", "").trim().to_string();
+        // let status = parts[2].replace("Task Status:", "").trim().to_string();
+        // let priority = parts[3].replace("Task Priority:", "").trim().to_string();
+        // let due_date = parts[4].replace("Task Due Date:", "").trim().to_string();
+
+        // let status = TaskStatus::from_str(&status).unwrap_or_default();
+        // let priority = TaskPriority::from_str(&priority).unwrap_or_default();
+        // let due_date = DateTime::<Utc>::from_str(&due_date).unwrap_or(Utc::now());
+
+        let suggestion_result: TaskSuggestionResult = serde_json::from_str(&result)?;
+
+        // TaskSuggestionResult {
+        //     title,
+        //     description,
+        //     status,
+        //     priority,
+        //     due_date,
+        // }
+
+        Ok(suggestion_result)
     }
+
+    // pub async fn get_
 }
