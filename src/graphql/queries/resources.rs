@@ -230,7 +230,7 @@ impl ResourcesQuery {
                 owner_id: r.owner_id,
                 description: r.description.clone(),
                 lead_id: r.lead_id,
-                start_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
+                start_date: r.start_date.map(DateTimeBridge::from_offset_date_time),
                 due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
             })
             .collect())
@@ -259,7 +259,7 @@ impl ResourcesQuery {
             prefix: project.prefix.clone(),
             owner_id: project.owner_id,
             lead_id: project.lead_id,
-            start_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
+            start_date: project.start_date.map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         })
     }
