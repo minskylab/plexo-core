@@ -6,12 +6,15 @@ use chrono::{DateTime, Utc};
 use async_graphql::dataloader::DataLoader;
 use uuid::Uuid;
 
+use serde::Deserialize;
+
 use super::{labels::Label, member::Member, project::Project};
 
 use super::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader};
 use crate::graphql::auth::extract_context;
+use serde::Serialize;
 
-#[derive(SimpleObject, Clone, Debug)]
+#[derive(SimpleObject, Clone, Debug, Serialize)]
 #[graphql(complex)]
 pub struct Task {
     pub id: Uuid,
@@ -169,7 +172,7 @@ impl Task {
     }
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Default, Deserialize, Serialize)]
 pub enum TaskStatus {
     #[default]
     None,
@@ -180,7 +183,7 @@ pub enum TaskStatus {
     Canceled,
 }
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Default, Deserialize, Serialize)]
 pub enum TaskPriority {
     #[default]
     None,

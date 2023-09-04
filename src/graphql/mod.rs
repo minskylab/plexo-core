@@ -1,5 +1,4 @@
 pub mod auth;
-pub mod auth_mutation;
-pub mod mutation;
-pub mod query;
+pub mod mutations;
+pub mod queries;
 pub mod subscription;

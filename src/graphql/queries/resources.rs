@@ -1,11 +1,9 @@
-use std::str::FromStr;
-
 use async_graphql::{Context, InputObject, Object, Result};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::{
-    llm::suggestions::{TaskSuggestion, TaskSuggestionResult},
+    graphql::auth::extract_context,
     sdk::{
         labels::Label,
         member::{Member, MemberRole},
@@ -16,10 +14,10 @@ use crate::{
     },
 };
 
-use super::auth::extract_context;
+// use super::auth::extract_context;
 
 #[derive(Default)]
-pub struct QueryRoot;
+pub struct ResourcesQuery;
 
 #[derive(InputObject)]
 pub struct TaskFilter {
@@ -52,7 +50,7 @@ pub struct ProjectFilter {
 }
 
 #[Object]
-impl QueryRoot {
+impl ResourcesQuery {
     async fn tasks(&self, ctx: &Context<'_>, _filter: Option<TaskFilter>) -> Result<Vec<Task>> {
         let (plexo_engine, _member_id) = extract_context(ctx)?;
 
@@ -232,7 +230,7 @@ impl QueryRoot {
                 owner_id: r.owner_id,
                 description: r.description.clone(),
                 lead_id: r.lead_id,
-                start_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
+                start_date: r.start_date.map(DateTimeBridge::from_offset_date_time),
                 due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
             })
             .collect())
@@ -261,7 +259,7 @@ impl QueryRoot {
             prefix: project.prefix.clone(),
             owner_id: project.owner_id,
             lead_id: project.lead_id,
-            start_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
+            start_date: project.start_date.map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         })
     }
@@ -341,42 +339,6 @@ impl QueryRoot {
                 description: r.description.clone(),
             })
             .collect())
-    }
-
-    async fn suggest_new_task(
-        &self,
-        ctx: &Context<'_>,
-        task: TaskSuggestion,
-    ) -> Result<TaskSuggestionResult> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
-
-        let raw_suggestion = plexo_engine
-            .auto_suggestions_engine
-            .get_suggestions(task)
-            .await;
-
-        let parts = raw_suggestion
-            .split('\n')
-            .map(|s| s.to_string())
-            .collect::<Vec<String>>();
-
-        let title = parts[0].replace("Task Title:", "").trim().to_string();
-        let description = parts[1].replace("Task Description:", "").trim().to_string();
-        let status = parts[2].replace("Task Status:", "").trim().to_string();
-        let priority = parts[3].replace("Task Priority:", "").trim().to_string();
-        let due_date = parts[4].replace("Task Due Date:", "").trim().to_string();
-
-        let status = TaskStatus::from_str(&status).unwrap_or_default();
-        let priority = TaskPriority::from_str(&priority).unwrap_or_default();
-        let due_date = DateTime::<Utc>::from_str(&due_date).unwrap_or(Utc::now());
-
-        Ok(TaskSuggestionResult {
-            title,
-            description,
-            status,
-            priority,
-            due_date,
-        })
     }
 
     async fn me(&self, ctx: &Context<'_>) -> Result<Member> {

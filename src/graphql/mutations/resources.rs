@@ -1,10 +1,11 @@
-use async_graphql::{Context, InputObject, MergedObject, Object, Result,futures_util::task::noop_waker_ref};
+use async_graphql::{Context, InputObject, Object, Result};
 use chrono::{DateTime, Utc};
 use sqlx;
 use uuid::Uuid;
 
 use crate::{
     errors::definitions::PlexoAppError,
+    graphql::auth::extract_context,
     sdk::{
         labels::Label,
         member::{Member, MemberRole},
@@ -17,8 +18,6 @@ use crate::{
 
     
 };
-
-use super::{auth::extract_context, auth_mutation::AuthMutation};
 
 #[derive(InputObject)]
 struct AssigneesOperation {
@@ -1215,6 +1214,3 @@ impl ResourcesMutation {
         })
     }
 }
-
-#[derive(MergedObject, Default)]
-pub struct MutationRoot(ResourcesMutation, AuthMutation);

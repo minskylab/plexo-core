@@ -12,7 +12,6 @@ use serde_json::{json, Value};
 
 use crate::commons::authorization::{get_token_from_cookie, get_token_from_headers};
 use crate::errors::definitions::PlexoAppError;
-use crate::graphql::auth::extract_context;
 use crate::system::core::Engine;
 
 #[derive(Debug, Deserialize)]
@@ -232,7 +231,7 @@ pub struct EmailRegisterParams {
     pub password: String,
 }
 
-fn get_token(headers: &HeaderMap) -> Result<PlexoAuthToken, PlexoAppError> {
+fn _get_token(headers: &HeaderMap) -> Result<PlexoAuthToken, PlexoAppError> {
     if let Some(token) = get_token_from_headers(headers) {
         return Ok(token);
     }
