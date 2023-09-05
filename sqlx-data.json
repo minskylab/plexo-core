@@ -1189,18 +1189,6 @@
     },
     "query": "\n                    DELETE FROM tasks_by_assignees\n                    WHERE task_id = $1\n                    "
   },
-  "5a809f706988a2146b08fe39e30d0035a8d355571f566287b0ed749bc4dbc08a": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n                    DELETE FROM members_by_projects\n                    WHERE member_id = $1\n                    "
-  },
   "5f8fcf951dd8d0cacf30d5859713b0c735e1c790be7b965ca942555be424f66e": {
     "describe": {
       "columns": [
@@ -2271,6 +2259,112 @@
     },
     "query": "\n                        INSERT INTO members_by_projects (member_id, project_id)\n                        VALUES ($1, $2)\n                        "
   },
+  "b8ad07396d9936f01e58d5db19cfada00689dcc016602ed6004e9a7ac89da030": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "title",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "status",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "priority",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "project_id",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 10,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "labels",
+          "ordinal": 11,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "count",
+          "ordinal": 12,
+          "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Timestamptz",
+          "Uuid",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                    INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)\n                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n                    RETURNING * \n                    "
+  },
   "bdf46ae26861a501ea571b139469ce42f1ffb428ff02ddaab741fcad62417b26": {
     "describe": {
       "columns": [
@@ -3292,18 +3386,6 @@
       }
     },
     "query": "\n            SELECT * FROM projects WHERE id  = ANY($1)\n            "
-  },
-  "f5e26e26625b5d123840967b4862fede649ccfe7d4eb1bd3216425ede6b1712b": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n                    DELETE FROM members_by_teams\n                    WHERE member_id = $1\n                    "
   },
   "fa0154535e96ce7bef5bc5e8720ae7c599c241ca978d33d2bb10ecd759666852": {
     "describe": {

@@ -23,6 +23,20 @@ struct AssigneesOperation {
     _delete: Option<Vec<Uuid>>,
 }
 
+#[derive(InputObject)]
+struct CreateTaskInput {
+    title: String,
+    description: Option<String>,
+    status: Option<String>,
+    priority: Option<String>,
+    due_date: Option<DateTime<Utc>>,
+    project_id: Option<Uuid>,
+    lead_id: Option<Uuid>,
+    labels: Option<Vec<Uuid>>,
+    // assignees: Option<Vec<Uuid>>,
+    parent_id: Option<Uuid>,
+}
+
 #[derive(Default)]
 pub struct ResourcesMutation;
 
@@ -41,11 +55,11 @@ impl ResourcesMutation {
         labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
         parent_id: Option<Uuid>,
+        subtasks: Option<Vec<CreateTaskInput>>,
     ) -> Result<Task> {
         let (plexo_engine, member_id) = extract_context(ctx)?;
 
-        let task_final_info = sqlx::query!(
-            r#"
+        let task_final_info = sqlx::query!(r#"
             INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING * 
@@ -65,6 +79,7 @@ impl ResourcesMutation {
 
         if let Some(assignees) = assignees {
             let _delete_assignees = sqlx::query!(
+                // TODO: Update this bad implementation
                 r#"
                 DELETE FROM tasks_by_assignees
                 WHERE task_id = $1
@@ -116,8 +131,34 @@ impl ResourcesMutation {
                 .unwrap();
             }
         }
+
         let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
             &ctx.data::<Engine>().unwrap().subscription_manager;
+
+        if let Some(subtasks_to_create) = subtasks {
+            for subtask in subtasks_to_create {
+                let _ = sqlx::query!(
+                    r#"
+                    INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    RETURNING * 
+                    "#,
+                    subtask.title,
+                    subtask.description,
+                    member_id,
+                    subtask.status,
+                    subtask.priority,
+                    subtask.due_date.map(|d| DateTimeBridge::from_date_time(d)),
+                    subtask.project_id,
+                    subtask.lead_id,
+                    task_final_info.id,
+                ).fetch_one(&*plexo_engine.pool)
+                .await
+                .unwrap();
+            }
+
+            // TODO: Implement subscription signal for subtasks
+        }
 
         let task = Task {
             id: task_final_info.id,
@@ -137,7 +178,7 @@ impl ResourcesMutation {
             parent_id: task_final_info.parent_id,
         };
 
-        subscription_manager.send_task_event(task.clone()).await;
+        let _ = subscription_manager.send_task_event(task.clone()).await;
 
         Ok(task)
     }

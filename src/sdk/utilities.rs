@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDateTime, TimeZone, Utc};
 use sqlx::types::time::OffsetDateTime;
 
 pub struct DateTimeBridge;
@@ -15,7 +15,10 @@ impl DateTimeBridge {
     pub fn from_offset_date_time(offset_date_time: OffsetDateTime) -> DateTime<Utc> {
         let naive_date_time =
             NaiveDateTime::from_timestamp_millis(offset_date_time.unix_timestamp() * 1000).unwrap();
-        DateTime::<Utc>::from_utc(naive_date_time, Utc)
+
+        // TimeZone::from_utc_datetime(&Utc, &naive_date_time)
+        Utc.from_utc_datetime(&naive_date_time)
+        // DateTime::<Utc>::from_utc(naive_date_time, Utc)
     }
 
     pub fn from_date_time(date_time: DateTime<Utc>) -> OffsetDateTime {
