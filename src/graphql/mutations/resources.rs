@@ -14,9 +14,7 @@ use crate::{
         team::{Team, TeamVisibility},
         utilities::DateTimeBridge,
     },
-    system::{core::Engine},
-
-    
+    system::core::Engine,
 };
 
 #[derive(InputObject)]
@@ -118,7 +116,8 @@ impl ResourcesMutation {
                 .unwrap();
             }
         }
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let task = Task {
             id: task_final_info.id,
@@ -240,7 +239,8 @@ impl ResourcesMutation {
             }
         }
 
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let task = Task {
             id: task_final_info.id,
@@ -263,7 +263,6 @@ impl ResourcesMutation {
         subscription_manager.send_task_event(task.clone()).await;
 
         Ok(task)
-
     }
 
     async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Result<Task> {
@@ -303,7 +302,8 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let task = Task {
             id: task_final_info.id,
@@ -323,106 +323,106 @@ impl ResourcesMutation {
             parent_id: task_final_info.parent_id,
         };
 
-        subscription_manager.send_task_event( task.clone()).await;
-        
+        subscription_manager.send_task_event(task.clone()).await;
+
         Ok(task)
     }
 
-    // async fn update_member(
-    //     &self,
-    //     ctx: &Context<'_>,
-    //     id: Uuid,
-    //     email: Option<String>,
-    //     name: Option<String>,
-    //     role: Option<String>,
-    //     projects: Option<Vec<Uuid>>,
-    //     teams: Option<Vec<Uuid>>,
-    // ) -> Result<Member> {
-    //     let (plexo_engine, _member_id) = extract_context(ctx)?;
+    async fn update_member(
+        &self,
+        ctx: &Context<'_>,
+        id: Uuid,
+        email: Option<String>,
+        name: Option<String>,
+        role: Option<String>,
+        // projects: Option<Vec<Uuid>>,
+        // teams: Option<Vec<Uuid>>,
+    ) -> Result<Member> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
 
-    //     let member = sqlx::query!(
-    //         r#"
-    //         UPDATE members
-    //         SET email = $1, name = $2, role = $3
-    //         WHERE id = $4
-    //         RETURNING id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
-    //         "#,
-    //         email,
-    //         name,
-    //         role,
-    //         id,
-    //     )
-    //     .fetch_one(&*plexo_engine.pool)
-    //     .await
-    //     .unwrap();
+        let member = sqlx::query!(
+            r#"
+            UPDATE members
+            SET email = $1, name = $2, role = $3
+            WHERE id = $4
+            RETURNING id, created_at, updated_at, email, name, github_id, google_id, photo_url, role
+            "#,
+            email,
+            name,
+            role,
+            id,
+        )
+        .fetch_one(&*plexo_engine.pool)
+        .await
+        .unwrap();
 
-    //     if let Some(projects) = projects {
-    //         let _deleted_projects = sqlx::query!(
-    //             r#"
-    //                 DELETE FROM members_by_projects
-    //                 WHERE member_id = $1
-    //                 "#,
-    //             id,
-    //         )
-    //         .execute(&*plexo_engine.pool)
-    //         .await
-    //         .unwrap();
+        // if let Some(projects) = projects {
+        //     let _deleted_projects = sqlx::query!(
+        //         r#"
+        //             DELETE FROM members_by_projects
+        //             WHERE member_id = $1
+        //             "#,
+        //         id,
+        //     )
+        //     .execute(&*plexo_engine.pool)
+        //     .await
+        //     .unwrap();
 
-    //         for project in projects {
-    //             let _inserted_projects = sqlx::query!(
-    //                 r#"
-    //                     INSERT INTO members_by_projects (member_id, project_id)
-    //                     VALUES ($1, $2)
-    //                     "#,
-    //                 id,
-    //                 project,
-    //             )
-    //             .execute(&*plexo_engine.pool)
-    //             .await
-    //             .unwrap();
-    //         }
-    //     }
+        //     for project in projects {
+        //         let _inserted_projects = sqlx::query!(
+        //             r#"
+        //                 INSERT INTO members_by_projects (member_id, project_id)
+        //                 VALUES ($1, $2)
+        //                 "#,
+        //             id,
+        //             project,
+        //         )
+        //         .execute(&*plexo_engine.pool)
+        //         .await
+        //         .unwrap();
+        //     }
+        // }
 
-    //     if let Some(teams) = teams {
-    //         let _deleted_teams = sqlx::query!(
-    //             r#"
-    //                 DELETE FROM members_by_teams
-    //                 WHERE member_id = $1
-    //                 "#,
-    //             id,
-    //         )
-    //         .execute(&*plexo_engine.pool)
-    //         .await
-    //         .unwrap();
+        // if let Some(teams) = teams {
+        //     let _deleted_teams = sqlx::query!(
+        //         r#"
+        //             DELETE FROM members_by_teams
+        //             WHERE member_id = $1
+        //             "#,
+        //         id,
+        //     )
+        //     .execute(&*plexo_engine.pool)
+        //     .await
+        //     .unwrap();
 
-    //         for team in teams {
-    //             let _inserted_teams = sqlx::query!(
-    //                 r#"
-    //                     INSERT INTO members_by_teams (member_id, team_id)
-    //                     VALUES ($1, $2)
-    //                     "#,
-    //                 id,
-    //                 team,
-    //             )
-    //             .execute(&*plexo_engine.pool)
-    //             .await
-    //             .unwrap();
-    //         }
-    //     }
+        //     for team in teams {
+        //         let _inserted_teams = sqlx::query!(
+        //             r#"
+        //                 INSERT INTO members_by_teams (member_id, team_id)
+        //                 VALUES ($1, $2)
+        //                 "#,
+        //             id,
+        //             team,
+        //         )
+        //         .execute(&*plexo_engine.pool)
+        //         .await
+        //         .unwrap();
+        //     }
+        // }
 
-    //     Ok(Member {
-    //         id: member.id,
-    //         created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-    //         updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-    //         name: member.name.clone(),
-    //         email: member.email.clone(),
-    //         github_id: member.github_id,
-    //         google_id: member.google_id,
-    //         photo_url: member.photo_url,
-    //         role: MemberRole::from_optional_str(&member.role),
-    //         password_hash: None,
-    //     })
-    // }
+        Ok(Member {
+            id: member.id,
+            created_at: DateTimeBridge::from_offset_date_time(member.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
+            name: member.name.clone(),
+            email: member.email.clone(),
+            github_id: member.github_id,
+            google_id: member.google_id,
+            photo_url: member.photo_url,
+            role: MemberRole::from_optional_str(&member.role),
+            password_hash: None,
+        })
+    }
 
     // async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Result<Member> {
     //     let (plexo_engine, _member_id) = extract_context(ctx)?;
@@ -545,7 +545,8 @@ impl ResourcesMutation {
             }
         }
 
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let project = Project {
             id: project.id,
@@ -562,10 +563,11 @@ impl ResourcesMutation {
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         };
 
-        subscription_manager.send_project_event(project.clone()).await;
-        
-        Ok(project)
+        subscription_manager
+            .send_project_event(project.clone())
+            .await;
 
+        Ok(project)
     }
 
     async fn update_project(
@@ -665,9 +667,8 @@ impl ResourcesMutation {
             }
         }
 
-
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
-
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let project = Project {
             id: project.id,
@@ -684,9 +685,10 @@ impl ResourcesMutation {
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         };
 
-        subscription_manager.send_project_event( project.clone()).await;
+        subscription_manager
+            .send_project_event(project.clone())
+            .await;
         Ok(project)
-
     }
 
     async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Project> {
@@ -738,7 +740,8 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let project = Project {
             id: project.id,
@@ -755,9 +758,10 @@ impl ResourcesMutation {
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         };
 
-        subscription_manager.send_project_event( project.clone()).await;
+        subscription_manager
+            .send_project_event(project.clone())
+            .await;
         Ok(project)
-
     }
 
     async fn create_team(
@@ -818,8 +822,8 @@ impl ResourcesMutation {
             }
         }
 
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
-
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let team = Team {
             id: team.id,
@@ -830,7 +834,7 @@ impl ResourcesMutation {
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
         };
-        subscription_manager.send_team_event( team.clone()).await;
+        subscription_manager.send_team_event(team.clone()).await;
         Ok(team)
     }
 
@@ -922,7 +926,8 @@ impl ResourcesMutation {
             }
         }
 
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let team = Team {
             id: team.id,
@@ -934,9 +939,8 @@ impl ResourcesMutation {
             prefix: team.prefix.clone(),
         };
 
-        subscription_manager.send_team_event( team.clone()).await;
+        subscription_manager.send_team_event(team.clone()).await;
         Ok(team)
-
     }
 
     async fn delete_team(&self, ctx: &Context<'_>, id: Uuid) -> Result<Team> {
@@ -976,7 +980,8 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
-        let subscription_manager: &crate::system::subscriptions::SubscriptionManager = &ctx.data::<Engine>().unwrap().subscription_manager;
+        let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+            &ctx.data::<Engine>().unwrap().subscription_manager;
 
         let team = Team {
             id: team.id,
@@ -990,7 +995,6 @@ impl ResourcesMutation {
 
         subscription_manager.send_team_event(team.clone()).await;
         Ok(team)
-
     }
 
     async fn create_label(

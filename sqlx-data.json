@@ -975,6 +975,77 @@
     },
     "query": "\n            SELECT * FROM members\n            "
   },
+  "54f9435e33611a8ce23e355a582b85e8d62799377627fc42e8f6ebd221f51683": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "email",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "name",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "github_id",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "google_id",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "photo_url",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "role",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Varchar",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE members\n            SET email = $1, name = $2, role = $3\n            WHERE id = $4\n            RETURNING id, created_at, updated_at, email, name, github_id, google_id, photo_url, role\n            "
+  },
   "573f633c9b549ec4c38415ae90f5b10242dbd0f9e8e8687e99335a3285ddef7a": {
     "describe": {
       "columns": [],
@@ -1117,6 +1188,18 @@
       }
     },
     "query": "\n                    DELETE FROM tasks_by_assignees\n                    WHERE task_id = $1\n                    "
+  },
+  "5a809f706988a2146b08fe39e30d0035a8d355571f566287b0ed749bc4dbc08a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                    DELETE FROM members_by_projects\n                    WHERE member_id = $1\n                    "
   },
   "5f8fcf951dd8d0cacf30d5859713b0c735e1c790be7b965ca942555be424f66e": {
     "describe": {
@@ -3209,6 +3292,18 @@
       }
     },
     "query": "\n            SELECT * FROM projects WHERE id  = ANY($1)\n            "
+  },
+  "f5e26e26625b5d123840967b4862fede649ccfe7d4eb1bd3216425ede6b1712b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                    DELETE FROM members_by_teams\n                    WHERE member_id = $1\n                    "
   },
   "fa0154535e96ce7bef5bc5e8720ae7c599c241ca978d33d2bb10ecd759666852": {
     "describe": {
