@@ -32,7 +32,7 @@ impl AIFunctionsQuery {
         &self,
         ctx: &Context<'_>,
         task_id: String,
-        #[graphql(default = 5)] subtasks: u32,
+        #[graphql(default = 3)] subtasks: u32,
     ) -> Result<Vec<TaskSuggestionResult>> {
         let (plexo_engine, _member_id) = extract_context(ctx)?;
 

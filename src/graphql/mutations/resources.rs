@@ -301,7 +301,10 @@ impl ResourcesMutation {
             parent_id: task_final_info.parent_id,
         };
 
-        subscription_manager.send_task_event(task.clone()).await;
+        subscription_manager
+            .send_task_event(task.clone())
+            .await
+            .unwrap();
 
         Ok(task)
     }
@@ -364,7 +367,10 @@ impl ResourcesMutation {
             parent_id: task_final_info.parent_id,
         };
 
-        subscription_manager.send_task_event(task.clone()).await;
+        subscription_manager
+            .send_task_event(task.clone())
+            .await
+            .unwrap();
 
         Ok(task)
     }
@@ -606,7 +612,8 @@ impl ResourcesMutation {
 
         subscription_manager
             .send_project_event(project.clone())
-            .await;
+            .await
+            .unwrap();
 
         Ok(project)
     }
@@ -728,7 +735,8 @@ impl ResourcesMutation {
 
         subscription_manager
             .send_project_event(project.clone())
-            .await;
+            .await
+            .unwrap();
         Ok(project)
     }
 
@@ -801,7 +809,8 @@ impl ResourcesMutation {
 
         subscription_manager
             .send_project_event(project.clone())
-            .await;
+            .await
+            .unwrap();
         Ok(project)
     }
 
@@ -875,7 +884,12 @@ impl ResourcesMutation {
             visibility: TeamVisibility::from_optional_str(&team.visibility),
             prefix: team.prefix.clone(),
         };
-        subscription_manager.send_team_event(team.clone()).await;
+
+        subscription_manager
+            .send_team_event(team.clone())
+            .await
+            .unwrap();
+
         Ok(team)
     }
 
@@ -980,7 +994,10 @@ impl ResourcesMutation {
             prefix: team.prefix.clone(),
         };
 
-        subscription_manager.send_team_event(team.clone()).await;
+        subscription_manager
+            .send_team_event(team.clone())
+            .await
+            .unwrap();
         Ok(team)
     }
 
@@ -1034,7 +1051,10 @@ impl ResourcesMutation {
             prefix: team.prefix.clone(),
         };
 
-        subscription_manager.send_team_event(team.clone()).await;
+        subscription_manager
+            .send_team_event(team.clone())
+            .await
+            .unwrap();
         Ok(team)
     }
 
