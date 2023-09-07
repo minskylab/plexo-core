@@ -9,3 +9,4 @@ data
 Secrets.toml
 .vscode
 .DS_Store
+.sqlx
