@@ -35,7 +35,8 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=raw,value=${{ steps.cargo_version.outputs.version }}-debug,enable=${{ github.ref == 'refs/heads/debug/prod' }}
+            type=sha,format=long,prefix=sha-
+            type=raw,value=stable,enable=${{ github.ref == 'refs/heads/debug/prod' }}
 
       - name: Build and push
         id: docker_build
