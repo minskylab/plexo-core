@@ -52,7 +52,7 @@ jobs:
   deploy-caprover-production:
     runs-on: ubuntu-20.04
     needs: [build-push-registry]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/debug/prod'
     name: "[Production] Deploy to Caprover"
     steps:
       - name: Deploy to Caprover
