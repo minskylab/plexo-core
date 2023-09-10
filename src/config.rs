@@ -6,7 +6,8 @@ lazy_static! {
     pub static ref HOST: String = var("HOST").unwrap_or("0.0.0.0".into());
     pub static ref PORT: String = var("PORT").unwrap_or("8080".into());
     pub static ref URL: String = var("URL").unwrap_or(format!("{}:{}", *HOST, *PORT));
-    pub static ref DOMAIN: String = var("DOMAIN").unwrap_or(format!("http://{}", *URL));
+    pub static ref SCHEMA: String = var("SCHEMA").unwrap_or("http".into());
+    pub static ref DOMAIN: String = var("DOMAIN").unwrap_or(format!("{}://{}", *SCHEMA, *URL));
     //
     pub static ref DATABASE_URL: String = var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
     pub static ref GITHUB_CLIENT_ID: Option<String> = var("GITHUB_CLIENT_ID").ok();

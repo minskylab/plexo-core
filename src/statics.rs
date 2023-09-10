@@ -138,20 +138,22 @@ impl Endpoint for StaticServer {
                 .header(EXPIRES, "0")
                 .body(Body::empty()));
 
-            let Some(auth_token) =  req
+            let Some(auth_token) = req
                 .header("Cookie")
                 .or(req.header("Set-Cookie"))
-                .and_then(get_token_from_raw_cookie) else {
-                    return unauthorized_response;
-                };
+                .and_then(get_token_from_raw_cookie)
+            else {
+                return unauthorized_response;
+            };
 
             let Ok(_member_id) = self
                 .plexo_engine
                 .auth
                 .extract_claims(&auth_token)
-                .map(|token_claims| token_claims.member_id()) else {
-                    return unauthorized_response;
-                };
+                .map(|token_claims| token_claims.member_id())
+            else {
+                return unauthorized_response;
+            };
         }
 
         if path.ends_with("/login") {

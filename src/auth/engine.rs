@@ -1,4 +1,4 @@
-use std::{env, error::Error};
+use std::error::Error;
 
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},

@@ -10,7 +10,7 @@ use plexo::{
     },
     config::{
         DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL,
-        JWT_ACCESS_TOKEN_SECRET, STATIC_PAGE_ENABLED, URL,
+        JWT_ACCESS_TOKEN_SECRET, URL,
     },
     graphql::{mutations::MutationRoot, queries::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
@@ -18,9 +18,7 @@ use plexo::{
     statics::StaticServer,
     system::core::Engine,
 };
-use poem::{
-    get, listener::TcpListener, middleware::Cors, post, EndpointExt, IntoEndpoint, Route, Server,
-};
+use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
 use sqlx::migrate;
 use sqlx::postgres::PgPoolOptions;
 
@@ -30,7 +28,7 @@ async fn main() {
 
     let plexo_engine = Engine::new(
         PgPoolOptions::new()
-            .max_connections(5)
+            .max_connections(3)
             .connect(&DATABASE_URL)
             .await
             .unwrap(),
@@ -90,6 +88,10 @@ async fn main() {
     // }
 
     let app = Route::new()
+        .nest(
+            "/",
+            StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
+        )
         // Non authenticated routes
         .at("/auth/email/login", post(email_basic_login_handler))
         // .at("/auth/email/register", post(email_basic_register_handler))
