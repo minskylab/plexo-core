@@ -9,7 +9,8 @@ use plexo::{
         engine::AuthEngine,
     },
     config::{
-        DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL, URL,
+        DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL,
+        JWT_ACCESS_TOKEN_SECRET, STATIC_PAGE_ENABLED, URL,
     },
     graphql::{mutations::MutationRoot, queries::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
@@ -17,7 +18,9 @@ use plexo::{
     statics::StaticServer,
     system::core::Engine,
 };
-use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
+use poem::{
+    get, listener::TcpListener, middleware::Cors, post, EndpointExt, IntoEndpoint, Route, Server,
+};
 use sqlx::migrate;
 use sqlx::postgres::PgPoolOptions;
 
@@ -32,9 +35,12 @@ async fn main() {
             .await
             .unwrap(),
         AuthEngine::new(
-            &GITHUB_CLIENT_ID,
-            &GITHUB_CLIENT_SECRET,
-            &GITHUB_REDIRECT_URL,
+            // TODO: That's horrible, fix it
+            (*JWT_ACCESS_TOKEN_SECRET).to_string(),
+            (*JWT_ACCESS_TOKEN_SECRET).to_string(),
+            (*GITHUB_CLIENT_ID).to_owned(),
+            (*GITHUB_CLIENT_SECRET).to_owned(),
+            Some((*GITHUB_REDIRECT_URL).to_owned()),
         ),
     );
 
@@ -73,11 +79,17 @@ async fn main() {
 
     // plexo_engine.create_member_from_email(email, name, password_hash)
 
+    // let with_static_page = *STATIC_PAGE_ENABLED;
+    // let with_github_auth = plexo_engine.auth.has_github_client();
+
+    // if with_static_page {
+    //     app = app.nest(
+    //         "/",
+    //         StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
+    //     )
+    // }
+
     let app = Route::new()
-        .nest(
-            "/",
-            StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
-        )
         // Non authenticated routes
         .at("/auth/email/login", post(email_basic_login_handler))
         // .at("/auth/email/register", post(email_basic_register_handler))

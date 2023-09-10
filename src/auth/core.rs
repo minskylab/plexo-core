@@ -34,9 +34,19 @@ pub const COOKIE_SESSION_TOKEN_NAME: &str = "__Host-plexo-session-token";
 
 #[handler]
 pub async fn github_sign_in_handler(plexo_engine: Data<&Engine>) -> impl IntoResponse {
-    let (url, _) = plexo_engine.0.auth.new_github_authorize_url();
+    let Some((url, _)) = plexo_engine.0.auth.new_github_authorize_url() else {
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header("Content-Type", "application/json")
+            .body(Body::from_json(&Error::new("Internal Server Error (github)")).unwrap());
+    };
 
     Redirect::temporary(url.to_string())
+        // .with_header("Set-Cookie", session_token_cookie.to_string())
+        // .with_header(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+        // .with_header(PRAGMA, "no-cache")
+        // .with_header(EXPIRES, "0")
+        .into_response()
 }
 
 #[handler]
