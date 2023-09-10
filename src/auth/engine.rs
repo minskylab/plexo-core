@@ -1,4 +1,4 @@
-use std::{env, error::Error};
+use std::error::Error;
 
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
@@ -20,41 +20,78 @@ use super::{
 pub struct AuthEngine {
     pub jwt_engine: JWTEngine,
 
-    github_client: BasicClient,
+    github_client: Option<BasicClient>,
     _google_client: Option<BasicClient>,
 }
 
 impl AuthEngine {
     pub fn new(
-        github_client_id: &str,
-        github_client_secret: &str,
-        github_redirect_url: &str,
+        jwt_access_token_secret: String,
+        jwt_refresh_token_secret: String,
+        //
+        github_client_id: Option<String>,
+        github_client_secret: Option<String>,
+        github_redirect_url: Option<String>,
     ) -> Self {
-        let github_client_id = ClientId::new(github_client_id.to_string());
-        let github_client_secret = ClientSecret::new(github_client_secret.to_string());
+        let mut github_client: Option<BasicClient> = None;
 
-        let auth_url = AuthUrl::new("https://github.com/login/oauth/authorize".to_string())
-            .expect("Invalid authorization endpoint URL");
-        let token_url = TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
-            .expect("Invalid token endpoint URL");
+        if let (Some(github_client_id), Some(github_client_secret), Some(github_redirect_url)) =
+            (github_client_id, github_client_secret, github_redirect_url)
+        {
+            let github_client_id = ClientId::new(github_client_id.to_string());
+            let github_client_secret = ClientSecret::new(github_client_secret.to_string());
 
-        let github_client = BasicClient::new(
-            github_client_id,
-            Some(github_client_secret),
-            auth_url,
-            Some(token_url),
-        )
-        .set_redirect_uri(
-            RedirectUrl::new(github_redirect_url.to_string()).expect("Invalid redirect URL"),
+            let auth_url = AuthUrl::new("https://github.com/login/oauth/authorize".to_string())
+                .expect("Invalid authorization endpoint URL");
+            let token_url =
+                TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
+                    .expect("Invalid token endpoint URL");
+
+            github_client = Some(
+                BasicClient::new(
+                    github_client_id,
+                    Some(github_client_secret),
+                    auth_url,
+                    Some(token_url),
+                )
+                .set_redirect_uri(
+                    RedirectUrl::new(github_redirect_url.to_string())
+                        .expect("Invalid redirect URL"),
+                ),
+            );
+        }
+
+        // match (github_client_id, github_client_secret, github_redirect_url) {
+        //     (Some(github_client_id), Some(github_client_secret), Some(github_redirect_url)) => {
+        //         let github_client_id = ClientId::new(github_client_id.to_string());
+        //         let github_client_secret = ClientSecret::new(github_client_secret.to_string());
+
+        //         let auth_url = AuthUrl::new("https://github.com/login/oauth/authorize".to_string())
+        //             .expect("Invalid authorization endpoint URL");
+        //         let token_url =
+        //             TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
+        //                 .expect("Invalid token endpoint URL");
+
+        //         github_client = Some(
+        //             BasicClient::new(
+        //                 github_client_id,
+        //                 Some(github_client_secret),
+        //                 auth_url,
+        //                 Some(token_url),
+        //             )
+        //             .set_redirect_uri(
+        //                 RedirectUrl::new(github_redirect_url.to_string())
+        //                     .expect("Invalid redirect URL"),
+        //             ),
+        //         );
+        //     }
+        //     _ => {}
+        // }
+
+        let jwt_engine = JWTEngine::new(
+            jwt_access_token_secret.to_string(),
+            jwt_refresh_token_secret.to_string(),
         );
-
-        let jwt_access_token_secret = env::var("JWT_ACCESS_TOKEN_SECRET")
-            .expect("Missing the JWT_ACCESS_TOKEN_SECRET environment variable.");
-
-        let jwt_refresh_token_secret = env::var("JWT_REFRESH_TOKEN_SECRET")
-            .expect("Missing the JWT_REFRESH_TOKEN_SECRET environment variable.");
-
-        let jwt_engine = JWTEngine::new(jwt_access_token_secret, jwt_refresh_token_secret);
 
         Self {
             jwt_engine,
@@ -63,11 +100,13 @@ impl AuthEngine {
         }
     }
 
-    pub fn new_github_authorize_url(&self) -> (Url, CsrfToken) {
-        self.github_client
-            .authorize_url(CsrfToken::new_random)
-            .add_scope(Scope::new("user:email".to_string()))
-            .url()
+    pub fn new_github_authorize_url(&self) -> Option<(Url, CsrfToken)> {
+        self.github_client.as_ref().map(|client| {
+            client
+                .authorize_url(CsrfToken::new_random)
+                .add_scope(Scope::new("user:email".to_string()))
+                .url()
+        })
     }
 
     pub async fn exchange_github_code(
@@ -77,6 +116,8 @@ impl AuthEngine {
     ) -> Result<String, String> {
         let token_result = self
             .github_client
+            .as_ref()
+            .unwrap()
             .exchange_code(code)
             .request_async(async_http_client)
             .await;
@@ -113,5 +154,13 @@ impl AuthEngine {
             .hash_password(password.as_bytes(), &salt)
             .unwrap()
             .to_string()
+    }
+
+    pub fn has_github_client(&self) -> bool {
+        self.github_client.is_some()
+    }
+
+    pub fn has_google_client(&self) -> bool {
+        self._google_client.is_some()
     }
 }

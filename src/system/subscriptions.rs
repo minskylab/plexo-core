@@ -15,13 +15,13 @@ pub enum DataContainer {
     TeamContainer(Team),
 }
 pub struct Subscription {
-    id: String,
+    // id: String,
     sender: Sender<DataContainer>,
 }
 
 impl Subscription {
-    fn new(id: String, sender: Sender<DataContainer>) -> Self {
-        Subscription { id, sender }
+    fn new(_id: String, sender: Sender<DataContainer>) -> Self {
+        Subscription { sender }
     }
 }
 
@@ -33,6 +33,12 @@ pub struct SubscriptionManager {
     pub id_task: String,
     pub id_project: String,
     pub id_team: String,
+}
+
+impl Default for SubscriptionManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SubscriptionManager {
@@ -97,7 +103,7 @@ impl SubscriptionManager {
         }
     }
 
-    async fn remove_subscription(&self, id: String) -> MyResult<bool> {
+    async fn _remove_subscription(&self, id: String) -> MyResult<bool> {
         let mut subscriptions = self.subscriptions.lock().await;
 
         if !subscriptions.contains_key(&id) {

@@ -9,7 +9,8 @@ use plexo::{
         engine::AuthEngine,
     },
     config::{
-        DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL, URL,
+        DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL,
+        JWT_ACCESS_TOKEN_SECRET, URL,
     },
     graphql::{mutations::MutationRoot, queries::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
@@ -27,14 +28,17 @@ async fn main() {
 
     let plexo_engine = Engine::new(
         PgPoolOptions::new()
-            .max_connections(5)
+            .max_connections(3)
             .connect(&DATABASE_URL)
             .await
             .unwrap(),
         AuthEngine::new(
-            &GITHUB_CLIENT_ID,
-            &GITHUB_CLIENT_SECRET,
-            &GITHUB_REDIRECT_URL,
+            // TODO: That's horrible, fix it
+            (*JWT_ACCESS_TOKEN_SECRET).to_string(),
+            (*JWT_ACCESS_TOKEN_SECRET).to_string(),
+            (*GITHUB_CLIENT_ID).to_owned(),
+            (*GITHUB_CLIENT_SECRET).to_owned(),
+            Some((*GITHUB_REDIRECT_URL).to_owned()),
         ),
     );
 
@@ -72,6 +76,16 @@ async fn main() {
     .finish();
 
     // plexo_engine.create_member_from_email(email, name, password_hash)
+
+    // let with_static_page = *STATIC_PAGE_ENABLED;
+    // let with_github_auth = plexo_engine.auth.has_github_client();
+
+    // if with_static_page {
+    //     app = app.nest(
+    //         "/",
+    //         StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
+    //     )
+    // }
 
     let app = Route::new()
         .nest(
