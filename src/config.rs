@@ -18,6 +18,7 @@ lazy_static! {
 
     pub static ref ADMIN_EMAIL: String = var("ADMIN_EMAIL").unwrap_or("admin@plexo.app".into());
     pub static ref ADMIN_PASSWORD: String = var("ADMIN_PASSWORD").unwrap_or("admin".into());
+    pub static ref ADMIN_NAME: String = var("ADMIN_NAME").unwrap_or("Admin".into());
 
     pub static ref ORGANIZATION_NAME: String = var("ORGANIZATION_NAME").unwrap_or("Plexo".into());
 

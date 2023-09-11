@@ -149,9 +149,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql"
-version = "6.0.5"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5be1398e018b56697478e6917ef623faace61ab83489a124ed2b1f8430b5fd9"
+checksum = "738953986114630243230d0961968972ac326530532dca8e46f085a42c26fc31"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -188,9 +188,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-derive"
-version = "6.0.5"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7e6a70e1cec2c1b606f090b1c552a917a397155cf29e34a94a3fb2b25f517c9"
+checksum = "a6f224b1a028d601e27c6fc8456eb580064cb20a58069c21e513b16d5d751e91"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -205,9 +205,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "6.0.5"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d239d9131931629e5c9f93954ae2c29743c394a92f6163ea17b8e707a32108f"
+checksum = "06a6788bfac416c4ef118d3314d603ace7bae4159cd453ad8b9d8b071efd6ce0"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -217,9 +217,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-poem"
-version = "6.0.5"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "765757e68407d086197d89b9e802f0e1bfbbfc2b35eec95ab4ec32c3a2d964ab"
+checksum = "392a05415351879a2a575a708fff5dfa1f406d49fc0454984b5469285b397f08"
 dependencies = [
  "async-graphql",
  "futures-util",
@@ -233,9 +233,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "6.0.5"
+version = "6.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0489808318931e0570fede9a36cf621c6aff856aa5b97e9cdf6f5da3b5d98147"
+checksum = "c141bdc0b12f87ad76c963bf1bae5c04608e0547ad6831a86fbb8f753b2c438f"
 dependencies = [
  "bytes",
  "indexmap 2.0.0",
@@ -245,9 +245,9 @@ dependencies = [
 
 [[package]]
 name = "async-openai"
-version = "0.14.0"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7614373e1d24d44f7b57df2125c5253c7afbf927574f2695371e5589a0dd4937"
+checksum = "d9e39a536b0075c2517fb2e7a70a7e77a492395e71b0f3677ff6e2609a836c5b"
 dependencies = [
  "async-convert",
  "backoff",
@@ -508,16 +508,15 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.29"
+version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d87d9d13be47a5b7c3907137f1290b0459a7f80efb26be8c52afb11963bccb02"
+checksum = "defd4e7873dbddba6c7c91e199c7fcb946abc4a6a4ac3195400bcfb01b5de877"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
  "js-sys",
  "num-traits",
  "serde",
- "time 0.1.45",
  "wasm-bindgen",
  "windows-targets",
 ]
@@ -546,7 +545,7 @@ dependencies = [
  "rand",
  "sha2",
  "subtle",
- "time 0.3.28",
+ "time",
  "version_check",
 ]
 
@@ -1023,7 +1022,7 @@ dependencies = [
  "cfg-if",
  "js-sys",
  "libc",
- "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasi",
  "wasm-bindgen",
 ]
 
@@ -1479,7 +1478,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
 dependencies = [
  "libc",
- "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasi",
  "windows-sys",
 ]
 
@@ -1581,9 +1580,9 @@ dependencies = [
 
 [[package]]
 name = "oauth2"
-version = "4.4.1"
+version = "4.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09a6e2a2b13a56ebeabba9142f911745be6456163fd6c3d361274ebcd891a80c"
+checksum = "c38841cdd844847e3e7c8d29cef9dcfed8877f8f56f9071f77843ecf3baf937f"
 dependencies = [
  "base64 0.13.1",
  "chrono",
@@ -1815,7 +1814,7 @@ checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
 
 [[package]]
 name = "plexo"
-version = "0.2.19"
+version = "0.2.22"
 dependencies = [
  "argon2",
  "async-graphql",
@@ -1872,7 +1871,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "thiserror",
- "time 0.3.28",
+ "time",
  "tokio",
  "tokio-tungstenite",
  "tokio-util",
@@ -2349,9 +2348,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.105"
+version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "693151e1ac27563d6dbcec9dee9fbd5da8539b20fa14ad3752b2e6d363ace360"
+checksum = "2cc66a619ed80bf7a0f6b17dd063a84b88f6dea1813737cf469aef1d081142c2"
 dependencies = [
  "itoa",
  "ryu",
@@ -2435,7 +2434,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "thiserror",
- "time 0.3.28",
+ "time",
 ]
 
 [[package]]
@@ -2551,7 +2550,7 @@ dependencies = [
  "sqlx-rt",
  "stringprep",
  "thiserror",
- "time 0.3.28",
+ "time",
  "tokio-stream",
  "url",
  "uuid",
@@ -2712,17 +2711,6 @@ checksum = "3fdd6f064ccff2d6567adcb3873ca630700f00b5ad3f060c25b5dcfd9a4ce152"
 dependencies = [
  "cfg-if",
  "once_cell",
-]
-
-[[package]]
-name = "time"
-version = "0.1.45"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b797afad3f312d1c66a56d11d0316f916356d11bd158fbc6ca6389ff6bf805a"
-dependencies = [
- "libc",
- "wasi 0.10.0+wasi-snapshot-preview1",
- "winapi",
 ]
 
 [[package]]
@@ -3117,12 +3105,6 @@ checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
 dependencies = [
  "try-lock",
 ]
-
-[[package]]
-name = "wasi"
-version = "0.10.0+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasi"
