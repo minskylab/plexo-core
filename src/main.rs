@@ -9,8 +9,8 @@ use plexo::{
         engine::AuthEngine,
     },
     config::{
-        DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL,
-        JWT_ACCESS_TOKEN_SECRET, URL,
+        ADMIN_EMAIL, ADMIN_NAME, ADMIN_PASSWORD, DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID,
+        GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL, JWT_ACCESS_TOKEN_SECRET, URL,
     },
     graphql::{mutations::MutationRoot, queries::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
@@ -75,17 +75,31 @@ async fn main() {
     ))
     .finish();
 
-    // plexo_engine.create_member_from_email(email, name, password_hash)
+    let admin_email = ADMIN_EMAIL.to_owned();
 
-    // let with_static_page = *STATIC_PAGE_ENABLED;
-    // let with_github_auth = plexo_engine.auth.has_github_client();
+    if plexo_engine
+        .get_member_by_email(admin_email.clone())
+        .await
+        .is_none()
+    {
+        let admin_password = ADMIN_PASSWORD.to_owned();
+        let admin_name = ADMIN_NAME.to_owned();
 
-    // if with_static_page {
-    //     app = app.nest(
-    //         "/",
-    //         StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
-    //     )
-    // }
+        let admin_password_hash = plexo_engine.auth.hash_password(admin_password.as_str());
+
+        let admin_member = plexo_engine
+            .create_member_from_email(admin_email.clone(), admin_name, admin_password_hash)
+            .await;
+
+        if admin_member.is_none() {
+            println!("Failed to create admin member");
+        } else {
+            println!(
+                "Admin created with email: '{}' and password: '{}'",
+                admin_email, admin_password
+            );
+        }
+    }
 
     let app = Route::new()
         .nest(
