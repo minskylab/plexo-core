@@ -30,7 +30,7 @@ pub struct AuthenticationResponse {
 pub struct PlexoAuthToken(pub String);
 
 const GITHUB_USER_API: &str = "https://api.github.com/user";
-pub const COOKIE_SESSION_TOKEN_NAME: &str = "__Host-plexo-session-token";
+pub const COOKIE_SESSION_TOKEN_NAME: &str = "plexo-session-token";
 
 #[handler]
 pub async fn github_sign_in_handler(plexo_engine: Data<&Engine>) -> impl IntoResponse {

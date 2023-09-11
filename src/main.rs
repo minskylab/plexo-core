@@ -118,7 +118,9 @@ async fn main() {
         .at("/playground", get(graphiq_handler))
         .at("/graphql", post(index_handler))
         .at("/graphql/ws", get(ws_switch_handler))
-        .with(Cors::new())
+        .with(
+            Cors::new().allow_credentials(true), // .expose_header("Set-Cookie"),
+        )
         .data(schema)
         .data(plexo_engine.clone());
 
