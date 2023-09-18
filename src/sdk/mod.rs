@@ -1,3 +1,4 @@
+pub mod activity;
 pub mod labels;
 pub mod loaders;
 pub mod member;

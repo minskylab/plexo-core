@@ -206,6 +206,65 @@
     },
     "query": "\n            SELECT *\n            FROM teams\n            "
   },
+  "187265260d43f34f33a7aa6be519518ebac14ee8328872d8dab55d08372bfc59": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "member_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "resource_id",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "operation",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "resource_type",
+          "ordinal": 6,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO activity (operation, resource_type, resource_id, member_id)\n            VALUES ($1, $2, $3, $4)\n            RETURNING *\n            "
+  },
   "1d590755cfdaf09c0e44dca775a2f22b397c319242588480ed307e5e700a36b2": {
     "describe": {
       "columns": [
@@ -1969,6 +2028,64 @@
     },
     "query": "\n            DELETE FROM teams_by_projects\n            WHERE team_id = $1\n            "
   },
+  "992f88d5cec838611561a51354604ef2dcb8aeaec8042202e3a5a6d92acdd71a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "member_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "resource_id",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "operation",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "resource_type",
+          "ordinal": 6,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM activity\n            WHERE\n                resource_type = COALESCE($1, resource_type)\n                AND operation = COALESCE($2, operation)\n                AND member_id = COALESCE($3, member_id)\n            "
+  },
   "9c46c35985fd52827f4008f4831f9f650032acfd535662f90eb335213c48ccb7": {
     "describe": {
       "columns": [
@@ -2855,21 +2972,6 @@
       }
     },
     "query": "\n            UPDATE members\n            SET password_hash = $1\n            WHERE id = $2\n            RETURNING *\n            "
-  },
-  "ce5c2e838b83baeeeb529baefefa27637b32f9a7558b7e9a6fb5b485494cffcf": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO activity (operation, resource_type, resource_id, member_id)\n            VALUES ($1, $2, $3, $4)\n            "
   },
   "d33b7c49405926b387de43bbc6a0e5a03e28a09634925eca963b5f619dc3ed8a": {
     "describe": {

@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use async_graphql::{Context, InputObject, Object, Result};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
@@ -5,6 +7,7 @@ use uuid::Uuid;
 use crate::{
     graphql::auth::extract_context,
     sdk::{
+        activity::{Activity, ActivityOperationType, ActivityResourceType},
         labels::Label,
         member::{Member, MemberRole},
         project::Project,
@@ -259,7 +262,9 @@ impl ResourcesQuery {
             prefix: project.prefix.clone(),
             owner_id: project.owner_id,
             lead_id: project.lead_id,
-            start_date: project.start_date.map(DateTimeBridge::from_offset_date_time),
+            start_date: project
+                .start_date
+                .map(DateTimeBridge::from_offset_date_time),
             due_date: project.due_date.map(DateTimeBridge::from_offset_date_time),
         })
     }
@@ -367,5 +372,44 @@ impl ResourcesQuery {
             role: MemberRole::from_optional_str(&r.role),
             password_hash: None,
         })
+    }
+
+    async fn activity(
+        &self,
+        ctx: &Context<'_>,
+        resource_type: Option<ActivityResourceType>,
+        operation_type: Option<ActivityOperationType>,
+        member_id: Option<Uuid>,
+    ) -> Result<Vec<Activity>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
+
+        let activities = sqlx::query!(
+            r#"
+            SELECT * FROM activity
+            WHERE
+                resource_type = COALESCE($1, resource_type)
+                AND operation = COALESCE($2, operation)
+                AND member_id = COALESCE($3, member_id)
+            "#,
+            resource_type.map(|r| r.to_string()),
+            operation_type.map(|r| r.to_string()),
+            member_id
+        )
+        .fetch_all(&*plexo_engine.pool)
+        .await
+        .unwrap();
+
+        Ok(activities
+            .iter()
+            .map(|r| Activity {
+                id: r.id,
+                created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+                resource_type: ActivityResourceType::from_str(&r.resource_type).unwrap(),
+                operation: ActivityOperationType::from_str(&r.operation).unwrap(),
+                resource_id: r.resource_id,
+                member_id: r.member_id,
+            })
+            .collect())
     }
 }

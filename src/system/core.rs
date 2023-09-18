@@ -5,6 +5,7 @@ use crate::{
     auth::engine::AuthEngine,
     llm::suggestions::AutoSuggestionsEngine,
     sdk::{
+        activity::{Activity, ActivityOperationType, ActivityResourceType},
         member::{Member, MemberRole},
         utilities::DateTimeBridge,
     },
@@ -233,33 +234,35 @@ impl Engine {
         }
     }
 
-    // pub async fn update_member(&self, _member: Member) -> Member {
-    //     todo!()
-    // }
-
-    // pub async fn delete_member(&self, _member: Member) -> Member {
-    //     todo!()
-    // }
-
     pub async fn record_activity(
         &self,
-        operation: String,
-        resource_type: String,
+        operation: ActivityOperationType,
+        resource_type: ActivityResourceType,
         resource_id: Uuid,
         member_id: Uuid,
-    ) {
+    ) -> Option<Activity> {
         sqlx::query!(
             r#"
             INSERT INTO activity (operation, resource_type, resource_id, member_id)
             VALUES ($1, $2, $3, $4)
+            RETURNING *
             "#,
+            operation.to_string(),
+            resource_type.to_string(),
+            resource_id,
+            member_id,
+        )
+        .fetch_one(&*self.pool)
+        .await
+        .ok()
+        .map(|res| Activity {
+            id: res.id,
+            created_at: DateTimeBridge::from_offset_date_time(res.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(res.updated_at),
             operation,
             resource_type,
             resource_id,
             member_id,
-        )
-        .execute(&*self.pool)
-        .await
-        .unwrap();
+        })
     }
 }

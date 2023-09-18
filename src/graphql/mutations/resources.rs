@@ -7,6 +7,7 @@ use crate::{
     errors::definitions::PlexoAppError,
     graphql::auth::extract_context,
     sdk::{
+        activity::{ActivityOperationType, ActivityResourceType},
         labels::Label,
         member::{Member, MemberRole},
         project::Project,
@@ -179,7 +180,20 @@ impl ResourcesMutation {
             parent_id: task_final_info.parent_id,
         };
 
-        let _ = subscription_manager.send_task_event(task.clone()).await;
+        subscription_manager
+            .send_task_event(task.clone())
+            .await
+            .unwrap();
+
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Create,
+                ActivityResourceType::Task,
+                task.id,
+                member_id,
+            )
+            .await
+            .unwrap();
 
         Ok(task)
     }
@@ -313,7 +327,20 @@ impl ResourcesMutation {
                 parent_id: task_final_info.parent_id,
             };
 
-            let _ = subscription_manager.send_task_event(task.clone()).await;
+            subscription_manager
+                .send_task_event(task.clone())
+                .await
+                .unwrap();
+
+            plexo_engine
+                .record_activity(
+                    ActivityOperationType::Create,
+                    ActivityResourceType::Task,
+                    task.id,
+                    member_id,
+                )
+                .await
+                .unwrap();
 
             tasks_to_return.push(task);
         }
@@ -338,7 +365,7 @@ impl ResourcesMutation {
         labels: Option<Vec<Uuid>>,
         assignees: Option<Vec<Uuid>>,
     ) -> Result<Task> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let task_final_info = sqlx::query!(
             r#"
@@ -447,11 +474,21 @@ impl ResourcesMutation {
             .await
             .unwrap();
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Update,
+                ActivityResourceType::Task,
+                task.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(task)
     }
 
     async fn delete_task(&self, ctx: &Context<'_>, id: Uuid) -> Result<Task> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let task_final_info = sqlx::query!(
             r#"
@@ -513,6 +550,16 @@ impl ResourcesMutation {
             .await
             .unwrap();
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Delete,
+                ActivityResourceType::Task,
+                task.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(task)
     }
 
@@ -526,7 +573,7 @@ impl ResourcesMutation {
         // projects: Option<Vec<Uuid>>,
         // teams: Option<Vec<Uuid>>,
     ) -> Result<Member> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let member = sqlx::query!(
             r#"
@@ -598,6 +645,16 @@ impl ResourcesMutation {
         //     }
         // }
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Update,
+                ActivityResourceType::Member,
+                member.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(Member {
             id: member.id,
             created_at: DateTimeBridge::from_offset_date_time(member.created_at),
@@ -611,65 +668,6 @@ impl ResourcesMutation {
             password_hash: None,
         })
     }
-
-    // async fn delete_member(&self, ctx: &Context<'_>, id: Uuid) -> Result<Member> {
-    //     let (plexo_engine, _member_id) = extract_context(ctx)?;
-
-    //     let member = sqlx::query!(
-    //         r#"
-    //         DELETE FROM members
-    //         WHERE id = $1
-    //         RETURNING id, created_at, updated_at, name, email, github_id, google_id, photo_url, role;
-    //         "#,
-    //         id,
-    //     )
-    //     .fetch_one(&*plexo_engine.pool).await.unwrap();
-
-    //     let _deleted_projects = sqlx::query!(
-    //         r#"
-    //         DELETE FROM members_by_projects
-    //         WHERE member_id = $1
-    //         "#,
-    //         id,
-    //     )
-    //     .execute(&*plexo_engine.pool)
-    //     .await
-    //     .unwrap();
-
-    //     let _deleted_teams = sqlx::query!(
-    //         r#"
-    //         DELETE FROM members_by_teams
-    //         WHERE member_id = $1
-    //         "#,
-    //         id,
-    //     )
-    //     .execute(&*plexo_engine.pool)
-    //     .await
-    //     .unwrap();
-
-    //     let _deleted_tasks = sqlx::query!(
-    //         r#"
-    //         DELETE FROM tasks_by_assignees
-    //         WHERE assignee_id = $1
-    //         "#,
-    //         id,
-    //     )
-    //     .execute(&*plexo_engine.pool)
-    //     .await
-    //     .unwrap();
-
-    //     Ok(Member {
-    //         id: member.id,
-    //         created_at: DateTimeBridge::from_offset_date_time(member.created_at),
-    //         updated_at: DateTimeBridge::from_offset_date_time(member.updated_at),
-    //         name: member.name.clone(),
-    //         email: member.email.clone(),
-    //         github_id: member.github_id,
-    //         google_id: member.google_id,
-    //         photo_url: member.photo_url,
-    //         role: MemberRole::from_optional_str(&member.role),
-    //     })
-    // }
 
     async fn create_project(
         &self,
@@ -756,6 +754,16 @@ impl ResourcesMutation {
             .await
             .unwrap();
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Create,
+                ActivityResourceType::Project,
+                project.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(project)
     }
 
@@ -773,7 +781,7 @@ impl ResourcesMutation {
         members: Option<Vec<Uuid>>,
         teams: Option<Vec<Uuid>>,
     ) -> Result<Project> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let project = sqlx::query!(
             r#"
@@ -879,11 +887,21 @@ impl ResourcesMutation {
             .await
             .unwrap();
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Update,
+                ActivityResourceType::Project,
+                project.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(project)
     }
 
     async fn delete_project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Project> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let project = sqlx::query!(
             r#"
@@ -951,6 +969,16 @@ impl ResourcesMutation {
 
         subscription_manager
             .send_project_event(project.clone())
+            .await
+            .unwrap();
+
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Delete,
+                ActivityResourceType::Project,
+                project.id,
+                member_id,
+            )
             .await
             .unwrap();
 
@@ -1033,6 +1061,16 @@ impl ResourcesMutation {
             .await
             .unwrap();
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Create,
+                ActivityResourceType::Team,
+                team.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(team)
     }
 
@@ -1047,7 +1085,7 @@ impl ResourcesMutation {
         members: Option<Vec<Uuid>>,
         projects: Option<Vec<Uuid>>,
     ) -> Result<Team> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let team = sqlx::query!(
             r#"
@@ -1141,11 +1179,22 @@ impl ResourcesMutation {
             .send_team_event(team.clone())
             .await
             .unwrap();
+
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Update,
+                ActivityResourceType::Team,
+                team.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(team)
     }
 
     async fn delete_team(&self, ctx: &Context<'_>, id: Uuid) -> Result<Team> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let team = sqlx::query!(
             r#"
@@ -1198,6 +1247,17 @@ impl ResourcesMutation {
             .send_team_event(team.clone())
             .await
             .unwrap();
+
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Delete,
+                ActivityResourceType::Team,
+                team.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(team)
     }
 
@@ -1208,7 +1268,7 @@ impl ResourcesMutation {
         description: Option<String>,
         color: Option<String>,
     ) -> Result<Label> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let label = sqlx::query!(
             r#"
@@ -1223,6 +1283,16 @@ impl ResourcesMutation {
         .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
+
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Create,
+                ActivityResourceType::Label,
+                label.id,
+                member_id,
+            )
+            .await
+            .unwrap();
 
         Ok(Label {
             id: label.id,
@@ -1242,7 +1312,7 @@ impl ResourcesMutation {
         description: Option<String>,
         color: Option<String>,
     ) -> Result<Label> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let label = sqlx::query!(
             r#"
@@ -1260,6 +1330,16 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Update,
+                ActivityResourceType::Label,
+                label.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(Label {
             id: label.id,
             created_at: DateTimeBridge::from_offset_date_time(label.created_at),
@@ -1271,7 +1351,7 @@ impl ResourcesMutation {
     }
 
     async fn delete_label(&self, ctx: &Context<'_>, id: Uuid) -> Result<Label> {
-        let (plexo_engine, _member_id) = extract_context(ctx)?;
+        let (plexo_engine, member_id) = extract_context(ctx)?;
 
         let label = sqlx::query!(
             r#"
@@ -1295,6 +1375,16 @@ impl ResourcesMutation {
         .execute(&*plexo_engine.pool)
         .await
         .unwrap();
+
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Delete,
+                ActivityResourceType::Label,
+                label.id,
+                member_id,
+            )
+            .await
+            .unwrap();
 
         Ok(Label {
             id: label.id,
@@ -1324,7 +1414,7 @@ impl ResourcesMutation {
             return Err(PlexoAppError::EmailAlreadyInUse.into());
         }
 
-        let r = sqlx::query!(
+        let profile = sqlx::query!(
             r#"
             UPDATE 
                 members
@@ -1345,16 +1435,26 @@ impl ResourcesMutation {
         .await
         .unwrap();
 
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Update,
+                ActivityResourceType::Member,
+                profile.id,
+                member_id,
+            )
+            .await
+            .unwrap();
+
         Ok(Member {
-            id: r.id,
-            created_at: DateTimeBridge::from_offset_date_time(r.created_at),
-            updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
-            name: r.name.clone(),
-            email: r.email.clone(),
-            photo_url: r.photo_url.clone(),
-            github_id: r.github_id,
-            google_id: r.google_id,
-            role: MemberRole::from_optional_str(&r.role),
+            id: profile.id,
+            created_at: DateTimeBridge::from_offset_date_time(profile.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(profile.updated_at),
+            name: profile.name.clone(),
+            email: profile.email.clone(),
+            photo_url: profile.photo_url.clone(),
+            github_id: profile.github_id,
+            google_id: profile.google_id,
+            role: MemberRole::from_optional_str(&profile.role),
             password_hash: None,
         })
     }
@@ -1407,6 +1507,16 @@ impl ResourcesMutation {
         .fetch_one(&*plexo_engine.pool)
         .await
         .unwrap();
+
+        plexo_engine
+            .record_activity(
+                ActivityOperationType::Update,
+                ActivityResourceType::Member,
+                member.id,
+                member_id,
+            )
+            .await
+            .unwrap();
 
         Ok(Member {
             id: r.id,
