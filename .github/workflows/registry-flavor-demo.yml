@@ -15,6 +15,7 @@ jobs:
       id-token: write
       # Allows pushing to the GitHub Container Registry
       packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -42,13 +43,13 @@ jobs:
             latest=false
           tags: |
             type=raw,value=${{ steps.cargo_version.outputs.version }}-demo,enable=${{ github.ref == 'refs/heads/flavor/demo' }}
+
       - uses: depot/setup-action@v1
+
       - name: Build and push
         id: docker_build
         uses: depot/build-push-action@v1
         with:
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
           project: qk8wpgrv4g
           push: true
           labels: ${{ steps.docker_meta.outputs.labels }}

@@ -129,6 +129,8 @@ impl Endpoint for StaticServer {
 
         let path = req.uri().path();
 
+        println!("path: {}", path);
+
         if !path.ends_with("login") {
             let unauthorized_response = Ok(Response::builder()
                 .status(StatusCode::FOUND)
@@ -193,6 +195,8 @@ impl Endpoint for StaticServer {
             .decode_utf8()
             .map_err(|_| StaticFileError::InvalidPath)?;
 
+        println!("cow path: {}", path);
+
         let mut file_path = self.path.clone();
 
         for p in Path::new(&*path) {
@@ -205,9 +209,40 @@ impl Endpoint for StaticServer {
             }
         }
 
+        let mut branch_file_path = file_path.clone();
+        branch_file_path.pop();
+
+        println!("branch_file_path: {:?}", branch_file_path);
+
+        if branch_file_path.is_dir() {
+            // check if dir have files that starts with '['
+
+            let read_dir = branch_file_path.read_dir().map_err(StaticFileError::Io)?;
+
+            for res in read_dir {
+                let entry = res.map_err(StaticFileError::Io)?;
+
+                if let Some(filename) = entry.file_name().to_str() {
+                    if filename.starts_with('[') && filename.ends_with("].html") {
+                        println!("detected dynamic filename: {}", filename);
+
+                        let file = entry.path().with_extension("html");
+                        println!("generating response: {:?}", file);
+
+                        return Ok(StaticFileRequest::from_request_without_body(&req)
+                            .await?
+                            .create_response(file, self.prefer_utf8)?
+                            .into_response());
+                    }
+                }
+            }
+        }
+
         if !file_path.starts_with(&self.path) {
             return Err(StaticFileError::Forbidden(file_path.display().to_string()).into());
         }
+
+        println!("file_path: {:?}", file_path);
 
         if file_path.with_extension("html").exists() {
             return Ok(StaticFileRequest::from_request_without_body(&req)

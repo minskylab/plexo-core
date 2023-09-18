@@ -1,4 +1,3 @@
-use async_graphql::{dataloader::DataLoader, Schema};
 use dotenvy::dotenv;
 use plexo::{
     auth::{
@@ -9,17 +8,14 @@ use plexo::{
         engine::AuthEngine,
     },
     config::{
-        ADMIN_EMAIL, ADMIN_NAME, ADMIN_PASSWORD, DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID,
-        GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL, JWT_ACCESS_TOKEN_SECRET, URL,
+        DATABASE_URL, DOMAIN, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URL,
+        JWT_ACCESS_TOKEN_SECRET, STATIC_PAGE_ENABLED, URL,
     },
-    graphql::{mutations::MutationRoot, queries::QueryRoot, subscription::SubscriptionRoot},
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
-    sdk::loaders::{LabelLoader, MemberLoader, ProjectLoader, TaskLoader, TeamLoader},
     statics::StaticServer,
-    system::core::Engine,
+    system::{core::Engine, prelude::Prelude, schema::GraphQLSchema},
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
-use sqlx::migrate;
 use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
@@ -42,70 +38,17 @@ async fn main() {
         ),
     );
 
-    match migrate!().run(plexo_engine.pool.as_ref()).await {
-        Ok(_) => println!("Database migration successful"),
-        Err(e) => println!("Database migration failed: {:?}\n", e),
-    }
+    plexo_engine.prelude().await;
 
-    let schema = Schema::build(
-        QueryRoot::default(),
-        MutationRoot::default(),
-        SubscriptionRoot,
-    )
-    .data(plexo_engine.clone()) // TODO: Optimize this
-    .data(DataLoader::new(
-        TaskLoader::new(plexo_engine.clone()),
-        tokio::spawn,
-    ))
-    .data(DataLoader::new(
-        ProjectLoader::new(plexo_engine.clone()),
-        tokio::spawn,
-    ))
-    .data(DataLoader::new(
-        LabelLoader::new(plexo_engine.clone()),
-        tokio::spawn,
-    ))
-    .data(DataLoader::new(
-        MemberLoader::new(plexo_engine.clone()),
-        tokio::spawn,
-    ))
-    .data(DataLoader::new(
-        TeamLoader::new(plexo_engine.clone()),
-        tokio::spawn,
-    ))
-    .finish();
+    let schema = plexo_engine.graphql_api_schema();
 
-    let admin_email = ADMIN_EMAIL.to_owned();
+    let static_page_root_path = "plexo-platform/out".to_string();
 
-    if plexo_engine
-        .get_member_by_email(admin_email.clone())
-        .await
-        .is_none()
-    {
-        let admin_password = ADMIN_PASSWORD.to_owned();
-        let admin_name = ADMIN_NAME.to_owned();
+    let static_page =
+        StaticServer::new(static_page_root_path, plexo_engine.clone()).index_file("index.html");
 
-        let admin_password_hash = plexo_engine.auth.hash_password(admin_password.as_str());
-
-        let admin_member = plexo_engine
-            .create_member_from_email(admin_email.clone(), admin_name, admin_password_hash)
-            .await;
-
-        if admin_member.is_none() {
-            println!("Failed to create admin member");
-        } else {
-            println!(
-                "Admin created with email: '{}' and password: '{}'",
-                admin_email, admin_password
-            );
-        }
-    }
-
-    let app = Route::new()
-        .nest(
-            "/",
-            StaticServer::new("plexo-platform/out", plexo_engine.clone()).index_file("index.html"),
-        )
+    let mut app = Route::new()
+        // .nest("/", static_page)
         // Non authenticated routes
         .at("/auth/email/login", post(email_basic_login_handler))
         // .at("/auth/email/register", post(email_basic_register_handler))
@@ -117,7 +60,14 @@ async fn main() {
         //
         .at("/playground", get(graphiq_handler))
         .at("/graphql", post(index_handler))
-        .at("/graphql/ws", get(ws_switch_handler))
+        .at("/graphql/ws", get(ws_switch_handler));
+
+    if *STATIC_PAGE_ENABLED {
+        println!("Static page enabled");
+        app = app.nest("/", static_page)
+    }
+
+    let app = app
         .with(
             Cors::new().allow_credentials(true), // .expose_header("Set-Cookie"),
         )

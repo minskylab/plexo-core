@@ -1263,6 +1263,43 @@
     },
     "query": "\n            SELECT * FROM members WHERE id  = ANY($1)\n            "
   },
+  "693a1fdc3edb1c24430b6d28eb149293ca11552bedeb2526dba3177ad827d162": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                    UPDATE self\n                    SET name = $1\n                    WHERE id = $2\n                    "
+  },
+  "72edd262a7119a1f00063559538c699ec1d091050093bdb6312b737acf72e2ad": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n            SELECT id, name\n            FROM self\n            "
+  },
   "732924968e001ae1556b8dccd8df2c3edcd5cea0c71ed664913b5ea54a3d4630": {
     "describe": {
       "columns": [],
@@ -1500,6 +1537,112 @@
       }
     },
     "query": "\n            UPDATE tasks\n            SET \n                title = COALESCE($1, title),\n                description = COALESCE($2, description),\n                status = COALESCE($3, status),\n                priority = COALESCE($4, priority),\n                due_date = COALESCE($5, due_date),\n                project_id = COALESCE($6, project_id),\n                lead_id = COALESCE($7, lead_id)\n            WHERE id = $8\n            RETURNING * \n            "
+  },
+  "8f58abd92b81d8eab8a7bb10a3eb327cc74a1ab5e9177813a1f27c81e9c9915f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "title",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "owner_id",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "status",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "priority",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "due_date",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "project_id",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "lead_id",
+          "ordinal": 10,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "labels",
+          "ordinal": 11,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "count",
+          "ordinal": 12,
+          "type_info": "Int4"
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 13,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Timestamptz",
+          "Uuid",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n                RETURNING * \n                "
   },
   "938db14251bb3889c9aef70189745babfcb965e32a7f2accd61a719b3e668a8c": {
     "describe": {
@@ -2226,6 +2369,18 @@
     },
     "query": "\n            SELECT *\n            FROM tasks\n            LIMIT 10\n            "
   },
+  "aaacbcb8a0af78b003e943becad4c4653e89672bb60ca3eb1e20db549ed9fe92": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                    DELETE FROM labels_by_tasks\n                    WHERE task_id = $1\n                    "
+  },
   "b59e21945a7912e1bcc6fea8bd3f0ed6adf0dd77f5069c38462aee6a92834657": {
     "describe": {
       "columns": [
@@ -2701,6 +2856,21 @@
     },
     "query": "\n            UPDATE members\n            SET password_hash = $1\n            WHERE id = $2\n            RETURNING *\n            "
   },
+  "ce5c2e838b83baeeeb529baefefa27637b32f9a7558b7e9a6fb5b485494cffcf": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO activity (operation, resource_type, resource_id, member_id)\n            VALUES ($1, $2, $3, $4)\n            "
+  },
   "d33b7c49405926b387de43bbc6a0e5a03e28a09634925eca963b5f619dc3ed8a": {
     "describe": {
       "columns": [],
@@ -3049,6 +3219,19 @@
     },
     "query": "\n            SELECT * FROM labels\n            "
   },
+  "e0a3b78c6e92f2bda75220e91bf8e414c4ea1343193bfc41dd84bfc8012c57d9": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n                        INSERT INTO labels_by_tasks (task_id, label_id)\n                        VALUES ($1, $2)\n                        "
+  },
   "e9b4b02eea2a2a153577a5b65aa14ab21184dd7bb51d195244f0786d6b1d4389": {
     "describe": {
       "columns": [
@@ -3386,6 +3569,18 @@
       }
     },
     "query": "\n            SELECT * FROM projects WHERE id  = ANY($1)\n            "
+  },
+  "f52594e1ee98a25104768dc98db3dc9afbba5302b856c9054c07239c33a8aa12": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n                    INSERT INTO self (name)\n                    VALUES ($1)\n                    "
   },
   "fa0154535e96ce7bef5bc5e8720ae7c599c241ca978d33d2bb10ecd759666852": {
     "describe": {

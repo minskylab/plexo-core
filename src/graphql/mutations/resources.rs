@@ -33,8 +33,9 @@ struct CreateTaskInput {
     project_id: Option<Uuid>,
     lead_id: Option<Uuid>,
     labels: Option<Vec<Uuid>>,
-    // assignees: Option<Vec<Uuid>>,
+    assignees: Option<Vec<Uuid>>,
     parent_id: Option<Uuid>,
+    subtasks: Option<Vec<CreateTaskInput>>,
 }
 
 #[derive(Default)]
@@ -181,6 +182,146 @@ impl ResourcesMutation {
         let _ = subscription_manager.send_task_event(task.clone()).await;
 
         Ok(task)
+    }
+
+    async fn create_tasks(
+        &self,
+        ctx: &Context<'_>,
+        tasks: Vec<CreateTaskInput>,
+    ) -> Result<Vec<Task>> {
+        let (plexo_engine, member_id) = extract_context(ctx)?;
+
+        let mut tasks_to_return = Vec::new();
+
+        for task in tasks {
+            let task_final_info = sqlx::query!(r#"
+                INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING * 
+                "#,
+                task.title,
+                task.description,
+                member_id,
+                task.status,
+                task.priority,
+                task.due_date.map(|d| DateTimeBridge::from_date_time(d)),
+                task.project_id,
+                task.lead_id,
+                task.parent_id,
+            ).fetch_one(&*plexo_engine.pool)
+            .await
+            .unwrap();
+
+            if let Some(assignees) = task.assignees {
+                let _delete_assignees = sqlx::query!(
+                    // TODO: Update this bad implementation
+                    r#"
+                    DELETE FROM tasks_by_assignees
+                    WHERE task_id = $1
+                    "#,
+                    task_final_info.id,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
+
+                for assignee in assignees {
+                    let _add_assignee = sqlx::query!(
+                        r#"
+                        INSERT INTO tasks_by_assignees (task_id, assignee_id)
+                        VALUES ($1, $2)
+                        "#,
+                        task_final_info.id,
+                        assignee,
+                    )
+                    .execute(&*plexo_engine.pool)
+                    .await
+                    .unwrap();
+                }
+            }
+
+            if let Some(labels) = task.labels {
+                let _delete_labels = sqlx::query!(
+                    r#"
+                    DELETE FROM labels_by_tasks
+                    WHERE task_id = $1
+                    "#,
+                    task_final_info.id,
+                )
+                .execute(&*plexo_engine.pool)
+                .await
+                .unwrap();
+
+                for label in labels {
+                    let _add_label = sqlx::query!(
+                        r#"
+                        INSERT INTO labels_by_tasks (task_id, label_id)
+                        VALUES ($1, $2)
+                        "#,
+                        task_final_info.id,
+                        label,
+                    )
+                    .execute(&*plexo_engine.pool)
+                    .await
+                    .unwrap();
+                }
+            }
+
+            let subscription_manager: &crate::system::subscriptions::SubscriptionManager =
+                &ctx.data::<Engine>().unwrap().subscription_manager;
+
+            if let Some(subtasks_to_create) = task.subtasks {
+                for subtask in subtasks_to_create {
+                    let _ = sqlx::query!(
+                    r#"
+                    INSERT INTO tasks (title, description, owner_id, status, priority, due_date, project_id, lead_id, parent_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    RETURNING * 
+                    "#,
+                    subtask.title,
+                    subtask.description,
+                    member_id,
+                    subtask.status,
+                    subtask.priority,
+                    subtask.due_date.map(|d| DateTimeBridge::from_date_time(d)),
+                    subtask.project_id,
+                    subtask.lead_id,
+                    task_final_info.id,
+                ).fetch_one(&*plexo_engine.pool)
+                .await
+                .unwrap();
+                }
+
+                // TODO: Implement subscription signal for subtasks
+            }
+
+            let task = Task {
+                id: task_final_info.id,
+                created_at: DateTimeBridge::from_offset_date_time(task_final_info.created_at),
+                updated_at: DateTimeBridge::from_offset_date_time(task_final_info.updated_at),
+                title: task_final_info.title,
+                description: task_final_info.description,
+                status: TaskStatus::from_optional_str(&task_final_info.status),
+                priority: TaskPriority::from_optional_str(&task_final_info.priority),
+                due_date: task_final_info
+                    .due_date
+                    .map(DateTimeBridge::from_offset_date_time),
+                project_id: task_final_info.project_id,
+                lead_id: task_final_info.lead_id,
+                owner_id: task_final_info.owner_id,
+                count: task_final_info.count,
+                parent_id: task_final_info.parent_id,
+            };
+
+            let _ = subscription_manager.send_task_event(task.clone()).await;
+
+            tasks_to_return.push(task);
+        }
+
+        Ok(tasks_to_return)
+
+        // if let Some(assignees) = task.assignees {
+        // let _delete_assignees = sqlx::query!(
     }
 
     async fn update_task(

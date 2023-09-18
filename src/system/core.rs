@@ -1,4 +1,5 @@
 use sqlx::{Pool, Postgres};
+use uuid::Uuid;
 
 use crate::{
     auth::engine::AuthEngine,
@@ -54,7 +55,6 @@ impl Engine {
         )
         .fetch_one(&*self.pool)
         .await
-        .ok()
         .map(|m| Member {
             id: m.id,
             email: m.email.clone(),
@@ -67,6 +67,7 @@ impl Engine {
             role: MemberRole::from_optional_str(&m.role),
             password_hash: None,
         })
+        .ok()
     }
 
     pub async fn get_member_by_email(&self, email: String) -> Option<Member> {
@@ -91,7 +92,6 @@ impl Engine {
         )
         .fetch_one(&*self.pool)
         .await
-        .ok()
         .map(|m| Member {
             id: m.id,
             email: m.email.clone(),
@@ -104,6 +104,7 @@ impl Engine {
             role: MemberRole::from_optional_str(&m.role),
             password_hash: m.password_hash,
         })
+        .ok()
     }
 
     pub async fn create_member_from_github(
@@ -177,28 +178,88 @@ impl Engine {
         .fetch_one(&*self.pool)
         .await;
 
-        match m {
-            Ok(m) => Some(Member {
-                id: m.id,
-                email: m.email,
-                name: m.name,
-                created_at: DateTimeBridge::from_offset_date_time(m.created_at),
-                updated_at: DateTimeBridge::from_offset_date_time(m.updated_at),
-                github_id: m.github_id,
-                google_id: m.google_id,
-                photo_url: m.photo_url,
-                role: MemberRole::from_optional_str(&m.role),
-                password_hash: None,
-            }),
-            Err(_) => None,
+        m.map(|m| Member {
+            id: m.id,
+            email: m.email,
+            name: m.name,
+            created_at: DateTimeBridge::from_offset_date_time(m.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(m.updated_at),
+            github_id: m.github_id,
+            google_id: m.google_id,
+            photo_url: m.photo_url,
+            role: MemberRole::from_optional_str(&m.role),
+            password_hash: None,
+        })
+        .ok()
+    }
+
+    pub async fn set_organization_name(&self, name: String) {
+        let current_organization = sqlx::query!(
+            r#"
+            SELECT id, name
+            FROM self
+            "#
+        )
+        .fetch_one(&*self.pool)
+        .await;
+
+        match current_organization {
+            Ok(org) => {
+                sqlx::query!(
+                    r#"
+                    UPDATE self
+                    SET name = $1
+                    WHERE id = $2
+                    "#,
+                    name,
+                    org.id,
+                )
+                .execute(&*self.pool)
+                .await
+                .unwrap();
+            }
+            Err(_) => {
+                sqlx::query!(
+                    r#"
+                    INSERT INTO self (name)
+                    VALUES ($1)
+                    "#,
+                    name,
+                )
+                .execute(&*self.pool)
+                .await
+                .unwrap();
+            }
         }
     }
 
-    pub async fn update_member(&self, _member: Member) -> Member {
-        todo!()
-    }
+    // pub async fn update_member(&self, _member: Member) -> Member {
+    //     todo!()
+    // }
 
-    pub async fn delete_member(&self, _member: Member) -> Member {
-        todo!()
+    // pub async fn delete_member(&self, _member: Member) -> Member {
+    //     todo!()
+    // }
+
+    pub async fn record_activity(
+        &self,
+        operation: String,
+        resource_type: String,
+        resource_id: Uuid,
+        member_id: Uuid,
+    ) {
+        sqlx::query!(
+            r#"
+            INSERT INTO activity (operation, resource_type, resource_id, member_id)
+            VALUES ($1, $2, $3, $4)
+            "#,
+            operation,
+            resource_type,
+            resource_id,
+            member_id,
+        )
+        .execute(&*self.pool)
+        .await
+        .unwrap();
     }
 }

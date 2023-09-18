@@ -10,3 +10,4 @@ Secrets.toml
 .vscode
 .DS_Store
 .sqlx
+.idea
