@@ -205,19 +205,19 @@ impl Engine {
         .await;
 
         match current_organization {
-            Ok(org) => {
-                sqlx::query!(
-                    r#"
-                    UPDATE self
-                    SET name = $1
-                    WHERE id = $2
-                    "#,
-                    name,
-                    org.id,
-                )
-                .execute(&*self.pool)
-                .await
-                .unwrap();
+            Ok(_) => {
+                // sqlx::query!(
+                //     r#"
+                //     UPDATE self
+                //     SET name = $1
+                //     WHERE id = $2
+                //     "#,
+                //     name,
+                //     org.id,
+                // )
+                // .execute(&*self.pool)
+                // .await
+                // .unwrap();
             }
             Err(_) => {
                 sqlx::query!(

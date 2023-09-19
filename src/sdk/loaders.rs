@@ -56,8 +56,6 @@ impl Loader<Uuid> for TaskLoader {
     type Error = Arc<sqlx::Error>;
 
     async fn load(&self, keys: &'_ [Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
-        println!("task loader token");
-
         let tasks = sqlx::query!(
             r#"
             SELECT * FROM tasks WHERE id  = ANY($1)
@@ -104,8 +102,6 @@ impl Loader<Uuid> for ProjectLoader {
     type Error = Arc<sqlx::Error>;
 
     async fn load(&self, keys: &'_ [Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
-        println!("project loader token");
-
         let projects = sqlx::query!(
             r#"
             SELECT * FROM projects WHERE id  = ANY($1)
@@ -151,8 +147,6 @@ impl Loader<Uuid> for MemberLoader {
     type Error = Arc<sqlx::Error>;
 
     async fn load(&self, keys: &'_ [Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
-        println!("member loader token");
-
         let members = sqlx::query!(
             r#"
             SELECT * FROM members WHERE id  = ANY($1)
@@ -196,8 +190,6 @@ impl Loader<Uuid> for LabelLoader {
     type Error = Arc<sqlx::Error>;
 
     async fn load(&self, keys: &'_ [Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
-        println!("label loader token");
-
         let labels = sqlx::query!(
             r#"
             SELECT * FROM labels WHERE id  = ANY($1)
@@ -237,8 +229,6 @@ impl Loader<Uuid> for TeamLoader {
     type Error = Arc<sqlx::Error>;
 
     async fn load(&self, keys: &'_ [Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
-        println!("team loader token");
-
         let teams = sqlx::query!(
             r#"
             SELECT * FROM teams WHERE id  = ANY($1)

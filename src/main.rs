@@ -42,11 +42,6 @@ async fn main() {
 
     let schema = plexo_engine.graphql_api_schema();
 
-    let static_page_root_path = "plexo-platform/out".to_string();
-
-    let static_page =
-        StaticServer::new(static_page_root_path, plexo_engine.clone()).index_file("index.html");
-
     let mut app = Route::new()
         // .nest("/", static_page)
         // Non authenticated routes
@@ -63,8 +58,14 @@ async fn main() {
         .at("/graphql/ws", get(ws_switch_handler));
 
     if *STATIC_PAGE_ENABLED {
+        let static_page_root_path = "plexo-platform/out".to_string();
+
+        let static_page =
+            StaticServer::new(static_page_root_path, plexo_engine.clone()).index_file("index.html");
+
+        app = app.nest("/", static_page);
+
         println!("Static page enabled");
-        app = app.nest("/", static_page)
     }
 
     let app = app

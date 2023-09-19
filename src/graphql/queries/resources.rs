@@ -378,6 +378,7 @@ impl ResourcesQuery {
         &self,
         ctx: &Context<'_>,
         resource_type: Option<ActivityResourceType>,
+        resource_id: Option<Uuid>,
         operation_type: Option<ActivityOperationType>,
         member_id: Option<Uuid>,
     ) -> Result<Vec<Activity>> {
@@ -388,10 +389,12 @@ impl ResourcesQuery {
             SELECT * FROM activity
             WHERE
                 resource_type = COALESCE($1, resource_type)
-                AND operation = COALESCE($2, operation)
-                AND member_id = COALESCE($3, member_id)
+                AND resource_id = COALESCE($2, resource_id)
+                AND operation = COALESCE($3, operation)
+                AND member_id = COALESCE($4, member_id)
             "#,
             resource_type.map(|r| r.to_string()),
+            resource_id,
             operation_type.map(|r| r.to_string()),
             member_id
         )

@@ -1322,18 +1322,64 @@
     },
     "query": "\n            SELECT * FROM members WHERE id  = ANY($1)\n            "
   },
-  "693a1fdc3edb1c24430b6d28eb149293ca11552bedeb2526dba3177ad827d162": {
+  "7078cbb6b9d49986e5e4e99e5f0c0cf3be63814371cb006c4831a9ddc18700a4": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "member_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "resource_id",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "operation",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "resource_type",
+          "ordinal": 6,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
       "parameters": {
         "Left": [
+          "Text",
+          "Uuid",
           "Text",
           "Uuid"
         ]
       }
     },
-    "query": "\n                    UPDATE self\n                    SET name = $1\n                    WHERE id = $2\n                    "
+    "query": "\n            SELECT * FROM activity\n            WHERE\n                resource_type = COALESCE($1, resource_type)\n                AND resource_id = COALESCE($2, resource_id)\n                AND operation = COALESCE($3, operation)\n                AND member_id = COALESCE($4, member_id)\n            "
   },
   "72edd262a7119a1f00063559538c699ec1d091050093bdb6312b737acf72e2ad": {
     "describe": {
@@ -2027,64 +2073,6 @@
       }
     },
     "query": "\n            DELETE FROM teams_by_projects\n            WHERE team_id = $1\n            "
-  },
-  "992f88d5cec838611561a51354604ef2dcb8aeaec8042202e3a5a6d92acdd71a": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 1,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "member_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "resource_id",
-          "ordinal": 4,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "operation",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "resource_type",
-          "ordinal": 6,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            SELECT * FROM activity\n            WHERE\n                resource_type = COALESCE($1, resource_type)\n                AND operation = COALESCE($2, operation)\n                AND member_id = COALESCE($3, member_id)\n            "
   },
   "9c46c35985fd52827f4008f4831f9f650032acfd535662f90eb335213c48ccb7": {
     "describe": {
