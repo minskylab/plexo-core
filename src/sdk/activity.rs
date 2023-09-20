@@ -1,10 +1,15 @@
-use async_graphql::{Enum, SimpleObject};
+use async_graphql::{dataloader::DataLoader, ComplexObject, Context, Enum, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use std::str::FromStr;
 
+use super::loaders::MemberLoader;
+use super::member::Member;
+use crate::graphql::auth::extract_context;
+
 #[derive(SimpleObject, Clone, Debug)]
+#[graphql(complex)]
 pub struct Activity {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,
@@ -15,6 +20,17 @@ pub struct Activity {
 
     pub operation: ActivityOperationType,
     pub resource_type: ActivityResourceType,
+}
+
+#[ComplexObject]
+impl Activity {
+    pub async fn member(&self, ctx: &Context<'_>) -> Result<Member> {
+        let (_plexo_engine, _member_id) = extract_context(ctx)?;
+
+        let loader = ctx.data::<DataLoader<MemberLoader>>()?;
+
+        Ok(loader.load_one(self.member_id).await?.unwrap())
+    }
 }
 
 #[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
