@@ -1,7 +1,9 @@
 use std::str::FromStr;
 
 use async_graphql::{Context, InputObject, Object, Result};
-use chrono::{DateTime, Utc};
+use async_graphql::types::connection::*;
+
+use chrono::{DateTime, Utc, NaiveDateTime};
 use uuid::Uuid;
 
 use crate::{
@@ -54,6 +56,65 @@ pub struct ProjectFilter {
 
 #[Object]
 impl ResourcesQuery {
+    async fn tasks_pag(&self,
+        ctx: &Context<'_>,
+        _filter: Option<TaskFilter>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> Result<Connection<DateTime<Utc>, Task, EmptyFields, EmptyFields>> {
+        let (plexo_engine, _member_id) = extract_context(ctx)?;
+
+        let mut start = 0;
+        let mut limit = 100;
+
+        if let Some(first) = first {
+        limit = first as usize;
+        }
+
+        if let Some(after) = &after {
+        start = after.parse().unwrap_or(0);
+        }
+
+        let tasks = sqlx::query!(
+        r#"
+        SELECT * FROM tasks ORDER BY created_at ASC LIMIT $1 OFFSET $2
+        "#,
+        limit as i32, 
+        start as i32
+        )
+        .fetch_all(&*plexo_engine.pool)
+        .await
+        .unwrap();
+
+        let items: Vec<_> = tasks.iter().map(|r| Task {
+            id: r.id,
+            created_at: DateTimeBridge::from_offset_date_time(r.created_at),
+            updated_at: DateTimeBridge::from_offset_date_time(r.updated_at),
+            title: r.title.clone(),
+            description: r.description.clone(),
+            status: TaskStatus::from_optional_str(&r.status),
+            priority: TaskPriority::from_optional_str(&r.priority),
+            due_date: r.due_date.map(DateTimeBridge::from_offset_date_time),
+            project_id: r.project_id,
+            lead_id: r.lead_id,
+            owner_id: r.owner_id,
+            count: r.count,
+            parent_id: r.parent_id,
+        }).collect();
+
+        let mut connection = Connection::with_additional_fields(false, false, EmptyFields);
+
+        connection.edges.extend(
+        items.iter().enumerate().map(|(_index, task)| {
+            Edge::with_additional_fields(task.created_at, task.clone(), EmptyFields)
+        })
+        );
+
+        Ok(connection)
+    }
+    
     async fn tasks(&self, ctx: &Context<'_>, _filter: Option<TaskFilter>) -> Result<Vec<Task>> {
         let (plexo_engine, _member_id) = extract_context(ctx)?;
 
