@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use async_graphql::dataloader::DataLoader;
+use poem_openapi::Object;
 
 use super::loaders::{MemberLoader, TeamLoader};
 use crate::{
@@ -15,7 +16,7 @@ use crate::{
     },
 };
 
-#[derive(SimpleObject, Clone)]
+#[derive(SimpleObject, Object, Clone)]
 #[graphql(complex)]
 pub struct Project {
     pub id: Uuid,

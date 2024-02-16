@@ -1,6 +1,9 @@
 use async_openai::{
     config::OpenAIConfig,
-    types::{ChatCompletionRequestMessageArgs, CreateChatCompletionRequestArgs, Role},
+    types::{
+        ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
+        CreateChatCompletionRequestArgs, Role,
+    },
     Client,
 };
 
@@ -22,16 +25,16 @@ impl LLMEngine {
             .max_tokens(512u16)
             .model(LLM_MODEL_NAME.to_string())
             .messages([
-                ChatCompletionRequestMessageArgs::default()
-                    .role(Role::System)
+                ChatCompletionRequestSystemMessageArgs::default()
                     .content(system_message)
                     .build()
-                    .unwrap(),
-                ChatCompletionRequestMessageArgs::default()
-                    .role(Role::User)
+                    .unwrap()
+                    .into(),
+                ChatCompletionRequestUserMessageArgs::default()
                     .content(user_message)
                     .build()
-                    .unwrap(),
+                    .unwrap()
+                    .into(),
             ])
             .build()
             .unwrap();

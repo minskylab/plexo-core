@@ -12,10 +12,12 @@ use plexo::{
         JWT_ACCESS_TOKEN_SECRET, STATIC_PAGE_ENABLED, URL,
     },
     handlers::{graphiq_handler, index_handler, ws_switch_handler},
+    openapi::api::Api,
     statics::StaticServer,
     system::{core::Engine, prelude::Prelude, schema::GraphQLSchema},
 };
 use poem::{get, listener::TcpListener, middleware::Cors, post, EndpointExt, Route, Server};
+use poem_openapi::OpenApiService;
 use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
@@ -42,7 +44,17 @@ async fn main() {
 
     let schema = plexo_engine.graphql_api_schema();
 
+    let api_service = OpenApiService::new(Api::default(), "Hello World", "1.0")
+        .server("http://localhost:3000/api");
+    let ui = api_service.swagger_ui();
+
+    let spec = api_service.spec();
+
+    std::fs::write("openapi.json", spec).unwrap();
+
     let mut app = Route::new()
+        .nest("/api", api_service)
+        .nest("/", ui)
         // .nest("/", static_page)
         // Non authenticated routes
         .at("/auth/email/login", post(email_basic_login_handler))
