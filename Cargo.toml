@@ -1,45 +1,45 @@
 [package]
 edition = '2021'
 name = 'plexo'
-version = '0.2.26'
+version = '0.2.27'
 
 [dependencies]
-async-graphql = { version = "6.0.11", features = [
+async-graphql = { version = "7.0.1", features = [
     "decimal",
     "chrono",
     "dataloader",
     "uuid",
 ] }
-async-graphql-poem = { version = "6.0.11" }
-poem = { version = "1.3.59", features = ["cookie", "static-files"] }
+async-graphql-poem = { version = "7.0.1" }
+poem = { version = "2.0.0", features = ["cookie", "static-files"] }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18" }
 lazy_static = { version = "1.4.0" }
 tokio-stream = "0.1.14"
-sqlx = { version = "0.7.2", features = [
+sqlx = { version = "0.7.3", features = [
     "runtime-tokio-native-tls",
     "postgres",
     "uuid",
     "time",
     "json",
 ] }
-tokio = { version = "1.34.0", features = ["full"] }
+tokio = { version = "1.36.0", features = ["full"] }
 dotenvy = "0.15.7"
-chrono = "0.4.31"
-serde = "1.0.192"
-serde_json = "1.0.108"
+chrono = "0.4.34"
+serde = "1.0.196"
+serde_json = "1.0.113"
 oauth2 = { version = "4.4.2", features = ["reqwest"] }
-reqwest = { version = "0.11.22", features = ["json"] }
-jsonwebtoken = "9.1.0"
-async-trait = "0.1.74"
-percent-encoding = "2.3.0"
+reqwest = { version = "0.11.24", features = ["json"] }
+jsonwebtoken = "9.2.0"
+async-trait = "0.1.77"
+percent-encoding = "2.3.1"
 mime = "0.3.17"
-async-openai = "0.16.3"
+async-openai = "0.18.3"
 cookie = "0.18.0"
-thiserror = "1.0.50"
-uuid = { version = "1.6.1", features = ["v4", "fast-rng", "macro-diagnostics"] }
-argon2 = "0.5.2"
-poem-openapi = { version = "3.0.6", features = [
+thiserror = "1.0.57"
+uuid = { version = "1.7.0", features = ["v4", "fast-rng", "macro-diagnostics"] }
+argon2 = "0.5.3"
+poem-openapi = { version = "4.0.0", features = [
     "swagger-ui",
     "chrono",
     "uuid",

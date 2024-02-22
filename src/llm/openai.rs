@@ -2,7 +2,7 @@ use async_openai::{
     config::OpenAIConfig,
     types::{
         ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
-        CreateChatCompletionRequestArgs, Role,
+        CreateChatCompletionRequestArgs,
     },
     Client,
 };

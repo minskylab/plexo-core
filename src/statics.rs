@@ -1,11 +1,13 @@
 use poem::{
-    error::StaticFileError, web::StaticFileRequest, Body, Endpoint, FromRequest, IntoResponse,
-    Request, Response, Result,
+    error::StaticFileError,
+    http::{
+        header::{CACHE_CONTROL, CONTENT_TYPE, EXPIRES, LOCATION, PRAGMA},
+        Method, StatusCode,
+    },
+    web::StaticFileRequest,
+    Body, Endpoint, FromRequest, IntoResponse, Request, Response, Result,
 };
-use reqwest::{
-    header::{CACHE_CONTROL, CONTENT_TYPE, EXPIRES, LOCATION, PRAGMA},
-    Method, StatusCode,
-};
+
 use std::{
     ffi::OsStr,
     fmt::Write,

@@ -1,10 +1,9 @@
 // use poem::{listener::TcpListener, Route};
-use poem_openapi::{param::Query, payload::PlainText, OpenApi, Tags, ApiResponse};
+use crate::sdk::project::Project;
 use poem_openapi::param::Path;
 use poem_openapi::payload::Json;
+use poem_openapi::{ApiResponse, OpenApi, Tags};
 use tokio::sync::Mutex;
-use uuid::Uuid;
-use crate::sdk::project::Project;
 
 use crate::sdk::task::Task;
 
@@ -13,19 +12,17 @@ enum ApiTags {
     /// Operations about tasks
     Task,
     /// Operations about members
-    Member,
+    // Member,
     /// Operations about projects
     Project,
-    /// Operations about teams
-    Team,
+    // /// Operations about teams
+    // Team,
 }
 
 #[derive(Default)]
 pub struct Api {
-    pub tasks: Mutex<Vec<Task>>
+    pub tasks: Mutex<Vec<Task>>,
 }
-
-
 
 #[OpenApi]
 impl Api {
@@ -37,7 +34,12 @@ impl Api {
     //     }
     // }
 
-    #[oai(path = "/tasks", method = "post", tag = "ApiTags::Task", operation_id = "create_task")]
+    #[oai(
+        path = "/tasks",
+        method = "post",
+        tag = "ApiTags::Task",
+        operation_id = "create_task"
+    )]
     async fn create_task(&self, task: Json<Task>) -> CreateTaskResponse {
         let mut users = self.tasks.lock().await;
         users.insert(0, task.0.clone());
@@ -45,14 +47,24 @@ impl Api {
         CreateTaskResponse::Ok(Json(task.0))
     }
 
-    #[oai(path = "/tasks", method = "get", tag = "ApiTags::Task", operation_id = "list_tasks")]
+    #[oai(
+        path = "/tasks",
+        method = "get",
+        tag = "ApiTags::Task",
+        operation_id = "list_tasks"
+    )]
     async fn list_tasks(&self) -> ListTasksResponse {
         let users = self.tasks.lock().await;
         ListTasksResponse::Ok(Json(users.clone()))
     }
 
-    #[oai(path = "/tasks/:id", method = "get", tag = "ApiTags::Task", operation_id = "get_task")]
-    async fn get_task(&self, id: Path<String>) -> GetTaskResponse {
+    #[oai(
+        path = "/tasks/:id",
+        method = "get",
+        tag = "ApiTags::Task",
+        operation_id = "get_task"
+    )]
+    async fn get_task(&self, _id: Path<String>) -> GetTaskResponse {
         // let users = self.tasks.lock().await;
         // let task = users.iter().find(|task| task.id == Uuid::from_str(id.0.as_str()));
 
@@ -64,8 +76,13 @@ impl Api {
         GetTaskResponse::NotFound
     }
 
-    #[oai(path = "/tasks/:id", method = "put", tag = "ApiTags::Task", operation_id = "update_task")]
-    async fn update_task(&self, id: Path<String>, task: Json<Task>) -> GetTaskResponse {
+    #[oai(
+        path = "/tasks/:id",
+        method = "put",
+        tag = "ApiTags::Task",
+        operation_id = "update_task"
+    )]
+    async fn update_task(&self, _id: Path<String>, _task: Json<Task>) -> GetTaskResponse {
         // let mut users = self.tasks.lock().await;
         // let task = users.iter_mut().find(|task| task.id == id.0.into());
         //
@@ -80,8 +97,13 @@ impl Api {
         GetTaskResponse::NotFound
     }
 
-    #[oai(path = "/tasks/:id", method = "delete", tag = "ApiTags::Task", operation_id = "delete_task")]
-    async fn delete_task(&self, id: Path<String>) -> GetTaskResponse {
+    #[oai(
+        path = "/tasks/:id",
+        method = "delete",
+        tag = "ApiTags::Task",
+        operation_id = "delete_task"
+    )]
+    async fn delete_task(&self, _id: Path<String>) -> GetTaskResponse {
         // let mut users = self.tasks.lock().await;
         // let task = users.iter().find(|task| task.id == id.0.into());
 
@@ -96,7 +118,12 @@ impl Api {
         GetTaskResponse::NotFound
     }
 
-    #[oai(path = "/projects", method = "post", tag = "ApiTags::Project", operation_id = "create_project")]
+    #[oai(
+        path = "/projects",
+        method = "post",
+        tag = "ApiTags::Project",
+        operation_id = "create_project"
+    )]
     async fn create_project(&self, task: Json<Project>) -> CreateProjectResponse {
         // let mut users = self.tasks.lock().await;
         // users.insert(0, task.0.clone());
@@ -104,7 +131,12 @@ impl Api {
         CreateProjectResponse::Ok(Json(task.0))
     }
 
-    #[oai(path = "/projects", method = "get", tag = "ApiTags::Project", operation_id = "list_projects")]
+    #[oai(
+        path = "/projects",
+        method = "get",
+        tag = "ApiTags::Project",
+        operation_id = "list_projects"
+    )]
     async fn list_projects(&self) -> ListProjectsResponse {
         // let users = self.tasks.lock().await;
         // ListTasksResponse::Ok(Json(users.clone()))
@@ -124,7 +156,6 @@ enum ListProjectsResponse {
     /// Returns when the user is successfully created.
     #[oai(status = 200)]
     Ok(Json<Vec<Project>>),
-
 }
 #[derive(ApiResponse)]
 enum CreateTaskResponse {
@@ -143,8 +174,8 @@ enum ListTasksResponse {
 #[derive(ApiResponse)]
 enum GetTaskResponse {
     /// Returns when the user is successfully created.
-    #[oai(status = 200)]
-    Ok(Json<Task>),
+    // #[oai(status = 200)]
+    // Ok(Json<Task>),
     #[oai(status = 404)]
     NotFound,
 }

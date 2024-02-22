@@ -1,12 +1,19 @@
 use async_graphql::Error;
 use chrono::{Duration, Utc};
 use oauth2::{AuthorizationCode, CsrfToken};
+use poem::http::header::SET_COOKIE;
 use poem::http::HeaderMap;
 use poem::web::cookie::{Cookie, SameSite};
 use poem::web::{Data, Json, Query, Redirect};
-use poem::{handler, Body, IntoResponse, Response, Result};
-use reqwest::header::{CACHE_CONTROL, EXPIRES, LOCATION, PRAGMA, SET_COOKIE};
-use reqwest::StatusCode;
+use poem::{
+    handler,
+    http::{
+        header::{CACHE_CONTROL, EXPIRES, LOCATION, PRAGMA},
+        StatusCode,
+    },
+    Body, IntoResponse, Response, Result,
+};
+
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
